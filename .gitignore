@@ -1,0 +1,12 @@
+.env
+cookies.txt
+token.json
+token_drive.json
+token_tenshi.json
+client_secret.json
+__pycache__/
+*.pyc
+outputs/
+outputs/video_frames/
+outputs/video_frames_telop/
+outputs/telop_sheets/
