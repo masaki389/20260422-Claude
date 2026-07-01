@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudioOgawa AI Office</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0a0f0a;
+  color: #c9d1d9;
+  font-family: 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 12px;
+}
+.title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: #00ff88;
+  text-shadow: 0 0 16px rgba(0,255,136,0.7);
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+}
+.wrapper {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1020px;
+}
+#game-container canvas {
+  display: block;
+  border: 3px solid #1a4a1a;
+  image-rendering: pixelated;
+}
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 2px solid #1a4a1a;
+  padding: 10px;
+  background: #0d1a0d;
+}
+.controls label {
+  font-size: 9px;
+  color: #4ade80;
+  font-family: 'Press Start 2P', monospace;
+}
+.controls input {
+  width: 100%;
+  background: #111;
+  border: 2px solid #1a4a1a;
+  color: #00ff88;
+  padding: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  outline: none;
+}
+.controls input:focus { border-color: #00ff88; }
+.run-btn {
+  background: #00ff88;
+  color: #000;
+  border: none;
+  padding: 9px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.1s;
+}
+.run-btn:hover { background: #00cc6a; transform: translateY(1px); }
+.run-btn:disabled { background: #2a4a2a; color: #4a6a4a; cursor: not-allowed; transform: none; }
+.running-badge {
+  font-size: 9px;
+  color: #fbbf24;
+  font-family: 'Press Start 2P', monospace;
+  text-align: center;
+  padding: 4px;
+  display: none;
+}
+.running-badge.active { display: block; animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }
+.log-box {
+  border: 2px solid #1a4a1a;
+  background: #080f08;
+  flex: 1;
+}
+.log-head {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #4ade80;
+  padding: 7px 10px;
+  border-bottom: 1px solid #1a4a1a;
+  background: rgba(0,255,136,0.05);
+}
+.log-body {
+  height: 280px;
+  overflow-y: auto;
+  padding: 6px 10px;
+  font-size: 10px;
+  line-height: 1.7;
+}
+.log-body::-webkit-scrollbar { width: 4px; }
+.log-body::-webkit-scrollbar-thumb { background: #1a4a1a; }
+.log-entry { color: #4a6a4a; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.log-entry .t { color: #1a4a2a; margin-right: 6px; }
+.log-entry.fresh { color: #c9d1d9; }
+.log-entry.ok  { color: #34d399; }
+.log-entry.err { color: #f87171; }
+.result-box {
+  border: 2px solid #34d399;
+  background: rgba(52,211,153,0.05);
+  display: none;
+}
+.result-head {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #34d399;
+  padding: 7px 10px;
+  border-bottom: 1px solid rgba(52,211,153,0.3);
+}
+.result-body {
+  padding: 10px;
+  font-size: 10px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+  color: #c9d1d9;
+}
+</style>
+</head>
+<body>
+<div class="title">🏢 STUDIO OGAWA AI OFFICE</div>
+
+<div class="wrapper">
+  <div id="game-container"></div>
+
+  <div class="sidebar">
+    <div class="controls">
+      <label>テーマ</label>
+      <input id="theme-input" type="text" placeholder="年金だけでは足りないと気づいた日">
+      <button class="run-btn" id="run-btn" onclick="runTask()">▶ 実行</button>
+    </div>
+    <div class="running-badge" id="running-badge">⚡ 作業中...</div>
+    <div class="log-box">
+      <div class="log-head">📋 ACTIVITY LOG</div>
+      <div class="log-body" id="log-body"></div>
+    </div>
+    <div class="result-box" id="result-box">
+      <div class="result-head">📄 最終成果物</div>
+      <div class="result-body" id="result-body"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+<script>
+// ── Agent layout config ──────────────────────────────────────
+const AGENTS_CFG = {
+  researcher:   { x: 125, y: 195, name: 'リサーチャー', dept:'sachiko' },
+  scriptwriter: { x: 245, y: 195, name: '脚本家',       dept:'sachiko' },
+  imagegen:     { x: 185, y: 320, name: '画像生成',      dept:'sachiko' },
+  x_research:   { x: 465, y: 195, name: 'Xリサーチ',    dept:'note'    },
+  note_writer:  { x: 575, y: 195, name: '記事作成',      dept:'note'    },
+};
+
+const STATUS_COLOR = { idle:0x6b7280, working:0xfbbf24, done:0x34d399, error:0xef4444 };
+const STATUS_LABEL = { idle:'待機中', working:'作業中▌', done:'完了 ✓', error:'エラー!' };
+
+// ── Pixel drawing helpers ────────────────────────────────────
+function drawFloor(scene, w, h) {
+  const T = 32;
+  for (let x = 0; x < w; x += T) {
+    for (let y = 0; y < h; y += T) {
+      const c = ((x / T + y / T) % 2 === 0) ? 0x1a3320 : 0x1e3d26;
+      scene.add.rectangle(x + T/2, y + T/2, T - 1, T - 1, c);
+    }
+  }
+}
+
+function drawRoom(scene, x, y, w, h, label, borderColor, fillColor) {
+  const g = scene.add.graphics();
+  g.fillStyle(fillColor, 0.25);
+  g.fillRect(x, y, w, h);
+  g.lineStyle(3, borderColor, 1);
+  g.strokeRect(x, y, w, h);
+  // Department sign
+  const sign = scene.add.graphics();
+  sign.fillStyle(borderColor, 0.8);
+  sign.fillRect(x + w/2 - 70, y + 8, 140, 18);
+  scene.add.text(x + w/2, y + 17, label, {
+    fontSize: '8px', color: '#000', fontFamily: 'monospace', fontStyle: 'bold'
+  }).setOrigin(0.5);
+}
+
+function drawDesk(scene, x, y) {
+  const g = scene.add.graphics();
+  // Shadow
+  g.fillStyle(0x000000, 0.35);
+  g.fillRect(x - 22 + 3, y - 8 + 3, 44, 22);
+  // Desk surface
+  g.fillStyle(0x5c3317);
+  g.fillRect(x - 22, y - 8, 44, 22);
+  // Desk top highlight
+  g.fillStyle(0x7a4a25);
+  g.fillRect(x - 22, y - 8, 44, 7);
+  // Leg detail
+  g.fillStyle(0x3d2010);
+  g.fillRect(x - 20, y + 10, 4, 6);
+  g.fillRect(x + 16, y + 10, 4, 6);
+  // Monitor stand
+  g.fillStyle(0x2a2a2a);
+  g.fillRect(x - 3, y - 22, 6, 6);
+  // Monitor
+  g.fillStyle(0x1a1a2a);
+  g.fillRect(x - 13, y - 38, 26, 18);
+  g.fillStyle(0x00334a);
+  g.fillRect(x - 11, y - 36, 22, 14);
+  // Screen glow
+  g.fillStyle(0x004466, 0.8);
+  g.fillRect(x - 9, y - 34, 18, 10);
+}
+
+function drawPlant(scene, x, y) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x2a1a0a);
+  g.fillRect(x - 8, y, 16, 14); // pot
+  g.fillStyle(0x8b4513);
+  g.fillRect(x - 6, y + 2, 12, 10);
+  g.fillStyle(0x2d7a2d);
+  g.fillCircle(x, y - 10, 12);
+  g.fillStyle(0x3a9a3a);
+  g.fillCircle(x - 6, y - 14, 8);
+  g.fillCircle(x + 6, y - 14, 8);
+}
+
+function drawWaterCooler(scene, x, y) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x3a6a8a);
+  g.fillRect(x - 6, y, 12, 20);
+  g.fillStyle(0x6aadcc);
+  g.fillRect(x - 4, y - 10, 8, 12); // bottle
+  g.fillStyle(0xaaddff, 0.6);
+  g.fillRect(x - 3, y - 9, 6, 5);
+}
+
+// Draw pixel art character
+function drawCharacter(g, x, y, shirtColor) {
+  const S = 3;
+  const skin = 0xfdbcb4;
+  const hair = 0x3a2a18;
+  const pants = 0x1e3a5f;
+  const shoe = 0x2a2018;
+
+  g.clear();
+  // Head
+  g.fillStyle(skin);
+  g.fillRect(x - S*2, y - S*8, S*4, S*4);
+  // Hair
+  g.fillStyle(hair);
+  g.fillRect(x - S*2, y - S*8, S*4, S);
+  g.fillRect(x - S*3, y - S*7, S, S*2);
+  g.fillRect(x + S*2, y - S*7, S, S*2);
+  // Eyes
+  g.fillStyle(0x333333);
+  g.fillRect(x - S*1, y - S*6, S, S);
+  g.fillRect(x + S*0, y - S*6, S, S);
+  // Neck
+  g.fillStyle(skin);
+  g.fillRect(x - S, y - S*4, S*2, S);
+  // Shirt/body
+  g.fillStyle(shirtColor);
+  g.fillRect(x - S*3, y - S*3, S*6, S*4);
+  // Arms
+  g.fillRect(x - S*4, y - S*3, S, S*3);
+  g.fillRect(x + S*3, y - S*3, S, S*3);
+  // Hands
+  g.fillStyle(skin);
+  g.fillRect(x - S*4, y - S*0, S, S);
+  g.fillRect(x + S*3, y - S*0, S, S);
+  // Pants
+  g.fillStyle(pants);
+  g.fillRect(x - S*2, y + S*1, S*2, S*3);
+  g.fillRect(x + S*0, y + S*1, S*2, S*3);
+  // Shoes
+  g.fillStyle(shoe);
+  g.fillRect(x - S*3, y + S*4, S*3, S);
+  g.fillRect(x + S*0, y + S*4, S*3, S);
+}
+
+// ── Phaser Scene ─────────────────────────────────────────────
+class OfficeScene extends Phaser.Scene {
+  constructor() {
+    super({ key: 'Office' });
+    this.agentObjs = {};
+    this.prevStatus = {};
+  }
+
+  create() {
+    const W = 720, H = 450;
+
+    // Floor
+    drawFloor(this, W, H);
+
+    // Rooms
+    drawRoom(this, 40,  45, 300, 380, '幸子チャンネル部署', 0x3a8a4a, 0x003300);
+    drawRoom(this, 380, 45, 300, 380, 'note部署',           0x3a4a8a, 0x000033);
+
+    // Decorations
+    drawPlant(this, 68, 370);
+    drawPlant(this, 318, 370);
+    drawPlant(this, 408, 370);
+    drawPlant(this, 658, 370);
+    drawWaterCooler(this, 358, 90);
+
+    // Corridor label
+    this.add.text(360, H/2, '|', { fontSize: '60px', color: '#1a3a1a', fontFamily: 'monospace' }).setOrigin(0.5);
+
+    // Build agent objects
+    for (const [id, cfg] of Object.entries(AGENTS_CFG)) {
+      this.buildAgent(id, cfg);
+    }
+
+    // Clock label
+    this.clockText = this.add.text(W - 8, H - 8, '', {
+      fontSize: '8px', color: '#1a4a1a', fontFamily: 'monospace'
+    }).setOrigin(1, 1);
+
+    // Start polling
+    this.time.addEvent({ delay: 1500, callback: this.fetchStatus, callbackScope: this, loop: true });
+    this.fetchStatus();
+  }
+
+  buildAgent(id, cfg) {
+    const { x, y } = cfg;
+
+    // Draw desk under the agent
+    drawDesk(this, x, y + 10);
+
+    // Glow circle
+    const glow = this.add.graphics();
+    glow.fillStyle(0x6b7280, 0.3);
+    glow.fillCircle(x, y - 14, 22);
+
+    // Character body graphics
+    const body = this.add.graphics();
+    drawCharacter(body, x, y - 14, STATUS_COLOR.idle);
+
+    // Name plate
+    const nameTxt = this.add.text(x, y + 30, cfg.name, {
+      fontSize: '7px', color: '#9ca3af', fontFamily: 'monospace'
+    }).setOrigin(0.5);
+
+    // Status badge
+    const badge = this.add.text(x, y - 54, STATUS_LABEL.idle, {
+      fontSize: '7px', color: '#6b7280',
+      fontFamily: 'monospace',
+      backgroundColor: '#0d1117',
+      padding: { x: 3, y: 2 },
+    }).setOrigin(0.5);
+
+    this.agentObjs[id] = { glow, body, nameTxt, badge, tween: null, baseY: y };
+  }
+
+  updateAgent(id, data) {
+    const obj = this.agentObjs[id];
+    if (!obj) return;
+    const prev = this.prevStatus[id];
+    if (prev === data.status) return; // no change
+    this.prevStatus[id] = data.status;
+
+    const col = STATUS_COLOR[data.status] || STATUS_COLOR.idle;
+
+    // Glow
+    obj.glow.clear();
+    const alpha = data.status === 'working' ? 0.5 : data.status === 'done' ? 0.3 : 0.15;
+    const radius = data.status === 'working' ? 26 : 20;
+    obj.glow.fillStyle(col, alpha);
+    obj.glow.fillCircle(AGENTS_CFG[id].x, AGENTS_CFG[id].y - 14, radius);
+
+    // Body redraw
+    drawCharacter(obj.body, AGENTS_CFG[id].x, AGENTS_CFG[id].y - 14, col);
+
+    // Badge
+    obj.badge.setText(STATUS_LABEL[data.status] || data.status);
+    const badgeColor = { idle:'#6b7280', working:'#fbbf24', done:'#34d399', error:'#ef4444' };
+    obj.badge.setColor(badgeColor[data.status] || '#6b7280');
+
+    // Name color
+    const nameColor = { idle:'#9ca3af', working:'#fbbf24', done:'#34d399', error:'#f87171' };
+    obj.nameTxt.setColor(nameColor[data.status] || '#9ca3af');
+
+    // Bounce tween for working
+    if (obj.tween) { obj.tween.stop(); obj.tween = null; }
+    if (data.status === 'working') {
+      [obj.body, obj.glow, obj.badge].forEach(t => {
+        if (t.y !== undefined) t.y = 0;
+      });
+      obj.tween = this.tweens.add({
+        targets: [obj.body, obj.glow, obj.badge, obj.nameTxt],
+        y: '-=5',
+        duration: 500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
+  }
+
+  async fetchStatus() {
+    try {
+      const res = await fetch('/api/status');
+      const data = await res.json();
+      for (const [id, agent] of Object.entries(data.agents)) {
+        this.updateAgent(id, agent);
+      }
+      this.clockText.setText(new Date().toLocaleTimeString('ja-JP'));
+      window._updateUI(data);
+    } catch (e) { /* ignore */ }
+  }
+}
+
+// ── Phaser init ──────────────────────────────────────────────
+const game = new Phaser.Game({
+  type: Phaser.AUTO,
+  width: 720,
+  height: 450,
+  parent: 'game-container',
+  backgroundColor: '#0a0f0a',
+  scene: [OfficeScene],
+  pixelArt: true,
+  roundPixels: true,
+  antialias: false,
+});
+
+// ── UI functions (outside Phaser) ────────────────────────────
+let prevRunning = false;
+
+window._updateUI = function(data) {
+  // Log panel
+  const logBody = document.getElementById('log-body');
+  logBody.innerHTML = (data.logs || []).map((l, i) => {
+    let cls = i === 0 ? 'log-entry fresh' : 'log-entry';
+    if (l.msg.includes('✅')) cls += ' ok';
+    if (l.msg.includes('❌')) cls += ' err';
+    return `<div class="${cls}"><span class="t">${l.time}</span>${esc(l.msg)}</div>`;
+  }).join('');
+
+  // Running badge
+  const badge = document.getElementById('running-badge');
+  badge.classList.toggle('active', data.running);
+
+  // Run button
+  document.getElementById('run-btn').disabled = data.running;
+
+  // Result panel
+  if (prevRunning && !data.running && data.result) {
+    const box = document.getElementById('result-box');
+    box.style.display = 'block';
+    document.getElementById('result-body').textContent = data.result;
+    box.scrollIntoView({ behavior: 'smooth' });
+  }
+  prevRunning = data.running;
+};
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function runTask() {
+  const theme = document.getElementById('theme-input').value.trim();
+  document.getElementById('result-box').style.display = 'none';
+  document.getElementById('run-btn').disabled = true;
+  try {
+    const r = await fetch('/api/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme }),
+    });
+    const d = await r.json();
+    if (d.error) alert(d.error);
+  } catch (e) {
+    alert('通信エラー: ' + e.message);
+    document.getElementById('run-btn').disabled = false;
+  }
+}
+
+document.getElementById('theme-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runTask();
+});
+</script>
+</body>
+</html>

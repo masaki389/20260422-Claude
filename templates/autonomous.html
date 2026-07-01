@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudioOgawa 自律AIオフィス</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0a0f0a;
+  color: #c9d1d9;
+  font-family: 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 10px;
+}
+.title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: #00ff88;
+  text-shadow: 0 0 16px rgba(0,255,136,0.7);
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+}
+.auto-badge {
+  display: inline-block;
+  background: #0a3a1a;
+  color: #30cc70;
+  border: 1px solid #1a6a3a;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 8px;
+  margin-left: 8px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+.wrapper { display: flex; gap: 10px; align-items: flex-start; width: 100%; max-width: 1210px; }
+#game-container canvas { display: block; border: 3px solid #1a4a1a; image-rendering: pixelated; }
+.sidebar { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 7px; }
+.panel { background: #111a11; border: 1px solid #1e4a1e; border-radius: 4px; padding: 7px 9px; }
+.panel-title { font-size: 9px; color: #4a9a4a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; border-bottom: 1px solid #1e4a1e; padding-bottom: 3px; }
+
+/* Controls */
+.theme-input { width: 100%; background: #0a1a0a; border: 1px solid #2a6a2a; color: #90ee90; padding: 5px 7px; font-family: 'Courier New', monospace; font-size: 11px; border-radius: 3px; margin-bottom: 5px; }
+.btn { width: 100%; padding: 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; border: none; border-radius: 3px; cursor: pointer; transition: opacity 0.2s; }
+.btn:hover { opacity: 0.85; }
+.btn-green { background: #2d6a2d; color: #90ee90; }
+.btn-disabled { background: #1a3a1a; color: #4a6a4a; cursor: not-allowed; }
+
+/* Tabs */
+.tab-bar { display: flex; gap: 4px; margin-bottom: 6px; }
+.tab { flex: 1; background: #0a1a0a; border: 1px solid #1e4a1e; color: #6a8a6a; font-size: 8px; font-family: 'Courier New', monospace; padding: 4px; cursor: pointer; border-radius: 3px; transition: all 0.2s; }
+.tab.active { background: #1a4a1a; color: #90ee90; border-color: #3a7a3a; }
+.badge { display: inline-block; background: #1a4a1a; color: #30cc70; border-radius: 8px; padding: 0 5px; font-size: 7px; margin-left: 3px; }
+.badge.red { background: #4a1a1a; color: #ff8080; }
+
+/* Approval panel */
+.approval-list { max-height: 170px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.approval-list.hidden { display: none; }
+.pend-item { background: #0d1a0d; border: 1px solid #1a4a1a; border-radius: 3px; padding: 5px; }
+.pend-text { font-size: 9px; color: #8abca0; line-height: 1.4; margin-bottom: 4px; word-break: break-all; }
+.pend-title { font-size: 9px; color: #8abca0; font-weight: bold; margin-bottom: 4px; }
+.pend-meta { font-size: 7px; color: #4a7a5a; margin-bottom: 4px; }
+.pend-actions { display: flex; gap: 4px; }
+.btn-approve { flex: 1; background: #0a3a1a; color: #30cc70; border: 1px solid #1a6a3a; border-radius: 2px; cursor: pointer; font-size: 8px; padding: 3px; font-family: 'Courier New', monospace; }
+.btn-reject  { flex: 1; background: #3a0a0a; color: #cc3030; border: 1px solid #6a1a1a; border-radius: 2px; cursor: pointer; font-size: 8px; padding: 3px; font-family: 'Courier New', monospace; }
+.btn-approve:hover { background: #1a5a2a; }
+.btn-reject:hover  { background: #5a1a1a; }
+.empty-msg { font-size: 9px; color: #3a6a3a; text-align: center; padding: 10px 0; }
+
+/* Approved queue summary */
+.queue-summary { display: flex; gap: 6px; font-size: 9px; }
+.q-item { flex: 1; background: #0d170d; border-radius: 3px; padding: 4px 6px; text-align: center; }
+.q-label { color: #4a8a4a; font-size: 7px; display: block; margin-bottom: 2px; }
+.q-count { color: #30cc70; font-size: 14px; font-family: 'Press Start 2P', monospace; }
+
+/* Schedule */
+.schedule-list { display: flex; flex-direction: column; gap: 4px; max-height: 130px; overflow-y: auto; }
+.sched-item { display: flex; justify-content: space-between; align-items: center; font-size: 8px; padding: 3px 5px; background: #0d170d; border-radius: 3px; border-left: 2px solid #2a6a2a; }
+.sched-name { color: #7aba7a; flex: 1; font-size: 7px; }
+.sched-next { color: #4a8a4a; font-size: 7px; margin: 0 4px; white-space: nowrap; }
+.btn-trigger { background: #1a4a3a; color: #40b080; border: 1px solid #2a7a5a; border-radius: 2px; cursor: pointer; font-size: 7px; padding: 2px 4px; }
+.btn-trigger:hover { background: #2a6a5a; }
+
+/* Log */
+.log-list { max-height: 110px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.log-item { font-size: 8px; padding: 2px 3px; background: #0d170d; border-radius: 2px; }
+.log-time { color: #4a7a4a; margin-right: 4px; }
+.log-msg { color: #90c090; }
+
+/* Result */
+.result-box { background: #0a150a; border: 1px solid #1e4a1e; border-radius: 3px; padding: 7px; font-size: 8px; color: #80bb80; max-height: 130px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; }
+
+.status-bar { font-size: 9px; color: #4a8a4a; text-align: center; padding: 3px; }
+
+/* Note body modal */
+.modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:#111a11; border:2px solid #2a6a2a; border-radius:6px; padding:16px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; }
+.modal-title { font-size:11px; color:#90ee90; margin-bottom:8px; }
+.modal-body { font-size:10px; color:#80bb80; white-space:pre-wrap; line-height:1.6; margin-bottom:12px; }
+.modal-actions { display:flex; gap:8px; }
+.modal-close { background:#2d3a2d; color:#6a8a6a; border:1px solid #3a5a3a; border-radius:3px; cursor:pointer; font-size:9px; padding:5px 10px; }
+</style>
+</head>
+<body>
+<div class="title">
+  StudioOgawa AI Office
+  <span class="auto-badge">● AUTO 24/7</span>
+</div>
+<div class="wrapper">
+  <div id="game-container"></div>
+  <div class="sidebar">
+
+    <!-- 手動実行 -->
+    <div class="panel">
+      <div class="panel-title">🎬 手動実行（台本骨子）</div>
+      <input id="theme-input" class="theme-input"
+             placeholder="テーマ（例：年金だけでは足りない）"
+             value="年金だけでは足りないと気づいた日">
+      <button id="run-btn" class="btn btn-green" onclick="runManual()">▶ 脚本エージェント起動</button>
+    </div>
+
+    <!-- 承認待ちキュー -->
+    <div class="panel">
+      <div class="panel-title">📥 承認待ちキュー</div>
+      <div class="tab-bar">
+        <button class="tab active" id="tab-x"    onclick="showTab('x')">
+          𝕏 X投稿 <span class="badge red" id="x-pending-count">0</span>
+        </button>
+        <button class="tab"        id="tab-note" onclick="showTab('note')">
+          📝 note <span class="badge red" id="note-pending-count">0</span>
+        </button>
+      </div>
+      <div class="approval-list" id="x-pending-list">
+        <div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:30に自動生成</div>
+      </div>
+      <div class="approval-list hidden" id="note-pending-list">
+        <div class="empty-msg">承認待ちのnote記事はありません<br>毎週月曜10時に自動生成</div>
+      </div>
+    </div>
+
+    <!-- 承認済みキュー -->
+    <div class="panel">
+      <div class="panel-title">✅ 承認済みキュー</div>
+      <div class="queue-summary">
+        <div class="q-item">
+          <span class="q-label">𝕏 投稿待ち</span>
+          <span class="q-count" id="x-approved-count">0</span>
+        </div>
+        <div class="q-item">
+          <span class="q-label">📝 公開待ち</span>
+          <span class="q-count" id="note-approved-count">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- スケジュール -->
+    <div class="panel">
+      <div class="panel-title">⏰ 自動スケジュール</div>
+      <div class="schedule-list" id="schedule-list">
+        <div class="empty-msg">読み込み中...</div>
+      </div>
+    </div>
+
+    <!-- ログ -->
+    <div class="panel">
+      <div class="panel-title">📋 ログ</div>
+      <div class="log-list" id="log-list"></div>
+    </div>
+
+    <!-- 成果物 -->
+    <div class="panel">
+      <div class="panel-title">💡 最新の成果物</div>
+      <div class="result-box" id="result-box">成果物はここに表示されます</div>
+    </div>
+
+    <div class="status-bar" id="status-bar">●  IDLE</div>
+  </div>
+</div>
+
+<!-- Note body modal -->
+<div class="modal-overlay" id="note-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn-approve" id="modal-approve-btn">✓ 承認して公開待ちに追加</button>
+      <button class="btn-reject"  id="modal-reject-btn">✗ 却下</button>
+      <button class="modal-close" onclick="closeModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+<script>
+// ─── Dept & agent config ──────────────────────────────────────────────────
+const AGENTS_CFG = {
+  researcher:       { x:  90, y: 225, name: '幸子リサーチャー', dept:'sachiko' },
+  scriptwriter:     { x: 205, y: 225, name: '脚本家',          dept:'sachiko' },
+  x_strategist:     { x: 330, y: 200, name: 'X戦略家',         dept:'xmkt' },
+  x_writer:         { x: 445, y: 200, name: 'X投稿ライター',   dept:'xmkt' },
+  x_poster:         { x: 387, y: 340, name: 'X投稿管理',       dept:'xmkt' },
+  note_researcher:  { x: 582, y: 225, name: 'noteリサーチャー','dept':'note' },
+  note_writer:      { x: 697, y: 225, name: 'note記事ライター','dept':'note' },
+  tieup_researcher: { x: 840, y: 260, name: 'タイアップ探索',  dept:'bizdev' },
+};
+const DEPT = {
+  sachiko: { wall:0x3a8a4a, bg:0x003300 },
+  xmkt:    { wall:0x3a4a8a, bg:0x000033 },
+  note:    { wall:0x6a3a8a, bg:0x110022 },
+  bizdev:  { wall:0x8a6a2a, bg:0x221100 },
+};
+const SC = { idle:0x6b7280, working:0xfbbf24, done:0x34d399, error:0xef4444 };
+const DEPT_LABELS = {
+  sachiko:'幸子チャンネル部署', xmkt:'Xマーケティング部署',
+  note:'noteコンテンツ部署', bizdev:'事業開発部署'
+};
+
+// ─── Phaser Scene ─────────────────────────────────────────────────────────
+class OfficeScene extends Phaser.Scene {
+  constructor() { super('Office'); }
+
+  create() {
+    this.agentObjs = {};
+    // Floor tiles
+    const gf = this.add.graphics();
+    for (let r=0; r<18; r++) for (let c=0; c<30; c++) {
+      gf.fillStyle((r+c)%2===0?0x0d1a0d:0x0a150a);
+      gf.fillRect(c*32, r*32, 32, 32);
+    }
+    // Rooms
+    drawRoom(this, 20,  40, 240, 450, 'sachiko');
+    drawRoom(this, 280, 40, 230, 450, 'xmkt');
+    drawRoom(this, 530, 40, 230, 450, 'note');
+    drawRoom(this, 780, 40, 170, 450, 'bizdev');
+    // Decorations
+    [262,263,519,521,767,769].forEach((x,i)=> drawPlant(this, x, 150 + (i%2)*200));
+    drawCooler(this, 230, 420);
+    drawCooler(this, 490, 420);
+    drawCooler(this, 745, 420);
+    // Agents
+    Object.entries(AGENTS_CFG).forEach(([id, cfg]) => this.buildAgent(id, cfg));
+    // Poll
+    this.time.addEvent({ delay:1500, callback:this.fetchStatus, callbackScope:this, loop:true });
+  }
+
+  buildAgent(id, cfg) {
+    const dc = DEPT[cfg.dept];
+    const c  = this.add.container(cfg.x, cfg.y);
+    drawDesk(this, c, 0, 12, dc.wall);
+    const glow = this.add.graphics();
+    glow.fillStyle(SC.idle, 0.2); glow.fillCircle(0,0,17);
+    c.add(glow);
+    const body = this.add.graphics();
+    drawChar(body, 0, 0, dc.wall); c.add(body);
+    c.add(this.add.text(0, 38, cfg.name, { fontSize:'7px', color:'#a0d0a0', fontFamily:'Courier New', align:'center' }).setOrigin(0.5));
+    const badge = this.add.text(0, -36, 'idle', { fontSize:'6px', color:'#6b7280', fontFamily:'Courier New', backgroundColor:'#0a0f0a', padding:{x:3,y:1} }).setOrigin(0.5);
+    c.add(badge);
+    this.agentObjs[id] = { c, glow, body, badge };
+  }
+
+  updateAgent(id, data) {
+    const o  = this.agentObjs[id]; if(!o) return;
+    const sc = SC[data.status] || SC.idle;
+    o.glow.clear();
+    const alpha = data.status==='working'?0.45:0.18;
+    const r     = data.status==='working'?22:15;
+    o.glow.fillStyle(sc, alpha); o.glow.fillCircle(0,0,r);
+    o.body.clear();
+    const dc = DEPT[AGENTS_CFG[id].dept];
+    drawChar(o.body, 0, 0, data.status==='working'?sc:dc.wall);
+    o.badge.setText(data.status).setColor('#'+sc.toString(16).padStart(6,'0'));
+    if (data.status==='working') {
+      this.tweens.add({ targets:o.c, y:AGENTS_CFG[id].y-4, duration:400, yoyo:true, repeat:-1, ease:'Sine.easeInOut' });
+    } else {
+      this.tweens.killTweensOf(o.c); o.c.setY(AGENTS_CFG[id].y);
+    }
+  }
+
+  fetchStatus() {
+    fetch('/api/status').then(r=>r.json()).then(data=>{
+      Object.entries(data.agents||{}).forEach(([id,a])=>this.updateAgent(id,a));
+      window._updateUI(data);
+    }).catch(()=>{});
+  }
+}
+
+// ─── Drawing helpers ──────────────────────────────────────────────────────
+function drawRoom(scene, x, y, w, h, dept) {
+  const dc = DEPT[dept];
+  const g  = scene.add.graphics();
+  g.fillStyle(dc.bg, 0.6); g.fillRect(x,y,w,h);
+  g.lineStyle(2, dc.wall); g.strokeRect(x,y,w,h);
+  g.fillStyle(dc.wall, 0.8); g.fillRect(x,y,w,22);
+  scene.add.text(x+w/2, y+11, DEPT_LABELS[dept], { fontSize:'7px', color:'#e0ffe0', fontFamily:'Courier New' }).setOrigin(0.5);
+}
+function drawDesk(scene, container, dx, dy, color) {
+  const g=scene.add.graphics();
+  g.fillStyle(color, 0.9); g.fillRect(dx-22,dy,44,13);
+  g.fillStyle(0x2a2a2a); g.fillRect(dx-9,dy+2,18,5);
+  container.add(g);
+}
+function drawChar(g, x, y, shirt) {
+  const S=3;
+  g.fillStyle(0xf5cba7); g.fillRect(x-2*S,y-9*S,4*S,4*S);
+  g.fillStyle(0x3b2a1a); g.fillRect(x-2*S,y-10*S,4*S,S);
+  g.fillStyle(0x333333); g.fillRect(x-S,y-8*S,S,S); g.fillRect(x+S,y-8*S,S,S);
+  g.fillStyle(shirt); g.fillRect(x-2*S,y-5*S,4*S,5*S);
+  g.fillRect(x-3*S,y-5*S,S,3*S); g.fillRect(x+2*S,y-5*S,S,3*S);
+  g.fillStyle(0x2c3e50); g.fillRect(x-2*S,y,2*S,3*S); g.fillRect(x,y,2*S,3*S);
+  g.fillStyle(0x1a1a1a); g.fillRect(x-2*S,y+3*S,2*S,S); g.fillRect(x,y+3*S,2*S,S);
+}
+function drawPlant(scene, x, y) {
+  const g=scene.add.graphics();
+  g.fillStyle(0x1a3a1a); g.fillRect(x-4,y+8,8,8);
+  g.fillStyle(0x2d8a2d); g.fillCircle(x,y,9);
+  g.fillStyle(0x22aa22); g.fillCircle(x-4,y+3,5); g.fillCircle(x+4,y+3,5);
+}
+function drawCooler(scene, x, y) {
+  const g=scene.add.graphics();
+  g.fillStyle(0x2a4a6a); g.fillRect(x-5,y-12,10,15);
+  g.fillStyle(0x88ccee); g.fillRect(x-3,y-10,6,7);
+}
+
+// Phaser init
+new Phaser.Game({ type:Phaser.AUTO, width:960, height:500, backgroundColor:'#0a0f0a',
+  parent:'game-container', pixelArt:true, roundPixels:true, antialias:false, scene:[OfficeScene] });
+
+// ─── Sidebar UI ──────────────────────────────────────────────────────────
+let _currentTab = 'x';
+let _pendingData = { x_posts:[], note_drafts:[] };
+let _modalItemId = null;
+
+function showTab(tab) {
+  _currentTab = tab;
+  document.getElementById('tab-x').classList.toggle('active', tab==='x');
+  document.getElementById('tab-note').classList.toggle('active', tab==='note');
+  document.getElementById('x-pending-list').classList.toggle('hidden', tab!=='x');
+  document.getElementById('note-pending-list').classList.toggle('hidden', tab!=='note');
+}
+
+function renderPendingX(posts) {
+  const el = document.getElementById('x-pending-list');
+  if (!posts || posts.length===0) {
+    el.innerHTML = '<div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:30に自動生成</div>';
+    return;
+  }
+  el.innerHTML = posts.map(p => `
+    <div class="pend-item" id="px-${p.id}">
+      <div class="pend-text">${escHtml(p.text)}</div>
+      <div class="pend-meta">${p.created_at}</div>
+      <div class="pend-actions">
+        <button class="btn-approve" onclick="approveItem('x_posts','${p.id}')">✓ 承認</button>
+        <button class="btn-reject"  onclick="rejectItem('x_posts','${p.id}')">✗ 却下</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderPendingNote(drafts) {
+  const el = document.getElementById('note-pending-list');
+  if (!drafts || drafts.length===0) {
+    el.innerHTML = '<div class="empty-msg">承認待ちのnote記事はありません<br>毎週月曜10時に自動生成</div>';
+    return;
+  }
+  el.innerHTML = drafts.map(d => `
+    <div class="pend-item" id="nd-${d.id}">
+      <div class="pend-title">${escHtml(d.title)}</div>
+      <div class="pend-meta">${d.created_at}</div>
+      <div class="pend-actions">
+        <button class="btn-approve" onclick="previewNote('${d.id}')">👁 確認・承認</button>
+        <button class="btn-reject"  onclick="rejectItem('note_drafts','${d.id}')">✗ 却下</button>
+      </div>
+    </div>`).join('');
+}
+
+function approveItem(type, id) {
+  fetch('/api/approve', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({type, id})
+  }).then(()=>{
+    document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove();
+  }).catch(()=>{});
+}
+
+function rejectItem(type, id) {
+  fetch('/api/reject', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({type, id})
+  }).then(()=>{
+    document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove();
+  }).catch(()=>{});
+}
+
+function previewNote(id) {
+  fetch('/api/note_body/'+id).then(r=>r.json()).then(data=>{
+    _modalItemId = id;
+    document.getElementById('modal-title').textContent = data.title;
+    document.getElementById('modal-body').textContent  = data.body;
+    document.getElementById('modal-approve-btn').onclick = ()=>{ approveItem('note_drafts',id); closeModal(); };
+    document.getElementById('modal-reject-btn').onclick  = ()=>{ rejectItem('note_drafts',id); closeModal(); };
+    document.getElementById('note-modal').classList.add('open');
+  }).catch(()=>{});
+}
+function closeModal() { document.getElementById('note-modal').classList.remove('open'); }
+
+window._updateUI = function(data) {
+  // Status bar
+  const sb = document.getElementById('status-bar');
+  if (data.running) { sb.textContent='⚡ RUNNING'; sb.style.color='#fbbf24'; }
+  else              { sb.textContent='●  IDLE';    sb.style.color='#4a8a4a'; }
+
+  // Run button
+  const btn = document.getElementById('run-btn');
+  btn.disabled = data.running;
+  btn.className = data.running ? 'btn btn-disabled' : 'btn btn-green';
+  btn.textContent = data.running ? '⏳ 実行中...' : '▶ 脚本エージェント起動';
+
+  // Pending queue
+  const xp   = (data.pending?.x_posts    || []);
+  const np   = (data.pending?.note_drafts || []);
+  document.getElementById('x-pending-count').textContent    = xp.length;
+  document.getElementById('note-pending-count').textContent  = np.length;
+  renderPendingX(xp);
+  renderPendingNote(np);
+
+  // Approved queue counts
+  const xa = (data.approved?.x_posts    || []).filter(p=>!p.posted).length;
+  const na = (data.approved?.note_drafts|| []).filter(d=>!d.published).length;
+  document.getElementById('x-approved-count').textContent    = xa;
+  document.getElementById('note-approved-count').textContent  = na;
+
+  // Schedule
+  if (data.schedule?.length) {
+    document.getElementById('schedule-list').innerHTML = data.schedule.map(s =>
+      `<div class="sched-item">
+        <span class="sched-name">${s.name}</span>
+        <span class="sched-next">${s.next_run}</span>
+        <button class="btn-trigger" onclick="triggerJob('${s.id}')">▶</button>
+       </div>`).join('');
+  }
+
+  // Logs
+  if (data.logs?.length) {
+    document.getElementById('log-list').innerHTML = data.logs.slice(0,15).map(l=>
+      `<div class="log-item"><span class="log-time">${l.time}</span><span class="log-msg">${escHtml(l.msg)}</span></div>`
+    ).join('');
+  }
+
+  // Result
+  if (data.result) document.getElementById('result-box').textContent = data.result;
+};
+
+function runManual() {
+  const theme = document.getElementById('theme-input').value.trim();
+  if (!theme) return;
+  fetch('/api/run', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({theme}) }).catch(()=>{});
+}
+function triggerJob(id) {
+  fetch('/api/trigger/'+id, { method:'POST' }).catch(()=>{});
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.getElementById('theme-input').addEventListener('keydown', e=>{ if(e.key==='Enter') runManual(); });
+document.getElementById('note-modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+</script>
+</body>
+</html>
