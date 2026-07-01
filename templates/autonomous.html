@@ -7,78 +7,63 @@
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  background: #070c07;
-  color: #c9d1d9;
-  font-family: 'Courier New', monospace;
-  display: flex; flex-direction: column; align-items: center;
-  min-height: 100vh; padding: 10px;
-}
-.title {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 11px; color: #00ff88;
-  text-shadow: 0 0 16px rgba(0,255,136,0.7);
-  margin-bottom: 8px; letter-spacing: 2px;
-}
-.auto-badge {
-  display: inline-block; background: #0a3a1a; color: #30cc70;
-  border: 1px solid #1a6a3a; border-radius: 10px; padding: 2px 8px;
-  font-size: 8px; margin-left: 8px; animation: pulse 2s infinite;
-}
+body { background:#070c07; color:#c9d1d9; font-family:'Courier New',monospace; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:10px; }
+.title { font-family:'Press Start 2P',monospace; font-size:11px; color:#00ff88; text-shadow:0 0 16px rgba(0,255,136,0.7); margin-bottom:8px; letter-spacing:2px; }
+.auto-badge { display:inline-block; background:#0a3a1a; color:#30cc70; border:1px solid #1a6a3a; border-radius:10px; padding:2px 8px; font-size:8px; margin-left:8px; animation:pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
-.wrapper { display: flex; gap: 10px; align-items: flex-start; width: 100%; max-width: 1460px; }
-#game-container canvas { display: block; border: 2px solid #1a3a1a; image-rendering: pixelated; }
-.sidebar { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 7px; }
-.panel { background: #111a11; border: 1px solid #1e4a1e; border-radius: 4px; padding: 7px 9px; }
-.panel-title { font-size: 9px; color: #4a9a4a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; border-bottom: 1px solid #1e4a1e; padding-bottom: 3px; }
-.theme-input { width: 100%; background: #0a1a0a; border: 1px solid #2a6a2a; color: #90ee90; padding: 5px 7px; font-family: 'Courier New', monospace; font-size: 11px; border-radius: 3px; margin-bottom: 5px; }
-.btn { width: 100%; padding: 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; border: none; border-radius: 3px; cursor: pointer; transition: opacity 0.2s; }
-.btn:hover { opacity: 0.85; }
-.btn-green { background: #2d6a2d; color: #90ee90; }
-.btn-disabled { background: #1a3a1a; color: #4a6a4a; cursor: not-allowed; }
-.tab-bar { display: flex; gap: 4px; margin-bottom: 6px; }
-.tab { flex: 1; background: #0a1a0a; border: 1px solid #1e4a1e; color: #6a8a6a; font-size: 8px; font-family: 'Courier New', monospace; padding: 4px; cursor: pointer; border-radius: 3px; transition: all 0.2s; }
-.tab.active { background: #1a4a1a; color: #90ee90; border-color: #3a7a3a; }
-.badge { display: inline-block; background: #1a4a1a; color: #30cc70; border-radius: 8px; padding: 0 5px; font-size: 7px; margin-left: 3px; }
-.badge.red { background: #4a1a1a; color: #ff8080; }
-.approval-list { max-height: 170px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-.approval-list.hidden { display: none; }
-.pend-item { background: #0d1a0d; border: 1px solid #1a4a1a; border-radius: 3px; padding: 5px; }
-.pend-text { font-size: 9px; color: #8abca0; line-height: 1.4; margin-bottom: 4px; word-break: break-all; }
-.pend-title { font-size: 9px; color: #8abca0; font-weight: bold; margin-bottom: 4px; }
-.pend-meta { font-size: 7px; color: #4a7a5a; margin-bottom: 4px; }
-.pend-actions { display: flex; gap: 4px; }
-.btn-approve { flex: 1; background: #0a3a1a; color: #30cc70; border: 1px solid #1a6a3a; border-radius: 2px; cursor: pointer; font-size: 8px; padding: 3px; font-family: 'Courier New', monospace; }
-.btn-reject  { flex: 1; background: #3a0a0a; color: #cc3030; border: 1px solid #6a1a1a; border-radius: 2px; cursor: pointer; font-size: 8px; padding: 3px; font-family: 'Courier New', monospace; }
-.btn-approve:hover { background: #1a5a2a; }
-.btn-reject:hover  { background: #5a1a1a; }
-.empty-msg { font-size: 9px; color: #3a6a3a; text-align: center; padding: 10px 0; }
-.queue-summary { display: flex; gap: 6px; font-size: 9px; }
-.q-item { flex: 1; background: #0d170d; border-radius: 3px; padding: 4px 6px; text-align: center; }
-.q-label { color: #4a8a4a; font-size: 7px; display: block; margin-bottom: 2px; }
-.q-count { color: #30cc70; font-size: 14px; font-family: 'Press Start 2P', monospace; }
-.kikuchi-panel { background: #0d1522; border: 1px solid #1e3a5e; border-radius: 4px; padding: 7px 9px; }
-.kikuchi-title { font-size: 9px; color: #4a7aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; border-bottom: 1px solid #1e3a5e; padding-bottom: 3px; }
-.kikuchi-ep { font-size: 11px; color: #7ab0e0; font-weight: bold; margin-bottom: 4px; }
-.kikuchi-due { font-size: 8px; color: #5a8aaa; margin-bottom: 6px; }
-.progress-bar-bg { background: #0a1520; border: 1px solid #1e3a5e; border-radius: 3px; height: 14px; overflow: hidden; margin-bottom: 4px; }
-.progress-bar-fill { height: 100%; background: linear-gradient(90deg, #1a5a9a, #3a9adf); transition: width 0.5s ease; border-radius: 2px; }
-.progress-text { font-size: 9px; color: #7ab0e0; text-align: right; }
-.kikuchi-checks { display: flex; gap: 3px; margin-top: 5px; }
-.check-item { flex: 1; background: #0a1520; border: 1px solid #1e3a5e; border-radius: 2px; padding: 2px; text-align: center; font-size: 7px; color: #3a6a9a; }
-.check-item.done { background: #0a2a40; border-color: #3a7aaa; color: #7ab0e0; }
-.schedule-list { display: flex; flex-direction: column; gap: 4px; max-height: 130px; overflow-y: auto; }
-.sched-item { display: flex; justify-content: space-between; align-items: center; font-size: 8px; padding: 3px 5px; background: #0d170d; border-radius: 3px; border-left: 2px solid #2a6a2a; }
-.sched-name { color: #7aba7a; flex: 1; font-size: 7px; }
-.sched-next { color: #4a8a4a; font-size: 7px; margin: 0 4px; white-space: nowrap; }
-.btn-trigger { background: #1a4a3a; color: #40b080; border: 1px solid #2a7a5a; border-radius: 2px; cursor: pointer; font-size: 7px; padding: 2px 4px; }
-.btn-trigger:hover { background: #2a6a5a; }
-.log-list { max-height: 110px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
-.log-item { font-size: 8px; padding: 2px 3px; background: #0d170d; border-radius: 2px; }
-.log-time { color: #4a7a4a; margin-right: 4px; }
-.log-msg { color: #90c090; }
-.result-box { background: #0a150a; border: 1px solid #1e4a1e; border-radius: 3px; padding: 7px; font-size: 8px; color: #80bb80; max-height: 130px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; }
-.status-bar { font-size: 9px; color: #4a8a4a; text-align: center; padding: 3px; }
+.wrapper { display:flex; gap:10px; align-items:flex-start; width:100%; max-width:1720px; }
+#game-container canvas { display:block; border:2px solid #1a3a1a; image-rendering:pixelated; }
+.sidebar { width:300px; flex-shrink:0; display:flex; flex-direction:column; gap:7px; }
+.panel { background:#111a11; border:1px solid #1e4a1e; border-radius:4px; padding:7px 9px; }
+.panel-title { font-size:9px; color:#4a9a4a; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; border-bottom:1px solid #1e4a1e; padding-bottom:3px; }
+.theme-input { width:100%; background:#0a1a0a; border:1px solid #2a6a2a; color:#90ee90; padding:5px 7px; font-family:'Courier New',monospace; font-size:11px; border-radius:3px; margin-bottom:5px; }
+.btn { width:100%; padding:6px; font-family:'Press Start 2P',monospace; font-size:8px; border:none; border-radius:3px; cursor:pointer; transition:opacity 0.2s; }
+.btn:hover { opacity:0.85; }
+.btn-green { background:#2d6a2d; color:#90ee90; }
+.btn-disabled { background:#1a3a1a; color:#4a6a4a; cursor:not-allowed; }
+.tab-bar { display:flex; gap:4px; margin-bottom:6px; }
+.tab { flex:1; background:#0a1a0a; border:1px solid #1e4a1e; color:#6a8a6a; font-size:8px; font-family:'Courier New',monospace; padding:4px; cursor:pointer; border-radius:3px; transition:all 0.2s; }
+.tab.active { background:#1a4a1a; color:#90ee90; border-color:#3a7a3a; }
+.badge { display:inline-block; background:#1a4a1a; color:#30cc70; border-radius:8px; padding:0 5px; font-size:7px; margin-left:3px; }
+.badge.red { background:#4a1a1a; color:#ff8080; }
+.approval-list { max-height:160px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; }
+.approval-list.hidden { display:none; }
+.pend-item { background:#0d1a0d; border:1px solid #1a4a1a; border-radius:3px; padding:5px; }
+.pend-text,.pend-title { font-size:9px; color:#8abca0; line-height:1.4; margin-bottom:4px; word-break:break-all; }
+.pend-title { font-weight:bold; }
+.pend-meta { font-size:7px; color:#4a7a5a; margin-bottom:4px; }
+.pend-actions { display:flex; gap:4px; }
+.btn-approve { flex:1; background:#0a3a1a; color:#30cc70; border:1px solid #1a6a3a; border-radius:2px; cursor:pointer; font-size:8px; padding:3px; font-family:'Courier New',monospace; }
+.btn-reject  { flex:1; background:#3a0a0a; color:#cc3030; border:1px solid #6a1a1a; border-radius:2px; cursor:pointer; font-size:8px; padding:3px; font-family:'Courier New',monospace; }
+.btn-approve:hover { background:#1a5a2a; }
+.btn-reject:hover  { background:#5a1a1a; }
+.empty-msg { font-size:9px; color:#3a6a3a; text-align:center; padding:10px 0; }
+.queue-summary { display:flex; gap:6px; }
+.q-item { flex:1; background:#0d170d; border-radius:3px; padding:4px 6px; text-align:center; }
+.q-label { color:#4a8a4a; font-size:7px; display:block; margin-bottom:2px; }
+.q-count { color:#30cc70; font-size:14px; font-family:'Press Start 2P',monospace; }
+.kikuchi-panel { background:#0d1522; border:1px solid #1e3a5e; border-radius:4px; padding:7px 9px; }
+.kikuchi-title { font-size:9px; color:#4a7aaa; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; border-bottom:1px solid #1e3a5e; padding-bottom:3px; }
+.kikuchi-ep { font-size:11px; color:#7ab0e0; font-weight:bold; margin-bottom:4px; }
+.kikuchi-due { font-size:8px; color:#5a8aaa; margin-bottom:6px; }
+.progress-bar-bg { background:#0a1520; border:1px solid #1e3a5e; border-radius:3px; height:14px; overflow:hidden; margin-bottom:4px; }
+.progress-bar-fill { height:100%; background:linear-gradient(90deg,#1a5a9a,#3a9adf); transition:width 0.5s; border-radius:2px; }
+.progress-text { font-size:9px; color:#7ab0e0; text-align:right; }
+.kikuchi-checks { display:flex; gap:3px; margin-top:5px; }
+.check-item { flex:1; background:#0a1520; border:1px solid #1e3a5e; border-radius:2px; padding:2px; text-align:center; font-size:7px; color:#3a6a9a; }
+.check-item.done { background:#0a2a40; border-color:#3a7aaa; color:#7ab0e0; }
+.schedule-list { display:flex; flex-direction:column; gap:3px; max-height:150px; overflow-y:auto; }
+.sched-item { display:flex; justify-content:space-between; align-items:center; font-size:8px; padding:3px 5px; background:#0d170d; border-radius:3px; border-left:2px solid #2a6a2a; }
+.sched-name { color:#7aba7a; flex:1; font-size:7px; }
+.sched-next { color:#4a8a4a; font-size:7px; margin:0 4px; white-space:nowrap; }
+.btn-trigger { background:#1a4a3a; color:#40b080; border:1px solid #2a7a5a; border-radius:2px; cursor:pointer; font-size:7px; padding:2px 4px; }
+.btn-trigger:hover { background:#2a6a5a; }
+.log-list { max-height:100px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
+.log-item { font-size:8px; padding:2px 3px; background:#0d170d; border-radius:2px; }
+.log-time { color:#4a7a4a; margin-right:4px; }
+.log-msg { color:#90c090; }
+.result-box { background:#0a150a; border:1px solid #1e4a1e; border-radius:3px; padding:7px; font-size:8px; color:#80bb80; max-height:110px; overflow-y:auto; white-space:pre-wrap; line-height:1.5; }
+.status-bar { font-size:9px; color:#4a8a4a; text-align:center; padding:3px; }
 .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; }
 .modal-overlay.open { display:flex; }
 .modal { background:#111a11; border:2px solid #2a6a2a; border-radius:6px; padding:16px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; }
@@ -112,10 +97,10 @@ body {
     <div class="panel">
       <div class="panel-title">📥 承認待ちキュー</div>
       <div class="tab-bar">
-        <button class="tab active" id="tab-x"    onclick="showTab('x')">𝕏 X投稿 <span class="badge red" id="x-pending-count">0</span></button>
-        <button class="tab"        id="tab-note" onclick="showTab('note')">📝 note <span class="badge red" id="note-pending-count">0</span></button>
+        <button class="tab active" id="tab-x" onclick="showTab('x')">𝕏 X投稿 <span class="badge red" id="x-pending-count">0</span></button>
+        <button class="tab" id="tab-note" onclick="showTab('note')">📝 note <span class="badge red" id="note-pending-count">0</span></button>
       </div>
-      <div class="approval-list" id="x-pending-list"><div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成</div></div>
+      <div class="approval-list" id="x-pending-list"><div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成（AI副業/YouTube収益化）</div></div>
       <div class="approval-list hidden" id="note-pending-list"><div class="empty-msg">承認待ちのnote記事はありません<br>毎週月曜10時に自動生成</div></div>
     </div>
     <div class="panel">
@@ -126,7 +111,7 @@ body {
       </div>
     </div>
     <div class="panel">
-      <div class="panel-title">⏰ 自動スケジュール</div>
+      <div class="panel-title">⏰ スケジュール</div>
       <div class="schedule-list" id="schedule-list"><div class="empty-msg">読み込み中...</div></div>
     </div>
     <div class="panel">
@@ -147,7 +132,7 @@ body {
     <div class="modal-body" id="modal-body"></div>
     <div class="modal-actions">
       <button class="btn-approve" id="modal-approve-btn">✓ 承認して公開待ちに追加</button>
-      <button class="btn-reject"  id="modal-reject-btn">✗ 却下</button>
+      <button class="btn-reject" id="modal-reject-btn">✗ 却下</button>
       <button class="modal-close" onclick="closeModal()">閉じる</button>
     </div>
   </div>
@@ -155,645 +140,386 @@ body {
 
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
-// ── Canvas / Room layout ────────────────────────────────────────────────────
-const CW = 1140, CH = 530;
-// Room definitions  (x, y, w, h)  — 5 thick walls between them
+// ── Layout constants ─────────────────────────────────────────────────────────
+const CW = 1380, CH = 530;
+
+// 6 rooms: sachiko | content | sales | tenshi | bizdev | external
 const ROOMS = {
-  sachiko:  { x:8,   y:38, w:229, h:454 },
-  xmkt:     { x:255, y:38, w:238, h:454 },
-  note:     { x:507, y:38, w:234, h:454 },
-  bizdev:   { x:755, y:38, w:172, h:454 },
-  external: { x:937, y:38, w:195, h:454 },
+  sachiko:  {x:8,    y:38, w:220, h:454},
+  content:  {x:242,  y:38, w:300, h:454},
+  sales:    {x:556,  y:38, w:195, h:454},
+  tenshi:   {x:765,  y:38, w:220, h:454},
+  bizdev:   {x:999,  y:38, w:170, h:454},
+  external: {x:1183, y:38, w:185, h:454},
 };
-// Walk bounds for idle wandering (keep chars inside room, away from walls/ceiling)
 const WALK_BOUNDS = {
-  sachiko:  {x1:28,  y1:95, x2:228, y2:478},
-  xmkt:     {x1:272, y1:95, x2:484, y2:478},
-  note:     {x1:524, y1:95, x2:732, y2:478},
-  bizdev:   {x1:772, y1:95, x2:916, y2:478},
-  external: {x1:954, y1:95, x2:1120,y2:478},
+  sachiko:  {x1:25,  y1:95, x2:220, y2:478},
+  content:  {x1:260, y1:95, x2:534, y2:478},
+  sales:    {x1:573, y1:95, x2:743, y2:478},
+  tenshi:   {x1:782, y1:95, x2:977, y2:478},
+  bizdev:   {x1:1016,y1:95, x2:1161,y2:478},
+  external: {x1:1200,y1:95, x2:1360,y2:478},
 };
 const DEPT = {
-  sachiko:  {wall:0x2d8a4a, accent:0x4acc6a, floor1:0xc4985a, floor2:0xb8894e, label:'幸子チャンネル部'},
-  xmkt:     {wall:0x2a4a9a, accent:0x4a7acc, floor1:0xb89060, floor2:0xa88052, label:'Xマーケ部'},
-  note:     {wall:0x7a2a9a, accent:0xaa4acc, floor1:0xb08858, floor2:0xa07848, label:'noteコンテンツ部'},
-  bizdev:   {wall:0x9a6a1a, accent:0xcc9a2a, floor1:0xc0a060, floor2:0xb09050, label:'事業開発部'},
-  external: {wall:0x4a5a8a, accent:0x7a8acc, floor1:0xa09080, floor2:0x908070, label:'外注管理'},
+  sachiko:  {wall:0x2d8a4a, floor1:0xc4985a, floor2:0xb8894e, label:'幸子チャンネル部'},
+  content:  {wall:0x5a3a9a, floor1:0xb08868, floor2:0xa07858, label:'コンテンツ部（note/X）'},
+  sales:    {wall:0xaa4422, floor1:0xc49060, floor2:0xb48050, label:'営業部門'},
+  tenshi:   {wall:0x1a8a7a, floor1:0xb0a068, floor2:0xa09058, label:'転職アニメ部'},
+  bizdev:   {wall:0x9a6a1a, floor1:0xc0a060, floor2:0xb09050, label:'事業開発部'},
+  external: {wall:0x4a5a8a, floor1:0xa09080, floor2:0x908070, label:'外注管理'},
 };
 const AGENTS_CFG = {
-  researcher:       {x:115, y:220, name:'幸子リサーチャー', dept:'sachiko'},
-  scriptwriter:     {x:185, y:355, name:'脚本家',          dept:'sachiko'},
-  x_strategist:     {x:340, y:200, name:'X戦略家',         dept:'xmkt'},
-  x_writer:         {x:458, y:200, name:'Xライター',        dept:'xmkt'},
-  x_poster:         {x:400, y:365, name:'X投稿管理',        dept:'xmkt'},
-  note_researcher:  {x:592, y:220, name:'noteリサーチャー', dept:'note'},
-  note_writer:      {x:698, y:220, name:'noteライター',     dept:'note'},
-  tieup_researcher: {x:844, y:220, name:'タイアップ探索',   dept:'bizdev'},
-  kikuchi:          {x:1030,y:280, name:'菊地（外注）',    dept:'external'},
+  // 幸子チャンネル部
+  researcher:          {x:65,   y:205, name:'幸子リサーチャー', dept:'sachiko'},
+  scriptwriter:        {x:180,  y:335, name:'脚本家',           dept:'sachiko'},
+  sachiko_analyst:     {x:185,  y:180, name:'幸子分析',         dept:'sachiko'},
+  // コンテンツ部
+  x_strategist:        {x:315,  y:175, name:'X戦略家',          dept:'content'},
+  x_writer:            {x:415,  y:175, name:'Xライター',         dept:'content'},
+  x_poster:            {x:510,  y:175, name:'X投稿管理',         dept:'content'},
+  note_researcher:     {x:330,  y:345, name:'noteリサーチャー',  dept:'content'},
+  note_writer:         {x:460,  y:345, name:'noteライター',      dept:'content'},
+  // 営業部門
+  sales_researcher:    {x:620,  y:200, name:'営業リサーチャー',  dept:'sales'},
+  proposal_writer:     {x:700,  y:355, name:'提案書ライター',    dept:'sales'},
+  // 転職アニメ部
+  tenshi_analyst:      {x:845,  y:200, name:'転職アニメ分析',    dept:'tenshi'},
+  tenshi_scriptwriter: {x:940,  y:360, name:'転職脚本家',        dept:'tenshi'},
+  // 事業開発
+  tieup_researcher:    {x:1085, y:265, name:'タイアップ探索',    dept:'bizdev'},
+  // 外注
+  kikuchi:             {x:1272, y:275, name:'菊地（外注）',      dept:'external'},
 };
 const SC = {idle:0x6b7280, working:0xfbbf24, done:0x34d399, error:0xef4444};
-const S = 3; // pixel scale for characters
+const S = 3;
 
-// ── Global bridge between fetch and update() ────────────────────────────────
 window._agentStates = {};
 
-// ── Phaser Scene ────────────────────────────────────────────────────────────
+// ── Scene ────────────────────────────────────────────────────────────────────
 class OfficeScene extends Phaser.Scene {
   constructor() { super('Office'); }
 
   create() {
     this.agentObjs = {};
-    this._bgG   = this.add.graphics().setDepth(0);
-    this._furG  = this.add.graphics().setDepth(1); // chair backs, desk bases (behind chars)
-    this._deskG = this.add.graphics().setDepth(3); // desk surfaces (in front of chars = hide legs)
-    this._decG  = this.add.graphics().setDepth(5); // plants, cooler
-
+    this._bgG  = this.add.graphics().setDepth(0);
+    this._furG = this.add.graphics().setDepth(1);
+    this._dskG = this.add.graphics().setDepth(3);
+    this._decG = this.add.graphics().setDepth(5);
     this.drawOffice();
     Object.entries(AGENTS_CFG).forEach(([id,cfg]) => this.buildAgent(id, cfg));
-
     this.time.addEvent({delay:1600, callback:this.fetchStatus, callbackScope:this, loop:true});
     setTimeout(() => this.fetchStatus(), 300);
   }
 
-  // ── Background ─────────────────────────────────────────────────────────
   drawOffice() {
-    const g  = this._bgG;
-    const fg = this._furG;
-    const ds = this._deskG;
-    const dc = this._decG;
-
-    // canvas background (walls / corridor)
+    const g=this._bgG, fr=this._furG, ds=this._dskG, dc=this._decG;
     g.fillStyle(0x040707); g.fillRect(0,0,CW,CH);
 
-    Object.entries(ROOMS).forEach(([dept, r]) => {
-      const d = DEPT[dept];
-
-      // Room floor (warm wood plank tiles)
+    Object.entries(ROOMS).forEach(([dept,r]) => {
+      const d=DEPT[dept];
+      // Floor tiles
       const tH=20, tW=28;
-      for (let ty=r.y+50; ty<r.y+r.h; ty+=tH) {
-        for (let tx=r.x; tx<r.x+r.w; tx+=tW) {
-          const alt = ((Math.floor(ty/tH)+Math.floor(tx/tW))%2===0);
-          g.fillStyle(alt?d.floor1:d.floor2, 0.85);
+      for (let ty=r.y+50;ty<r.y+r.h;ty+=tH)
+        for (let tx=r.x;tx<r.x+r.w;tx+=tW) {
+          g.fillStyle(((Math.floor(ty/tH)+Math.floor(tx/tW))%2===0)?d.floor1:d.floor2, 0.85);
           g.fillRect(tx, ty, tW-1, tH-1);
         }
-      }
-      // Plank grain lines (subtle horizontal)
-      g.lineStyle(1, d.floor2, 0.25);
-      for (let ty=r.y+50; ty<r.y+r.h; ty+=tH) {
-        g.moveTo(r.x,ty+tH/2); g.lineTo(r.x+r.w,ty+tH/2); g.strokePath();
-      }
-
-      // Ceiling band
-      g.fillStyle(0x0a0e0a,1); g.fillRect(r.x, r.y, r.w, 50);
-      // Ceiling-to-wall shadow strip
-      g.fillStyle(0x000000, 0.4); g.fillRect(r.x, r.y+48, r.w, 6);
-
-      // Fluorescent ceiling lights
-      const numL = Math.max(1, Math.floor(r.w/80));
-      const lSp  = r.w/(numL+1);
-      for (let i=1;i<=numL;i++) {
-        const lx = r.x + lSp*i;
-        // Fixture housing
+      g.lineStyle(1,d.floor2,0.2);
+      for (let ty=r.y+50;ty<r.y+r.h;ty+=tH) { g.moveTo(r.x,ty+tH/2); g.lineTo(r.x+r.w,ty+tH/2); g.strokePath(); }
+      // Ceiling
+      g.fillStyle(0x0a0e0a); g.fillRect(r.x,r.y,r.w,50);
+      g.fillStyle(0x000000,0.4); g.fillRect(r.x,r.y+48,r.w,6);
+      // Fluorescent lights
+      const nL=Math.max(1,Math.floor(r.w/75)), lSp=r.w/(nL+1);
+      for (let i=1;i<=nL;i++) {
+        const lx=r.x+lSp*i;
         g.fillStyle(0x1a1a1a); g.fillRect(lx-22,r.y+8,44,8);
-        // Tube glow spread
-        g.fillStyle(0xffffc8, 0.06); g.fillCircle(lx,r.y+14,50);
-        g.fillStyle(0xffffc8, 0.04); g.fillCircle(lx,r.y+14,80);
-        // Tube bright
+        g.fillStyle(0xffffc8,0.06); g.fillCircle(lx,r.y+14,55);
         g.fillStyle(0xffffee,0.95); g.fillRect(lx-20,r.y+10,40,5);
-        // Tube highlight
         g.fillStyle(0xffffff,0.7);  g.fillRect(lx-18,r.y+10,36,2);
       }
-
       // Room border
-      g.lineStyle(2, d.wall, 0.7); g.strokeRect(r.x, r.y, r.w, r.h);
-      // Inner shadow on top
-      g.lineStyle(1, d.wall, 0.2); g.strokeRect(r.x+2, r.y+2, r.w-4, 50);
+      g.lineStyle(2,d.wall,0.65); g.strokeRect(r.x,r.y,r.w,r.h);
+      g.lineStyle(1,d.wall,0.15); g.strokeRect(r.x+2,r.y+2,r.w-4,50);
     });
 
-    // Thick wall dividers between rooms (drawn on top of floors)
-    const wallXs = [237, 493, 741, 927];
-    wallXs.forEach(wx => {
-      g.fillStyle(0x050808); g.fillRect(wx, 38, 18, 454);
-      // Inner wall trim
-      g.fillStyle(0x111111, 0.8); g.fillRect(wx+1, 38, 2, 454);
-      g.fillStyle(0x111111, 0.8); g.fillRect(wx+15, 38, 2, 454);
-      // Door opening in center of each wall
-      const doorY = 220, doorH = 90;
-      const adjDept = wx < 500 ? 'sachiko' : wx < 750 ? 'xmkt' : wx < 930 ? 'note' : 'bizdev';
-      g.fillStyle(DEPT[adjDept].floor2, 0.5);
-      g.fillRect(wx+3, doorY, 12, doorH);
-      // Door frame top/bottom
-      g.fillStyle(0x3a3020, 0.8);
-      g.fillRect(wx+2, doorY-2, 14, 3);
-      g.fillRect(wx+2, doorY+doorH, 14, 3);
+    // Wall dividers
+    const wallXs = [228, 542, 751, 985, 1169];
+    const wallW  = [14,  14,  14,  14,  14];
+    wallXs.forEach((wx,i) => {
+      g.fillStyle(0x050808); g.fillRect(wx,38,wallW[i],454);
+      g.fillStyle(0x111111,0.8); g.fillRect(wx+1,38,2,454);
+      g.fillStyle(0x111111,0.8); g.fillRect(wx+wallW[i]-3,38,2,454);
+      g.fillStyle(0x3a3020,0.7);
+      g.fillRect(wx+2,225,wallW[i]-4,3);
+      g.fillRect(wx+2,315,wallW[i]-4,3);
     });
 
-    // Windows on outer walls
+    // Windows
     this.drawWindow(g, ROOMS.sachiko.x+3, 115);
     this.drawWindow(g, ROOMS.external.x+ROOMS.external.w-35, 115);
 
-    // Whiteboards on back walls
-    Object.entries(ROOMS).forEach(([dept, r]) => {
-      this.drawWhiteboard(g, r.x + r.w/2 - 28, r.y + 58, DEPT[dept].wall);
+    // Whiteboards
+    Object.entries(ROOMS).forEach(([dept,r]) => {
+      this.drawWhiteboard(g, r.x+r.w/2-28, r.y+58, DEPT[dept].wall);
     });
 
-    // Baseboard at bottom
-    g.fillStyle(0x0a0e0a, 0.9);
-    Object.entries(ROOMS).forEach(([_, r]) => {
-      g.fillRect(r.x, r.y+r.h-10, r.w, 10);
-      g.lineStyle(1, 0x1a2a1a, 0.5);
-      g.moveTo(r.x, r.y+r.h-10); g.lineTo(r.x+r.w, r.y+r.h-10); g.strokePath();
+    // Baseboard
+    Object.entries(ROOMS).forEach(([_,r]) => {
+      g.fillStyle(0x0a0e0a,0.9); g.fillRect(r.x,r.y+r.h-10,r.w,10);
+      g.lineStyle(1,0x1a2a1a,0.4); g.moveTo(r.x,r.y+r.h-10); g.lineTo(r.x+r.w,r.y+r.h-10); g.strokePath();
     });
 
-    // Dept labels as Phaser text
-    Object.entries(ROOMS).forEach(([dept, r]) => {
-      this.add.text(r.x+r.w/2, r.y+25, DEPT[dept].label, {
-        fontSize:'7px', color:'#d0ffd0', fontFamily:'Courier New', align:'center'
-      }).setOrigin(0.5).setDepth(6);
+    // Dept labels
+    Object.entries(ROOMS).forEach(([dept,r]) => {
+      this.add.text(r.x+r.w/2, r.y+26, DEPT[dept].label,
+        {fontSize:'7px', color:'#d0ffd0', fontFamily:'Courier New'}).setOrigin(0.5).setDepth(6);
     });
 
-    // Static desk furniture (chair back + desk base at depth 1, desk surface at depth 3)
-    Object.entries(AGENTS_CFG).forEach(([id, cfg]) => {
-      const d = DEPT[cfg.dept];
-      drawChairBack(fg, cfg.x, cfg.y, d.wall);
-      drawDeskBase(fg, cfg.x, cfg.y);
+    // Static desk furniture
+    Object.entries(AGENTS_CFG).forEach(([_,cfg]) => {
+      const d=DEPT[cfg.dept];
+      drawChairBack(fr, cfg.x, cfg.y, d.wall);
+      drawDeskBase(fr, cfg.x, cfg.y);
       drawDeskSurface(ds, cfg.x, cfg.y, d.wall);
     });
 
     // Decorations
-    Object.entries(ROOMS).forEach(([dept, r]) => {
-      drawPlant(dc, r.x+14,       r.y+r.h-28);
-      drawPlant(dc, r.x+r.w-14,   r.y+r.h-28);
+    Object.entries(ROOMS).forEach(([_,r]) => {
+      drawPlant(dc, r.x+14,     r.y+r.h-28);
+      drawPlant(dc, r.x+r.w-14, r.y+r.h-28);
     });
-    drawCooler(dc, ROOMS.sachiko.x+ROOMS.sachiko.w-18, 370);
-    drawCooler(dc, ROOMS.note.x+ROOMS.note.w-18, 370);
-    drawBookshelf(dc, ROOMS.bizdev.x+8, r_y(ROOMS.bizdev)+58);
-    drawBookshelf(dc, ROOMS.external.x+8, r_y(ROOMS.external)+58);
+    drawCooler(dc, ROOMS.sachiko.x+ROOMS.sachiko.w-15, 370);
+    drawCooler(dc, ROOMS.content.x+ROOMS.content.w-15, 270);
+    drawCooler(dc, ROOMS.tenshi.x+ROOMS.tenshi.w-15, 370);
+    drawBookshelf(dc, ROOMS.sales.x+8,    ROOMS.sales.y+58);
+    drawBookshelf(dc, ROOMS.bizdev.x+8,   ROOMS.bizdev.y+58);
+    drawBookshelf(dc, ROOMS.external.x+8, ROOMS.external.y+58);
   }
 
   drawWindow(g, x, y) {
     const w=30, h=45;
     g.fillStyle(0x2a3030); g.fillRect(x,y,w,h);
-    // Sky gradient (fake with layers)
     g.fillStyle(0x5a8acc,0.8); g.fillRect(x+2,y+2,w-4,h-4);
     g.fillStyle(0x7aaade,0.5); g.fillRect(x+2,y+2,(w-5)/2,(h-5)/2);
     g.fillStyle(0x4a72b0,0.4); g.fillRect(x+2+(w-5)/2+1,y+2,(w-5)/2,(h-5)/2);
-    g.fillStyle(0x6090c0,0.3); g.fillRect(x+2,y+2+(h-5)/2+1,w-4,(h-5)/2);
-    // Window cross
     g.fillStyle(0x2a3030,0.9);
-    g.fillRect(x,    y+h/2-1, w, 2);
-    g.fillRect(x+w/2-1, y, 2, h);
-    // Sill
-    g.fillStyle(0x3a4040); g.fillRect(x-2, y+h, w+4, 4);
-    // Inner glow (daylight)
-    g.fillStyle(0xaaccff,0.04); g.fillCircle(x+w/2, y+h/2, 30);
+    g.fillRect(x,y+h/2-1,w,2); g.fillRect(x+w/2-1,y,2,h);
+    g.fillStyle(0x3a4040); g.fillRect(x-2,y+h,w+4,4);
+    g.fillStyle(0xaaccff,0.04); g.fillCircle(x+w/2,y+h/2,30);
   }
 
   drawWhiteboard(g, x, y, wallColor) {
-    const w=56, h=32;
+    const w=56, h=30;
     g.fillStyle(0x1a1a1a); g.fillRect(x,y,w,h);
     g.fillStyle(0xeaeaea,0.92); g.fillRect(x+2,y+2,w-4,h-4);
-    // Colored writing lines
     const r=(wallColor>>16)&0xff, gr=(wallColor>>8)&0xff, b=wallColor&0xff;
-    g.lineStyle(1, (r<<16)|(gr<<8)|b, 0.5);
-    [8,16,22].forEach(ly => {
-      const lw = 10+Math.sin(y+ly)*12+12;
+    g.lineStyle(1,(r<<16)|(gr<<8)|b,0.5);
+    [8,16,22].forEach(ly=>{
+      const lw=12+Math.sin(y+ly)*10+12;
       g.moveTo(x+5,y+ly); g.lineTo(x+5+lw,y+ly); g.strokePath();
     });
-    // A small diagram/box
-    g.lineStyle(1, 0x6666aa, 0.4);
-    g.strokeRect(x+38, y+8, 12, 10);
-    // Marker tray
+    g.lineStyle(1,0x6666aa,0.4); g.strokeRect(x+38,y+8,12,10);
     g.fillStyle(0x2a2a2a); g.fillRect(x,y+h,w,4);
-    // Marker on tray
     g.fillStyle(0xcc3030); g.fillRect(x+8,y+h+1,6,2);
     g.fillStyle(0x3030cc); g.fillRect(x+18,y+h+1,6,2);
   }
 
-  // ── Agent setup ─────────────────────────────────────────────────────────
   buildAgent(id, cfg) {
-    const d  = DEPT[cfg.dept];
-    const c  = this.add.container(cfg.x, cfg.y).setDepth(2);
-
-    const glow = this.add.graphics();
-    glow.fillStyle(SC.idle, 0.1); glow.fillCircle(0,0,14);
-    c.add(glow);
-
-    const body = this.add.graphics();
-    drawCharIdle(body, 0, 0, d.wall);
-    c.add(body);
-
-    // Floating labels (separate, follow container pos in update)
-    const nameT = this.add.text(cfg.x, cfg.y+34, cfg.name, {
-      fontSize:'7px', color:'#b0ddb0', fontFamily:'Courier New',
-    }).setOrigin(0.5).setDepth(8);
-    const badge = this.add.text(cfg.x, cfg.y-33, 'idle', {
-      fontSize:'6px', color:'#6b7280', fontFamily:'Courier New',
-      backgroundColor:'#050808', padding:{x:2,y:1},
-    }).setOrigin(0.5).setDepth(9);
-
-    this.agentObjs[id] = {
-      c, glow, body, nameT, badge,
-      homeX:cfg.x, homeY:cfg.y, dept:cfg.dept,
-      walkTarget: null,
-      walkPause:  Math.random()*2000,
-      facing:     true,
-      walkFrame:  Math.floor(Math.random()*4),
-      lastFrameT: -999,
-      lastStatus: '',
-    };
+    const d=DEPT[cfg.dept];
+    const c=this.add.container(cfg.x,cfg.y).setDepth(2);
+    const glow=this.add.graphics(); glow.fillStyle(SC.idle,0.1); glow.fillCircle(0,0,14); c.add(glow);
+    const body=this.add.graphics(); drawCharIdle(body,0,0,d.wall); c.add(body);
+    const nameT=this.add.text(cfg.x,cfg.y+34,cfg.name,{fontSize:'7px',color:'#b0ddb0',fontFamily:'Courier New'}).setOrigin(0.5).setDepth(8);
+    const badge=this.add.text(cfg.x,cfg.y-33,'idle',{fontSize:'6px',color:'#6b7280',fontFamily:'Courier New',backgroundColor:'#050808',padding:{x:2,y:1}}).setOrigin(0.5).setDepth(9);
+    this.agentObjs[id]={c,glow,body,nameT,badge,homeX:cfg.x,homeY:cfg.y,dept:cfg.dept,walkTarget:null,walkPause:Math.random()*2000,facing:true,walkFrame:Math.floor(Math.random()*4),lastFrameT:-999,lastStatus:''};
   }
 
-  // ── Data fetch ──────────────────────────────────────────────────────────
   fetchStatus() {
     fetch('/api/status').then(r=>r.json()).then(data=>{
-      Object.entries(data.agents||{}).forEach(([id,a]) => {
-        window._agentStates[id] = a;
-        const obj = this.agentObjs[id]; if(!obj) return;
-        const sc = SC[a.status]||SC.idle;
-        obj.badge
-          .setText(a.status==='working'&&a.task ? a.task.slice(0,20) : a.status)
-          .setColor('#'+sc.toString(16).padStart(6,'0'));
+      Object.entries(data.agents||{}).forEach(([id,a])=>{
+        window._agentStates[id]=a;
+        const obj=this.agentObjs[id]; if(!obj)return;
+        const sc=SC[a.status]||SC.idle;
+        obj.badge.setText(a.status==='working'&&a.task?a.task.slice(0,20):a.status).setColor('#'+sc.toString(16).padStart(6,'0'));
       });
       window._updateUI(data);
     }).catch(()=>{});
   }
 
-  // ── Animation loop (60fps) ──────────────────────────────────────────────
   update(time, delta) {
-    if (!delta || delta>250) return;
-    const WALK_SPD   = 38;  // px/s idle
-    const RETURN_SPD = 75;  // px/s returning to desk
-    const FRAME_MS   = 200; // walk animation frame interval
-
-    Object.entries(this.agentObjs).forEach(([id, obj]) => {
-      const st       = (window._agentStates[id]||{}).status || 'idle';
-      const goHome   = (st==='working'||st==='done');
-      const d        = DEPT[AGENTS_CFG[id].dept];
-
-      // ── Decide target ──────────────────────────────────────────────────
+    if(!delta||delta>250) return;
+    const WALK=38, RETURN=75, FMS=200;
+    Object.entries(this.agentObjs).forEach(([id,obj])=>{
+      const st=(window._agentStates[id]||{}).status||'idle';
+      const goHome=(st==='working'||st==='done');
+      const d=DEPT[AGENTS_CFG[id].dept];
       let tX=obj.c.x, tY=obj.c.y;
-      if (goHome) {
-        tX=obj.homeX; tY=obj.homeY;
-      } else {
-        // Wander around room
-        const atT = obj.walkTarget &&
-          Math.abs(obj.c.x-obj.walkTarget.x)<6 &&
-          Math.abs(obj.c.y-obj.walkTarget.y)<6;
-        if (atT || !obj.walkTarget) {
-          obj.walkPause -= delta;
-          if (obj.walkPause<=0) {
-            const b = WALK_BOUNDS[AGENTS_CFG[id].dept];
-            obj.walkTarget = {
-              x: b.x1 + Math.random()*(b.x2-b.x1),
-              y: b.y1 + Math.random()*(b.y2-b.y1),
-            };
-            obj.walkPause = 500 + Math.random()*2800;
+      if (goHome) { tX=obj.homeX; tY=obj.homeY; }
+      else {
+        const atT=obj.walkTarget&&Math.abs(obj.c.x-obj.walkTarget.x)<6&&Math.abs(obj.c.y-obj.walkTarget.y)<6;
+        if(atT||!obj.walkTarget){
+          obj.walkPause-=delta;
+          if(obj.walkPause<=0){
+            const b=WALK_BOUNDS[AGENTS_CFG[id].dept];
+            obj.walkTarget={x:b.x1+Math.random()*(b.x2-b.x1),y:b.y1+Math.random()*(b.y2-b.y1)};
+            obj.walkPause=500+Math.random()*2800;
           }
         }
-        if (obj.walkTarget) { tX=obj.walkTarget.x; tY=obj.walkTarget.y; }
+        if(obj.walkTarget){tX=obj.walkTarget.x;tY=obj.walkTarget.y;}
       }
-
-      // ── Move ───────────────────────────────────────────────────────────
-      const dx=tX-obj.c.x, dy=tY-obj.c.y;
-      const dist=Math.sqrt(dx*dx+dy*dy);
-      const spd=(goHome?RETURN_SPD:WALK_SPD);
+      const dx=tX-obj.c.x, dy=tY-obj.c.y, dist=Math.sqrt(dx*dx+dy*dy);
       const moving=dist>2.5;
-      if (moving) {
-        const step=Math.min(spd*delta/1000, dist);
-        obj.c.x += (dx/dist)*step;
-        obj.c.y += (dy/dist)*step;
-        if (Math.abs(dx)>1) obj.facing = dx>0;
-      }
-
-      // Sync floating labels
-      obj.nameT.setPosition(obj.c.x, obj.c.y+34);
-      obj.badge.setPosition(obj.c.x, obj.c.y-33);
-
-      // ── Sprite redraw (every FRAME_MS) ─────────────────────────────────
-      const isAtDesk = Math.abs(obj.c.x-obj.homeX)<5 && Math.abs(obj.c.y-obj.homeY)<5;
-      const seated   = isAtDesk && goHome;
-      const timeForFrame = (time-obj.lastFrameT)>FRAME_MS;
-
-      if (timeForFrame) {
-        obj.lastFrameT = time;
-        if (moving) obj.walkFrame=(obj.walkFrame+1)%4;
+      if(moving){const step=Math.min((goHome?RETURN:WALK)*delta/1000,dist);obj.c.x+=(dx/dist)*step;obj.c.y+=(dy/dist)*step;if(Math.abs(dx)>1)obj.facing=dx>0;}
+      obj.nameT.setPosition(obj.c.x,obj.c.y+34);
+      obj.badge.setPosition(obj.c.x,obj.c.y-33);
+      const isAtDesk=Math.abs(obj.c.x-obj.homeX)<5&&Math.abs(obj.c.y-obj.homeY)<5;
+      const seated=isAtDesk&&goHome;
+      if((time-obj.lastFrameT)>FMS){
+        obj.lastFrameT=time;
+        if(moving)obj.walkFrame=(obj.walkFrame+1)%4;
         obj.body.clear();
-        if (seated) {
-          drawCharSeated(obj.body, 0, 0, d.wall, st==='working');
-        } else if (moving) {
-          drawCharWalk(obj.body, 0, 0, d.wall, obj.walkFrame, obj.facing);
-        } else {
-          drawCharIdle(obj.body, 0, 0, d.wall);
-        }
+        if(seated) drawCharSeated(obj.body,0,0,d.wall);
+        else if(moving) drawCharWalk(obj.body,0,0,d.wall,obj.walkFrame,obj.facing);
+        else drawCharIdle(obj.body,0,0,d.wall);
       }
-
-      // ── Glow ───────────────────────────────────────────────────────────
-      const sc = SC[st]||SC.idle;
-      if (st==='working') {
-        const pulse = 0.28+0.12*Math.sin(time*0.0028);
-        const pr    = 18+4*Math.sin(time*0.0028);
+      const sc=SC[st]||SC.idle;
+      if(st==='working'){
+        const pulse=0.28+0.12*Math.sin(time*0.0028), pr=18+4*Math.sin(time*0.0028);
+        obj.glow.clear(); obj.glow.fillStyle(sc,pulse); obj.glow.fillCircle(0,0,pr);
+        obj.glow.fillStyle(sc,0.05); obj.glow.fillCircle(0,0,34);
+      } else if(st!==obj.lastStatus){
         obj.glow.clear();
-        obj.glow.fillStyle(sc, pulse); obj.glow.fillCircle(0,0,pr);
-        obj.glow.fillStyle(sc, 0.05); obj.glow.fillCircle(0,0,34);
-      } else if (st !== obj.lastStatus) {
-        obj.glow.clear();
-        const a  = st==='done'?0.28:st==='error'?0.32:0.08;
-        const pr = st==='done'?16:st==='error'?16:12;
-        obj.glow.fillStyle(sc,a); obj.glow.fillCircle(0,0,pr);
+        obj.glow.fillStyle(sc, st==='done'?0.28:st==='error'?0.32:0.08);
+        obj.glow.fillCircle(0,0, st==='done'?16:st==='error'?16:12);
       }
-      obj.lastStatus = st;
+      obj.lastStatus=st;
     });
   }
 }
 
-// ── Character draw functions ─────────────────────────────────────────────────
-function drawCharIdle(g, x, y, shirt) {
-  g.fillStyle(0x2a1a08); g.fillRect(x-2*S,y-10*S,4*S,S);       // hair
-  g.fillStyle(0xf5cba7); g.fillRect(x-2*S,y-9*S,4*S,4*S);       // face
-  g.fillStyle(0x1a1a1a); g.fillRect(x-S,  y-8*S, S,S);          // eye L
-  g.fillRect(x+S,        y-8*S, S,S);                            // eye R
-  g.fillStyle(shirt);    g.fillRect(x-2*S,y-5*S,4*S,5*S);       // torso
-  g.fillRect(x-3*S,y-5*S,S,3*S);                                  // arm L
-  g.fillRect(x+2*S,y-5*S,S,3*S);                                  // arm R
-  g.fillStyle(0xf5cba7); g.fillRect(x-3*S,y-2*S,S,S);           // hand L
-  g.fillRect(x+2*S,y-2*S,S,S);                                    // hand R
-  g.fillStyle(0x2c3e50); g.fillRect(x-2*S,y,2*S,3*S);           // leg L
-  g.fillRect(x,y,2*S,3*S);                                        // leg R
-  g.fillStyle(0x1a1a1a); g.fillRect(x-2*S,y+3*S,2*S,S);        // shoe L
-  g.fillRect(x,y+3*S,2*S,S);                                      // shoe R
+// ── Character draw ────────────────────────────────────────────────────────────
+function drawCharIdle(g,x,y,shirt){
+  g.fillStyle(0x2a1a08);g.fillRect(x-2*S,y-10*S,4*S,S);
+  g.fillStyle(0xf5cba7);g.fillRect(x-2*S,y-9*S,4*S,4*S);
+  g.fillStyle(0x1a1a1a);g.fillRect(x-S,y-8*S,S,S);g.fillRect(x+S,y-8*S,S,S);
+  g.fillStyle(shirt);g.fillRect(x-2*S,y-5*S,4*S,5*S);
+  g.fillRect(x-3*S,y-5*S,S,3*S);g.fillRect(x+2*S,y-5*S,S,3*S);
+  g.fillStyle(0xf5cba7);g.fillRect(x-3*S,y-2*S,S,S);g.fillRect(x+2*S,y-2*S,S,S);
+  g.fillStyle(0x2c3e50);g.fillRect(x-2*S,y,2*S,3*S);g.fillRect(x,y,2*S,3*S);
+  g.fillStyle(0x1a1a1a);g.fillRect(x-2*S,y+3*S,2*S,S);g.fillRect(x,y+3*S,2*S,S);
 }
-
-function drawCharWalk(g, x, y, shirt, frame, faceRight) {
-  const bob = (frame%2)?-1:0;
-  // Hair
-  g.fillStyle(0x2a1a08); g.fillRect(x-2*S,y-10*S+bob,4*S,S);
-  // Face
-  g.fillStyle(0xf5cba7); g.fillRect(x-2*S,y-9*S+bob,4*S,4*S);
-  // Eyes (shifted toward facing direction)
+function drawCharWalk(g,x,y,shirt,frame,fR){
+  const bob=(frame%2)?-1:0;
+  g.fillStyle(0x2a1a08);g.fillRect(x-2*S,y-10*S+bob,4*S,S);
+  g.fillStyle(0xf5cba7);g.fillRect(x-2*S,y-9*S+bob,4*S,4*S);
   g.fillStyle(0x1a1a1a);
-  const eOff = faceRight ? S : -2*S;
-  g.fillRect(x+eOff,   y-8*S+bob, S,S);
-  g.fillRect(x+eOff+S, y-8*S+bob, S,S);
-  // Torso
-  g.fillStyle(shirt); g.fillRect(x-2*S,y-5*S+bob,4*S,5*S);
-  // Arms swing (opposite to legs)
-  const aFwd = (frame<2)?-S:0;
-  g.fillStyle(shirt);
-  g.fillRect(x-3*S, y-5*S+bob+aFwd,     S,3*S);
-  g.fillRect(x+2*S, y-5*S+bob+(S-aFwd), S,3*S);
-  g.fillStyle(0xf5cba7);
-  g.fillRect(x-3*S, y-2*S+bob+aFwd,     S,S);
-  g.fillRect(x+2*S, y-2*S+bob+(S-aFwd), S,S);
-  // Legs alternate
+  const eO=fR?S:-2*S; g.fillRect(x+eO,y-8*S+bob,S,S);g.fillRect(x+eO+S,y-8*S+bob,S,S);
+  g.fillStyle(shirt);g.fillRect(x-2*S,y-5*S+bob,4*S,5*S);
+  const aF=(frame<2)?-S:0;
+  g.fillStyle(shirt);g.fillRect(x-3*S,y-5*S+bob+aF,S,3*S);g.fillRect(x+2*S,y-5*S+bob+(S-aF),S,3*S);
+  g.fillStyle(0xf5cba7);g.fillRect(x-3*S,y-2*S+bob+aF,S,S);g.fillRect(x+2*S,y-2*S+bob+(S-aF),S,S);
   g.fillStyle(0x2c3e50);
-  if (frame===0||frame===2) {
-    // right foot forward
-    g.fillRect(x-2*S, y+bob,    2*S,2*S);
-    g.fillRect(x-2*S, y+2*S+bob,2*S,S);
-    g.fillRect(x,     y-S+bob,  2*S,3*S);
-  } else {
-    g.fillRect(x-2*S, y-S+bob,  2*S,3*S);
-    g.fillRect(x,     y+bob,    2*S,2*S);
-    g.fillRect(x,     y+2*S+bob,2*S,S);
-  }
+  if(frame===0||frame===2){g.fillRect(x-2*S,y+bob,2*S,2*S);g.fillRect(x-2*S,y+2*S+bob,2*S,S);g.fillRect(x,y-S+bob,2*S,3*S);}
+  else{g.fillRect(x-2*S,y-S+bob,2*S,3*S);g.fillRect(x,y+bob,2*S,2*S);g.fillRect(x,y+2*S+bob,2*S,S);}
   g.fillStyle(0x1a1a1a);
-  if (frame===0||frame===2) {
-    g.fillRect(x-2*S, y+2*S+bob,2*S,S);
-    g.fillRect(x,     y+2*S+bob,3*S,S);
-  } else {
-    g.fillRect(x-2*S, y+2*S+bob,3*S,S);
-    g.fillRect(x,     y+2*S+bob,2*S,S);
-  }
+  if(frame===0||frame===2){g.fillRect(x-2*S,y+2*S+bob,2*S,S);g.fillRect(x,y+2*S+bob,3*S,S);}
+  else{g.fillRect(x-2*S,y+2*S+bob,3*S,S);g.fillRect(x,y+2*S+bob,2*S,S);}
+}
+function drawCharSeated(g,x,y,shirt){
+  g.fillStyle(0x2a1a08);g.fillRect(x-2*S,y-10*S,4*S,S);
+  g.fillStyle(0xf5cba7);g.fillRect(x-2*S,y-9*S,4*S,4*S);
+  g.fillStyle(0x1a1a1a);g.fillRect(x-S,y-8*S,S,S);g.fillRect(x+S,y-8*S,S,S);
+  g.fillStyle(shirt);g.fillRect(x-2*S,y-5*S,4*S,4*S);
+  g.fillRect(x-5*S,y-2*S,3*S,2*S);g.fillRect(x+2*S,y-2*S,3*S,2*S);
+  g.fillStyle(0xf5cba7);g.fillRect(x-6*S,y-2*S,S,2*S);g.fillRect(x+5*S,y-2*S,S,2*S);
 }
 
-function drawCharSeated(g, x, y, shirt, typing) {
-  // Upper body only — desk surface (depth 3) hides legs
-  g.fillStyle(0x2a1a08); g.fillRect(x-2*S,y-10*S,4*S,S);        // hair
-  g.fillStyle(0xf5cba7); g.fillRect(x-2*S,y-9*S, 4*S,4*S);       // face
-  g.fillStyle(0x1a1a1a); g.fillRect(x-S,  y-8*S, S,S);           // eye L
-  g.fillRect(x+S,        y-8*S,S,S);                              // eye R
-  g.fillStyle(shirt);    g.fillRect(x-2*S,y-5*S,4*S,4*S);        // torso
-  // Arms reaching forward onto desk (at y-2*S = desk surface level)
-  g.fillRect(x-5*S,y-2*S,3*S,2*S);  // arm L
-  g.fillRect(x+2*S,y-2*S,3*S,2*S);  // arm R
-  g.fillStyle(0xf5cba7);
-  g.fillRect(x-6*S,y-2*S,S,2*S);    // hand L
-  g.fillRect(x+5*S,y-2*S,S,2*S);    // hand R
+// ── Furniture draw ───────────────────────────────────────────────────────────
+function drawChairBack(g,x,y,wall){
+  const c=darken(wall,0.55);
+  g.fillStyle(c,0.92);g.fillRect(x-12,y-35,24,20);
+  g.fillStyle(c,0.5);g.fillRect(x-12,y-35,24,3);
+  g.fillStyle(0x1a1a22);g.fillRect(x-15,y-24,4,12);g.fillRect(x+11,y-24,4,12);
+  g.fillStyle(0x222222);g.fillRect(x-10,y+16,3,10);g.fillRect(x+7,y+16,3,10);
+  g.fillStyle(c,0.7);g.fillRect(x-13,y+14,26,6);
 }
-
-// ── Static furniture helpers ────────────────────────────────────────────────
-function drawChairBack(g, x, y, wall) {
-  const c = darken(wall, 0.55);
-  // Chair back rectangle (depth 1 = behind character)
-  g.fillStyle(c, 0.92); g.fillRect(x-12,y-35,24,20);
-  g.fillStyle(c, 0.5);  g.fillRect(x-12,y-35,24,3);   // top highlight
-  // Armrests
-  g.fillStyle(0x1a1a22); g.fillRect(x-15,y-24,4,12);
-  g.fillStyle(0x1a1a22); g.fillRect(x+11, y-24,4,12);
-  // Chair legs
-  g.fillStyle(0x222222);
-  g.fillRect(x-10,y+16,3,10);
-  g.fillRect(x+7, y+16,3,10);
-  // Seat
-  g.fillStyle(c, 0.7); g.fillRect(x-13,y+14,26,6);
+function drawDeskBase(g,x,y){
+  g.fillStyle(0x4a2808);g.fillRect(x-26,y+12,4,10);g.fillRect(x+22,y+12,4,10);
+  g.fillStyle(0x3a1a06,0.8);g.fillRect(x-28,y+10,56,4);
 }
-
-function drawDeskBase(g, x, y) {
-  // Desk legs (depth 1 = behind character)
-  g.fillStyle(0x4a2808);
-  g.fillRect(x-26,y+12,4,10);
-  g.fillRect(x+22, y+12,4,10);
-  // Desk side panel (3D look)
-  g.fillStyle(0x3a1a06,0.8); g.fillRect(x-28,y+10,56,4);
+function drawDeskSurface(g,x,y,wall){
+  g.fillStyle(0x7a4820);g.fillRect(x-28,y-7,56,15);
+  g.fillStyle(0x9a6030,0.6);g.fillRect(x-28,y-7,56,3);
+  g.fillStyle(0x2a0e00,0.5);g.fillRect(x-28,y+6,56,2);
+  g.fillStyle(0xeeeedd,0.8);g.fillRect(x+6,y-5,15,10);
+  g.fillStyle(0xddddcc,0.5);g.fillRect(x+7,y-4,11,2);
+  g.fillStyle(0x101010);g.fillRect(x-1,y-20,2,14);
+  g.fillStyle(0x181820);g.fillRect(x-7,y-20,14,4);
+  g.fillStyle(0x0d0d1a);g.fillRect(x-13,y-44,26,25);
+  g.lineStyle(1,0x2a2a40,0.9);g.strokeRect(x-13,y-44,26,25);
+  const r=(wall>>16)&0xff,gr=(wall>>8)&0xff,b=wall&0xff;
+  const sc=(Math.max(0,r-80)<<16)|(Math.max(0,gr-60)<<8)|Math.max(50,b+20);
+  g.fillStyle(sc,0.95);g.fillRect(x-12,y-43,24,23);
+  g.fillStyle(0xffffff,0.1);g.fillRect(x-12,y-43,24,6);
 }
-
-function drawDeskSurface(g, x, y, wall) {
-  // Desk surface (depth 3 = IN FRONT of character, visually hides legs when seated)
-  // Surface
-  g.fillStyle(0x7a4820); g.fillRect(x-28,y-7,56,15);
-  // Highlight strip
-  g.fillStyle(0x9a6030,0.6); g.fillRect(x-28,y-7,56,3);
-  // Shadow underside
-  g.fillStyle(0x2a0e00,0.5); g.fillRect(x-28,y+6,56,2);
-  // Papers
-  g.fillStyle(0xeeeedd,0.8); g.fillRect(x+6,y-5,15,10);
-  g.fillStyle(0xddddcc,0.5); g.fillRect(x+7,y-4,11,2);
-  g.fillStyle(0xddddcc,0.3); g.fillRect(x+7,y-1,8,1);
-  // Monitor neck
-  g.fillStyle(0x101010); g.fillRect(x-1,y-20,2,14);
-  // Monitor base
-  g.fillStyle(0x181820); g.fillRect(x-7,y-20,14,4);
-  // Monitor frame (depth 3 = in front of character's head too)
-  g.fillStyle(0x0d0d1a); g.fillRect(x-13,y-44,26,25);
-  g.lineStyle(1,0x2a2a40,0.9); g.strokeRect(x-13,y-44,26,25);
-  // Screen (dept-colored tint)
-  const r=(wall>>16)&0xff, gr=(wall>>8)&0xff, b=wall&0xff;
-  const sc = (Math.max(0,r-80)<<16)|(Math.max(0,gr-60)<<8)|Math.max(50,b+20);
-  g.fillStyle(sc,0.95); g.fillRect(x-12,y-43,24,23);
-  g.fillStyle(0xffffff,0.1); g.fillRect(x-12,y-43,24,6); // screen glare
+function drawPlant(g,x,y){
+  g.fillStyle(0x7a4010);g.fillRect(x-5,y+6,10,10);
+  g.fillStyle(0x2a1005);g.fillRect(x-4,y+7,8,4);
+  g.fillStyle(0x2a8030);g.fillCircle(x,y,10);
+  g.fillStyle(0x1aaa28);g.fillCircle(x-6,y+3,6);g.fillCircle(x+6,y+3,6);
+  g.fillStyle(0x35cc40,0.4);g.fillCircle(x,y-4,6);
 }
-
-function drawPlant(g, x, y) {
-  // Pot
-  g.fillStyle(0x7a4010); g.fillRect(x-5,y+6,10,10);
-  g.fillStyle(0x9a5820,0.5); g.fillRect(x-5,y+6,10,2);
-  g.fillStyle(0x2a1005); g.fillRect(x-4,y+7,8,4);
-  // Leaves
-  g.fillStyle(0x2a8030); g.fillCircle(x,y,10);
-  g.fillStyle(0x1aaa28); g.fillCircle(x-6,y+3,6); g.fillCircle(x+6,y+3,6);
-  g.fillStyle(0x35cc40,0.45); g.fillCircle(x,y-4,6);
+function drawCooler(g,x,y){
+  g.fillStyle(0x1a3a5a);g.fillRect(x-7,y-22,14,26);
+  g.fillStyle(0x70b8e0,0.7);g.fillRect(x-5,y-20,10,11);
+  g.fillStyle(0x99d4f8,0.4);g.fillRect(x-4,y-19,4,5);
+  g.fillStyle(0x0a2a4a);g.fillRect(x-8,y+4,16,3);
+  g.fillStyle(0xcc3030);g.fillRect(x-4,y-4,3,3);
+  g.fillStyle(0x3030cc);g.fillRect(x+1,y-4,3,3);
 }
-
-function drawCooler(g, x, y) {
-  g.fillStyle(0x1a3a5a); g.fillRect(x-7,y-22,14,26);
-  g.fillStyle(0x2a5a8a,0.5); g.fillRect(x-6,y-21,5,10);
-  g.fillStyle(0x70b8e0,0.7); g.fillRect(x-5,y-20,10,11);
-  g.fillStyle(0x99d4f8,0.4); g.fillRect(x-4,y-19,4,5);
-  g.fillStyle(0x0a2a4a); g.fillRect(x-8,y+4,16,3);
-  // Buttons
-  g.fillStyle(0xcc3030); g.fillRect(x-4,y-4,3,3);
-  g.fillStyle(0x3030cc); g.fillRect(x+1, y-4,3,3);
+function drawBookshelf(g,x,y){
+  g.fillStyle(0x3a2010);g.fillRect(x,y,30,44);
+  g.fillStyle(0x2a1808);g.fillRect(x,y+21,30,2);
+  [0x8a2020,0x205a8a,0x208a40,0x8a7820,0x6a2080,0x8a4020].forEach((c,i)=>{g.fillStyle(c);g.fillRect(x+2+i*4,y+24,3,17);});
+  [0x5a2870,0x70501a,0x1a5040,0x5a1818].forEach((c,i)=>{g.fillStyle(c);g.fillRect(x+2+i*6,y+3,5,15);});
 }
+function darken(color,f){return(Math.floor(((color>>16)&0xff)*f)<<16)|(Math.floor(((color>>8)&0xff)*f)<<8)|Math.floor((color&0xff)*f);}
 
-function drawBookshelf(g, x, y) {
-  g.fillStyle(0x3a2010); g.fillRect(x,y,30,44);
-  g.fillStyle(0x2a1808); g.fillRect(x,y+21,30,2);
-  const bc=[0x8a2020,0x205a8a,0x208a40,0x8a7820,0x6a2080,0x8a4020];
-  for(let i=0;i<6;i++){g.fillStyle(bc[i]);g.fillRect(x+2+i*4,y+24,3,17);}
-  const bc2=[0x5a2870,0x70501a,0x1a5040,0x5a1818];
-  for(let i=0;i<4;i++){g.fillStyle(bc2[i]);g.fillRect(x+2+i*6,y+3,5,15);}
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-function darken(color, f) {
-  return (Math.floor(((color>>16)&0xff)*f)<<16) |
-         (Math.floor(((color>>8)&0xff)*f)<<8)  |
-          Math.floor((color&0xff)*f);
-}
-function r_y(room) { return room.y; }
-
-// ── Phaser init ──────────────────────────────────────────────────────────────
-new Phaser.Game({
-  type: Phaser.AUTO, width: CW, height: CH,
-  backgroundColor: '#040707',
-  parent: 'game-container', pixelArt: true, roundPixels: true, antialias: false,
-  scene: [OfficeScene],
-});
+new Phaser.Game({type:Phaser.AUTO,width:CW,height:CH,backgroundColor:'#040707',parent:'game-container',pixelArt:true,roundPixels:true,antialias:false,scene:[OfficeScene]});
 
 // ── Sidebar UI ───────────────────────────────────────────────────────────────
 let _currentTab='x';
-function showTab(tab){
-  _currentTab=tab;
-  document.getElementById('tab-x').classList.toggle('active',tab==='x');
-  document.getElementById('tab-note').classList.toggle('active',tab==='note');
-  document.getElementById('x-pending-list').classList.toggle('hidden',tab!=='x');
-  document.getElementById('note-pending-list').classList.toggle('hidden',tab!=='note');
-}
-
-function renderPendingX(posts) {
-  const el=document.getElementById('x-pending-list');
-  if(!posts||!posts.length){el.innerHTML='<div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成（AI副業/YouTube収益化テーマ）</div>';return;}
-  el.innerHTML=posts.map(p=>`<div class="pend-item" id="px-${p.id}">
-    <div class="pend-text">${escHtml(p.text)}</div>
-    <div class="pend-meta">${p.created_at}</div>
-    <div class="pend-actions">
-      <button class="btn-approve" onclick="approveItem('x_posts','${p.id}')">✓ 承認</button>
-      <button class="btn-reject"  onclick="rejectItem('x_posts','${p.id}')">✗ 却下</button>
-    </div></div>`).join('');
-}
-
-function renderPendingNote(drafts) {
-  const el=document.getElementById('note-pending-list');
-  if(!drafts||!drafts.length){el.innerHTML='<div class="empty-msg">承認待ちのnote記事はありません<br>毎週月曜10時に自動生成</div>';return;}
-  el.innerHTML=drafts.map(d=>`<div class="pend-item" id="nd-${d.id}">
-    <div class="pend-title">${escHtml(d.title)}</div>
-    <div class="pend-meta">${d.created_at}</div>
-    <div class="pend-actions">
-      <button class="btn-approve" onclick="previewNote('${d.id}')">👁 確認・承認</button>
-      <button class="btn-reject"  onclick="rejectItem('note_drafts','${d.id}')">✗ 却下</button>
-    </div></div>`).join('');
-}
-
-function approveItem(type,id){
-  fetch('/api/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,id})})
-    .then(()=>document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove()).catch(()=>{});
-}
-function rejectItem(type,id){
-  fetch('/api/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,id})})
-    .then(()=>document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove()).catch(()=>{});
-}
-function previewNote(id){
-  fetch('/api/note_body/'+id).then(r=>r.json()).then(data=>{
-    document.getElementById('modal-title').textContent=data.title;
-    document.getElementById('modal-body').textContent=data.body;
-    document.getElementById('modal-approve-btn').onclick=()=>{approveItem('note_drafts',id);closeModal();};
-    document.getElementById('modal-reject-btn').onclick=()=>{rejectItem('note_drafts',id);closeModal();};
-    document.getElementById('note-modal').classList.add('open');
-  }).catch(()=>{});
-}
+function showTab(t){_currentTab=t;document.getElementById('tab-x').classList.toggle('active',t==='x');document.getElementById('tab-note').classList.toggle('active',t==='note');document.getElementById('x-pending-list').classList.toggle('hidden',t!=='x');document.getElementById('note-pending-list').classList.toggle('hidden',t!=='note');}
+function renderPendingX(posts){const el=document.getElementById('x-pending-list');if(!posts||!posts.length){el.innerHTML='<div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成（AI副業/YouTube収益化）</div>';return;}el.innerHTML=posts.map(p=>`<div class="pend-item" id="px-${p.id}"><div class="pend-text">${escHtml(p.text)}</div><div class="pend-meta">${p.created_at}</div><div class="pend-actions"><button class="btn-approve" onclick="approveItem('x_posts','${p.id}')">✓ 承認</button><button class="btn-reject" onclick="rejectItem('x_posts','${p.id}')">✗ 却下</button></div></div>`).join('');}
+function renderPendingNote(drafts){const el=document.getElementById('note-pending-list');if(!drafts||!drafts.length){el.innerHTML='<div class="empty-msg">承認待ちのnote記事はありません<br>毎週月曜10時に自動生成</div>';return;}el.innerHTML=drafts.map(d=>`<div class="pend-item" id="nd-${d.id}"><div class="pend-title">${escHtml(d.title)}</div><div class="pend-meta">${d.created_at}</div><div class="pend-actions"><button class="btn-approve" onclick="previewNote('${d.id}')">👁 確認・承認</button><button class="btn-reject" onclick="rejectItem('note_drafts','${d.id}')">✗ 却下</button></div></div>`).join('');}
+function approveItem(type,id){fetch('/api/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,id})}).then(()=>document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove()).catch(()=>{});}
+function rejectItem(type,id){fetch('/api/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,id})}).then(()=>document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove()).catch(()=>{});}
+function previewNote(id){fetch('/api/note_body/'+id).then(r=>r.json()).then(data=>{document.getElementById('modal-title').textContent=data.title;document.getElementById('modal-body').textContent=data.body;document.getElementById('modal-approve-btn').onclick=()=>{approveItem('note_drafts',id);closeModal();};document.getElementById('modal-reject-btn').onclick=()=>{rejectItem('note_drafts',id);closeModal();};document.getElementById('note-modal').classList.add('open');}).catch(()=>{});}
 function closeModal(){document.getElementById('note-modal').classList.remove('open');}
-
-function updateKikuchi(data){
-  if(!data||data.error) return;
-  document.getElementById('kk-episode').textContent=data.episode||'-';
-  document.getElementById('kk-due').textContent=data.due?`納期: ${data.due}  ${data.status||''}`:'';
-  const pct=data.progress||0;
-  document.getElementById('kk-bar').style.width=pct+'%';
-  document.getElementById('kk-pct').textContent=`${pct}% (${data.done||0}/${data.total||5}章)`;
-  const checks=document.querySelectorAll('#kk-checks .check-item');
-  ['①','②','③','④','⑤'].forEach((lb,i)=>{
-    const done=i<(data.done||0);
-    checks[i].textContent=done?'✓'+lb:lb;
-    checks[i].classList.toggle('done',done);
-  });
-}
-
+function updateKikuchi(data){if(!data||data.error)return;document.getElementById('kk-episode').textContent=data.episode||'-';document.getElementById('kk-due').textContent=data.due?`納期: ${data.due}  ${data.status||''}`:'';const pct=data.progress||0;document.getElementById('kk-bar').style.width=pct+'%';document.getElementById('kk-pct').textContent=`${pct}% (${data.done||0}/${data.total||5}章)`;const checks=document.querySelectorAll('#kk-checks .check-item');['①','②','③','④','⑤'].forEach((lb,i)=>{const done=i<(data.done||0);checks[i].textContent=done?'✓'+lb:lb;checks[i].classList.toggle('done',done);});}
 function pollKikuchi(){fetch('/api/kikuchi_progress').then(r=>r.json()).then(updateKikuchi).catch(()=>{});}
 pollKikuchi(); setInterval(pollKikuchi,300000);
-
 window._updateUI=function(data){
   const sb=document.getElementById('status-bar');
-  if(data.running){sb.textContent='⚡ RUNNING';sb.style.color='#fbbf24';}
-  else{sb.textContent='●  IDLE';sb.style.color='#4a8a4a';}
-  const btn=document.getElementById('run-btn');
-  btn.disabled=data.running;
-  btn.className=data.running?'btn btn-disabled':'btn btn-green';
-  btn.textContent=data.running?'⏳ 実行中...':'▶ 脚本エージェント起動';
-  const xp=data.pending?.x_posts||[];
-  const np=data.pending?.note_drafts||[];
+  if(data.running){sb.textContent='⚡ RUNNING';sb.style.color='#fbbf24';}else{sb.textContent='●  IDLE';sb.style.color='#4a8a4a';}
+  const btn=document.getElementById('run-btn');btn.disabled=data.running;btn.className=data.running?'btn btn-disabled':'btn btn-green';btn.textContent=data.running?'⏳ 実行中...':'▶ 脚本エージェント起動';
+  const xp=data.pending?.x_posts||[],np=data.pending?.note_drafts||[];
   document.getElementById('x-pending-count').textContent=xp.length;
   document.getElementById('note-pending-count').textContent=np.length;
-  renderPendingX(xp); renderPendingNote(np);
+  renderPendingX(xp);renderPendingNote(np);
   const xa=(data.approved?.x_posts||[]).filter(p=>!p.posted).length;
   const na=(data.approved?.note_drafts||[]).filter(d=>!d.published).length;
   document.getElementById('x-approved-count').textContent=xa;
   document.getElementById('note-approved-count').textContent=na;
-  if(data.schedule?.length){
-    document.getElementById('schedule-list').innerHTML=data.schedule.map(s=>
-      `<div class="sched-item">
-        <span class="sched-name">${s.name}</span>
-        <span class="sched-next">${s.next_run}</span>
-        <button class="btn-trigger" onclick="triggerJob('${s.id}')">▶</button>
-      </div>`).join('');
-  }
-  if(data.logs?.length){
-    document.getElementById('log-list').innerHTML=data.logs.slice(0,15).map(l=>
-      `<div class="log-item"><span class="log-time">${l.time}</span><span class="log-msg">${escHtml(l.msg)}</span></div>`
-    ).join('');
-  }
-  if(data.result) document.getElementById('result-box').textContent=data.result;
-  if(data.kikuchi_progress) updateKikuchi(data.kikuchi_progress);
+  if(data.schedule?.length)document.getElementById('schedule-list').innerHTML=data.schedule.map(s=>`<div class="sched-item"><span class="sched-name">${s.name}</span><span class="sched-next">${s.next_run}</span><button class="btn-trigger" onclick="triggerJob('${s.id}')">▶</button></div>`).join('');
+  if(data.logs?.length)document.getElementById('log-list').innerHTML=data.logs.slice(0,15).map(l=>`<div class="log-item"><span class="log-time">${l.time}</span><span class="log-msg">${escHtml(l.msg)}</span></div>`).join('');
+  if(data.result)document.getElementById('result-box').textContent=data.result;
+  if(data.kikuchi_progress)updateKikuchi(data.kikuchi_progress);
 };
-
-function runManual(){
-  const theme=document.getElementById('theme-input').value.trim();
-  if(!theme)return;
-  fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({theme})}).catch(()=>{});
-}
+function runManual(){const theme=document.getElementById('theme-input').value.trim();if(!theme)return;fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({theme})}).catch(()=>{});}
 function triggerJob(id){fetch('/api/trigger/'+id,{method:'POST'}).catch(()=>{});}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-
 document.getElementById('theme-input').addEventListener('keydown',e=>{if(e.key==='Enter')runManual();});
 document.getElementById('note-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 </script>

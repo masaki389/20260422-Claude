@@ -105,22 +105,26 @@ state = {
     "theme": "",
     "result": "",
     "agents": {
-        # 管理部門
-        "secretary":        {"name": "秘書",              "dept": "mgmt",   "status": "idle", "task": ""},
-        # 幸子チャンネル部署
-        "researcher":       {"name": "幸子リサーチャー",  "dept": "sachiko", "status": "idle", "task": ""},
-        "scriptwriter":     {"name": "脚本家",             "dept": "sachiko", "status": "idle", "task": ""},
-        # Xマーケティング部署
-        "x_strategist":    {"name": "X戦略家",             "dept": "xmkt",   "status": "idle", "task": ""},
-        "x_writer":        {"name": "X投稿ライター",        "dept": "xmkt",   "status": "idle", "task": ""},
-        "x_poster":        {"name": "X投稿管理",            "dept": "xmkt",   "status": "idle", "task": ""},
-        # noteコンテンツ部署
-        "note_researcher": {"name": "noteリサーチャー",    "dept": "note",   "status": "idle", "task": ""},
-        "note_writer":     {"name": "note記事ライター",    "dept": "note",   "status": "idle", "task": ""},
-        # 事業開発部署
-        "tieup_researcher":{"name": "タイアップ探索",      "dept": "bizdev", "status": "idle", "task": ""},
+        # 幸子チャンネル部
+        "researcher":          {"name": "幸子リサーチャー",  "dept": "sachiko",  "status": "idle", "task": ""},
+        "scriptwriter":        {"name": "脚本家",             "dept": "sachiko",  "status": "idle", "task": ""},
+        "sachiko_analyst":     {"name": "幸子分析",           "dept": "sachiko",  "status": "idle", "task": ""},
+        # コンテンツ部（X + note 統合）
+        "x_strategist":        {"name": "X戦略家",            "dept": "content",  "status": "idle", "task": ""},
+        "x_writer":            {"name": "Xライター",           "dept": "content",  "status": "idle", "task": ""},
+        "x_poster":            {"name": "X投稿管理",           "dept": "content",  "status": "idle", "task": ""},
+        "note_researcher":     {"name": "noteリサーチャー",    "dept": "content",  "status": "idle", "task": ""},
+        "note_writer":         {"name": "noteライター",        "dept": "content",  "status": "idle", "task": ""},
+        # 営業部門
+        "sales_researcher":    {"name": "営業リサーチャー",    "dept": "sales",    "status": "idle", "task": ""},
+        "proposal_writer":     {"name": "提案書ライター",      "dept": "sales",    "status": "idle", "task": ""},
+        # 転職アニメ部
+        "tenshi_analyst":      {"name": "転職アニメ分析",      "dept": "tenshi",   "status": "idle", "task": ""},
+        "tenshi_scriptwriter": {"name": "転職脚本家",          "dept": "tenshi",   "status": "idle", "task": ""},
+        # 事業開発
+        "tieup_researcher":    {"name": "タイアップ探索",      "dept": "bizdev",   "status": "idle", "task": ""},
         # 外注
-        "kikuchi":          {"name": "菊地（外注）",        "dept": "external","status": "idle", "task": ""},
+        "kikuchi":             {"name": "菊地（外注）",        "dept": "external", "status": "idle", "task": ""},
     },
     "logs": [],
     "kikuchi_progress": {"episode": "-", "progress": 0, "status": "-", "due": "-"},
@@ -587,6 +591,164 @@ def job_kikuchi_progress_update():
         log(f"⚠ 菊地進捗取得失敗: {str(e)[:80]}")
 
 
+# ─── Job: 幸子チャンネル分析 (weekly Tue 09:00) ──────────────────────────────
+def job_sachiko_analytics():
+    today = datetime.now(JST).strftime("%Y%m%d")
+    log("📊 幸子チャンネル分析開始", "sachiko_analyst")
+    try:
+        set_status("sachiko_analyst", "working", "チャンネルデータ分析中...")
+        # 直近の分析ファイル・リサーチファイルを参照
+        research_files = sorted(RESEARCH_DIR.glob("sachiko_auto_*.txt"))
+        past_data = ""
+        if research_files:
+            past_data = research_files[-1].read_text(encoding="utf-8")[:3000]
+        agent = make_agent_soul("sachiko_analyst")
+        result = run_single(
+            "幸子チャンネルの直近パフォーマンスを分析してください。\n"
+            "利用可能なデータ:\n" + (past_data or "（直近リサーチファイルなし）") + "\n\n"
+            "分析項目:\n"
+            "①現状の再生数トレンドと月間目標達成率\n"
+            "②最もパフォーマンスが良かった話のタイトル傾向とその理由\n"
+            "③視聴者55-64歳女性層に刺さるテーマキーワード（次回作向け）\n"
+            "④競合シニア系アニメチャンネルとの差別化ポイント\n"
+            "⑤次の1本で変えるべき点3つ（具体的に）",
+            "幸子チャンネル週次分析レポート", agent)
+        set_status("sachiko_analyst", "done", "週次レポート完成 ✓")
+        (RESEARCH_DIR / f"sachiko_analysis_{today}.txt").write_text(
+            f"=== 幸子チャンネル分析 {today} ===\n\n{result}", encoding="utf-8")
+        log(f"💾 幸子分析レポート: sachiko_analysis_{today}.txt", "sachiko_analyst")
+        with lock:
+            state["result"] = result
+    except Exception as e:
+        log(f"❌ 幸子分析エラー: {str(e)[:200]}")
+        set_status("sachiko_analyst", "error", "エラー")
+
+
+# ─── Job: 営業リサーチ (weekly Wed 09:00) ────────────────────────────────────
+def job_sales_research():
+    today = datetime.now(JST).strftime("%Y%m%d")
+    log("🔍 営業リサーチャー起動", "sales_researcher")
+    try:
+        set_status("sales_researcher", "working", "見込み客リストを調査中...")
+        agent = make_agent_soul("sales_researcher")
+        result = run_single(
+            "StudioOgawaのAIアニメ制作受託（1本¥30,000〜50,000・制作期間2〜3日）の\n"
+            "見込み客企業を10社リストアップしてください。\n"
+            "各社について：①会社名 ②業種 ③なぜアニメ動画が刺さるか ④担当部署・役職\n"
+            "⑤最適アプローチ方法 ⑥優先度（高/中/低）\n"
+            "優先度「高」は採用PR・会社紹介・サービス説明に今すぐ動画が必要そうな会社。\n"
+            "実在する日本企業・実名で記載すること。",
+            "BtoB見込み客リスト10社（Markdown表形式）", agent)
+        set_status("sales_researcher", "done", "リスト10社完成 ✓")
+        (RESEARCH_DIR / f"sales_prospects_{today}.txt").write_text(
+            f"=== BtoB見込み客リスト {today} ===\n\n{result}", encoding="utf-8")
+        log(f"💾 営業リスト: sales_prospects_{today}.txt", "sales_researcher")
+        with lock:
+            state["result"] = result
+        # リサーチ完了後に提案書生成を自動起動
+        threading.Thread(target=job_proposal_generate, daemon=True).start()
+    except Exception as e:
+        log(f"❌ 営業リサーチエラー: {str(e)[:200]}")
+        set_status("sales_researcher", "error", "エラー")
+
+
+# ─── Job: 提案書生成 (営業リサーチ後に自動実行) ──────────────────────────────
+def job_proposal_generate():
+    today = datetime.now(JST).strftime("%Y%m%d")
+    log("📄 提案書ライター起動", "proposal_writer")
+    try:
+        set_status("proposal_writer", "working", "提案書・DM文を生成中...")
+        # 最新の営業リストを読み込む
+        prospect_files = sorted(RESEARCH_DIR.glob("sales_prospects_*.txt"))
+        prospects = ""
+        if prospect_files:
+            prospects = prospect_files[-1].read_text(encoding="utf-8")[:2000]
+        agent = make_agent_soul("proposal_writer")
+        result = run_single(
+            "以下の見込み客リストの中から優先度「高」の企業3社を選び、\n"
+            "各社向けのアプローチDM（200文字）と提案書テキスト（A4 1枚相当）を生成してください。\n\n"
+            "見込み客リスト:\n" + (prospects or "（リストなし）") + "\n\n"
+            "StudioOgawa実績：95万再生・登録者2,900人・制作コスト1本¥1,000〜1,500・期間2〜3日",
+            "3社分のDM文＋提案書テキスト", agent)
+        set_status("proposal_writer", "done", "提案書3社分完成 ✓")
+        (RESEARCH_DIR / f"proposals_{today}.txt").write_text(
+            f"=== BtoB提案書 {today} ===\n\n{result}", encoding="utf-8")
+        log(f"💾 提案書: proposals_{today}.txt", "proposal_writer")
+        with lock:
+            state["result"] = result
+    except Exception as e:
+        log(f"❌ 提案書生成エラー: {str(e)[:200]}")
+        set_status("proposal_writer", "error", "エラー")
+
+
+# ─── Job: 転職アニメ分析 (weekly Thu 09:00) ──────────────────────────────────
+def job_tenshi_analyze():
+    today = datetime.now(JST).strftime("%Y%m%d")
+    log("🎬 転職アニメアナリスト起動", "tenshi_analyst")
+    try:
+        set_status("tenshi_analyst", "working", "非成約原因を分析中...")
+        # 既存スクリプトのリストを取得
+        tenshi_scripts_dir = BASE_DIR / "tenshi_scripts"
+        script_list = ""
+        if tenshi_scripts_dir.exists():
+            files = sorted(tenshi_scripts_dir.glob("*.txt"))[:5]  # 直近5本
+            for f in files:
+                content = f.read_text(encoding="utf-8")[:500]
+                script_list += f"\n--- {f.name} ---\n{content}\n"
+        agent = make_agent_soul("tenshi_analyst")
+        result = run_single(
+            "転職アニメチャンネルで10本制作したが成約（アフィリエイト）が0件です。\n"
+            "以下の直近スクリプトを参考に、非成約の原因を分析してください。\n\n"
+            + script_list +
+            "\n分析軸：①ターゲットズレ ②CTA弱さ ③企業選定 ④構成の問題 ⑤競合との比較\n"
+            "最後に「次の1本を作るべきか」判定（GO/WAIT/方向転換）と理由を明記してください。\n"
+            "GOの場合は成約率を上げるための変更点3つを具体的に挙げること。",
+            "転職アニメ週次分析レポート（GO/WAIT/方向転換判定含む）", agent)
+        set_status("tenshi_analyst", "done", "分析レポート完成 ✓")
+        (RESEARCH_DIR / f"tenshi_analysis_{today}.txt").write_text(
+            f"=== 転職アニメ分析 {today} ===\n\n{result}", encoding="utf-8")
+        log(f"💾 転職分析: tenshi_analysis_{today}.txt", "tenshi_analyst")
+        with lock:
+            state["result"] = result
+    except Exception as e:
+        log(f"❌ 転職分析エラー: {str(e)[:200]}")
+        set_status("tenshi_analyst", "error", "エラー")
+
+
+# ─── Job: 転職アニメ脚本（手動トリガー専用・tenshi_analystのGO判定後） ────────
+def job_tenshi_script():
+    today = datetime.now(JST).strftime("%Y%m%d")
+    log("✍ 転職アニメ脚本家起動（手動トリガー）", "tenshi_scriptwriter")
+    try:
+        set_status("tenshi_scriptwriter", "working", "分析結果を確認中...")
+        # 最新の分析レポートを読み込む
+        analysis_files = sorted(RESEARCH_DIR.glob("tenshi_analysis_*.txt"))
+        analysis = ""
+        if analysis_files:
+            analysis = analysis_files[-1].read_text(encoding="utf-8")[:2000]
+        else:
+            log("⚠ 転職分析レポートなし — tenshi_analystを先に実行してください", "tenshi_scriptwriter")
+            set_status("tenshi_scriptwriter", "error", "分析レポートなし")
+            return
+        agent = make_agent_soul("tenshi_scriptwriter")
+        result = run_single(
+            "以下の分析レポートをもとに、成約率を上げる転職アニメショートのスクリプト骨子を1本生成してください。\n\n"
+            "分析レポート:\n" + analysis + "\n\n"
+            "CLAUDE.mdの転職チャンネル台本ルールに完全準拠すること。\n"
+            "含めるもの：①企業名と年収 ②主人公の低スペック経歴 ③カット構成（25〜30カット）\n"
+            "④CTA文言 ⑤冒頭フックカット（数字or非日常）",
+            "転職アニメスクリプト骨子（カット構成付き）", agent)
+        set_status("tenshi_scriptwriter", "done", "スクリプト骨子完成 ✓")
+        (RESEARCH_DIR / f"tenshi_script_draft_{today}.txt").write_text(
+            f"=== 転職アニメスクリプト骨子 {today} ===\n\n{result}", encoding="utf-8")
+        log(f"💾 転職脚本: tenshi_script_draft_{today}.txt", "tenshi_scriptwriter")
+        with lock:
+            state["result"] = result
+    except Exception as e:
+        log(f"❌ 転職脚本エラー: {str(e)[:200]}")
+        set_status("tenshi_scriptwriter", "error", "エラー")
+
+
 # ─── Scheduler ───────────────────────────────────────────────────────────────
 scheduler = BackgroundScheduler(timezone=JST, job_defaults={"misfire_grace_time": 300})
 # Daily 07:30 — 秘書
@@ -601,11 +763,17 @@ scheduler.add_job(job_x_random_post,        CronTrigger(hour=12, minute=0,  time
 scheduler.add_job(job_x_random_post,        CronTrigger(hour=20, minute=0,  timezone=JST), id="x_post_evening",    name="X投稿（夜20時）")
 # 30分ごと — 菊地進捗（毎時0分・30分）
 scheduler.add_job(job_kikuchi_progress_update, CronTrigger(minute="0,30", timezone=JST), id="kikuchi_check", name="菊地進捗チェック（30分ごと）")
-# Weekly
-scheduler.add_job(job_x_strategy_learn,    CronTrigger(day_of_week="sun", hour=23, minute=0,  timezone=JST), id="x_strategy_weekly",   name="X戦略学習（週1）")
-scheduler.add_job(job_note_research,        CronTrigger(day_of_week="sun", hour=23, minute=30, timezone=JST), id="note_research_weekly", name="noteリサーチ（週1）")
-scheduler.add_job(job_generate_note_draft,  CronTrigger(day_of_week="mon", hour=10, minute=0,  timezone=JST), id="note_draft_weekly",    name="note記事ドラフト生成")
-scheduler.add_job(job_tieup_research,       CronTrigger(day_of_week="mon", hour=11, minute=0,  timezone=JST), id="tieup_weekly",         name="タイアップリサーチ")
+# Weekly — コンテンツ
+scheduler.add_job(job_x_strategy_learn,    CronTrigger(day_of_week="sun", hour=23, minute=0,  timezone=JST), id="x_strategy_weekly",    name="X戦略学習（週1）")
+scheduler.add_job(job_note_research,        CronTrigger(day_of_week="sun", hour=23, minute=30, timezone=JST), id="note_research_weekly",  name="noteリサーチ（週1）")
+scheduler.add_job(job_generate_note_draft,  CronTrigger(day_of_week="mon", hour=10, minute=0,  timezone=JST), id="note_draft_weekly",     name="note記事ドラフト生成")
+scheduler.add_job(job_tieup_research,       CronTrigger(day_of_week="mon", hour=11, minute=0,  timezone=JST), id="tieup_weekly",          name="タイアップリサーチ")
+# Weekly — 幸子分析 (火曜9時)
+scheduler.add_job(job_sachiko_analytics,    CronTrigger(day_of_week="tue", hour=9,  minute=0,  timezone=JST), id="sachiko_analytics",     name="幸子チャンネル週次分析")
+# Weekly — 営業（水曜9時）
+scheduler.add_job(job_sales_research,       CronTrigger(day_of_week="wed", hour=9,  minute=0,  timezone=JST), id="sales_research_weekly", name="BtoB営業リサーチ")
+# Weekly — 転職分析（木曜9時）
+scheduler.add_job(job_tenshi_analyze,       CronTrigger(day_of_week="thu", hour=9,  minute=0,  timezone=JST), id="tenshi_analysis_weekly", name="転職アニメ非成約分析")
 
 JOB_FUNCS = {
     "secretary_daily":      job_secretary_briefing,
@@ -615,11 +783,15 @@ JOB_FUNCS = {
     "x_post_morning":       job_x_random_post,
     "x_post_noon":          job_x_random_post,
     "x_post_evening":       job_x_random_post,
-    "kikuchi_check":        job_kikuchi_progress_update,
-    "x_strategy_weekly":    job_x_strategy_learn,
-    "note_research_weekly": job_note_research,
-    "note_draft_weekly":    job_generate_note_draft,
-    "tieup_weekly":         job_tieup_research,
+    "kikuchi_check":          job_kikuchi_progress_update,
+    "x_strategy_weekly":      job_x_strategy_learn,
+    "note_research_weekly":   job_note_research,
+    "note_draft_weekly":      job_generate_note_draft,
+    "tieup_weekly":           job_tieup_research,
+    "sachiko_analytics":      job_sachiko_analytics,
+    "sales_research_weekly":  job_sales_research,
+    "tenshi_analysis_weekly": job_tenshi_analyze,
+    "tenshi_script_manual":   job_tenshi_script,
 }
 
 
