@@ -8,56 +8,39 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  background: #0a0f0a;
+  background: #070c07;
   color: #c9d1d9;
   font-family: 'Courier New', monospace;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-  padding: 10px;
+  display: flex; flex-direction: column; align-items: center;
+  min-height: 100vh; padding: 10px;
 }
 .title {
   font-family: 'Press Start 2P', monospace;
-  font-size: 11px;
-  color: #00ff88;
+  font-size: 11px; color: #00ff88;
   text-shadow: 0 0 16px rgba(0,255,136,0.7);
-  margin-bottom: 8px;
-  letter-spacing: 2px;
+  margin-bottom: 8px; letter-spacing: 2px;
 }
 .auto-badge {
-  display: inline-block;
-  background: #0a3a1a;
-  color: #30cc70;
-  border: 1px solid #1a6a3a;
-  border-radius: 10px;
-  padding: 2px 8px;
-  font-size: 8px;
-  margin-left: 8px;
-  animation: pulse 2s infinite;
+  display: inline-block; background: #0a3a1a; color: #30cc70;
+  border: 1px solid #1a6a3a; border-radius: 10px; padding: 2px 8px;
+  font-size: 8px; margin-left: 8px; animation: pulse 2s infinite;
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
 .wrapper { display: flex; gap: 10px; align-items: flex-start; width: 100%; max-width: 1460px; }
-#game-container canvas { display: block; border: 3px solid #1a4a1a; image-rendering: pixelated; }
+#game-container canvas { display: block; border: 2px solid #1a3a1a; image-rendering: pixelated; }
 .sidebar { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 7px; }
 .panel { background: #111a11; border: 1px solid #1e4a1e; border-radius: 4px; padding: 7px 9px; }
 .panel-title { font-size: 9px; color: #4a9a4a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; border-bottom: 1px solid #1e4a1e; padding-bottom: 3px; }
-
-/* Controls */
 .theme-input { width: 100%; background: #0a1a0a; border: 1px solid #2a6a2a; color: #90ee90; padding: 5px 7px; font-family: 'Courier New', monospace; font-size: 11px; border-radius: 3px; margin-bottom: 5px; }
 .btn { width: 100%; padding: 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; border: none; border-radius: 3px; cursor: pointer; transition: opacity 0.2s; }
 .btn:hover { opacity: 0.85; }
 .btn-green { background: #2d6a2d; color: #90ee90; }
 .btn-disabled { background: #1a3a1a; color: #4a6a4a; cursor: not-allowed; }
-
-/* Tabs */
 .tab-bar { display: flex; gap: 4px; margin-bottom: 6px; }
 .tab { flex: 1; background: #0a1a0a; border: 1px solid #1e4a1e; color: #6a8a6a; font-size: 8px; font-family: 'Courier New', monospace; padding: 4px; cursor: pointer; border-radius: 3px; transition: all 0.2s; }
 .tab.active { background: #1a4a1a; color: #90ee90; border-color: #3a7a3a; }
 .badge { display: inline-block; background: #1a4a1a; color: #30cc70; border-radius: 8px; padding: 0 5px; font-size: 7px; margin-left: 3px; }
 .badge.red { background: #4a1a1a; color: #ff8080; }
-
-/* Approval panel */
 .approval-list { max-height: 170px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
 .approval-list.hidden { display: none; }
 .pend-item { background: #0d1a0d; border: 1px solid #1a4a1a; border-radius: 3px; padding: 5px; }
@@ -70,14 +53,10 @@ body {
 .btn-approve:hover { background: #1a5a2a; }
 .btn-reject:hover  { background: #5a1a1a; }
 .empty-msg { font-size: 9px; color: #3a6a3a; text-align: center; padding: 10px 0; }
-
-/* Approved queue summary */
 .queue-summary { display: flex; gap: 6px; font-size: 9px; }
 .q-item { flex: 1; background: #0d170d; border-radius: 3px; padding: 4px 6px; text-align: center; }
 .q-label { color: #4a8a4a; font-size: 7px; display: block; margin-bottom: 2px; }
 .q-count { color: #30cc70; font-size: 14px; font-family: 'Press Start 2P', monospace; }
-
-/* Kikuchi progress */
 .kikuchi-panel { background: #0d1522; border: 1px solid #1e3a5e; border-radius: 4px; padding: 7px 9px; }
 .kikuchi-title { font-size: 9px; color: #4a7aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; border-bottom: 1px solid #1e3a5e; padding-bottom: 3px; }
 .kikuchi-ep { font-size: 11px; color: #7ab0e0; font-weight: bold; margin-bottom: 4px; }
@@ -88,27 +67,18 @@ body {
 .kikuchi-checks { display: flex; gap: 3px; margin-top: 5px; }
 .check-item { flex: 1; background: #0a1520; border: 1px solid #1e3a5e; border-radius: 2px; padding: 2px; text-align: center; font-size: 7px; color: #3a6a9a; }
 .check-item.done { background: #0a2a40; border-color: #3a7aaa; color: #7ab0e0; }
-
-/* Schedule */
 .schedule-list { display: flex; flex-direction: column; gap: 4px; max-height: 130px; overflow-y: auto; }
 .sched-item { display: flex; justify-content: space-between; align-items: center; font-size: 8px; padding: 3px 5px; background: #0d170d; border-radius: 3px; border-left: 2px solid #2a6a2a; }
 .sched-name { color: #7aba7a; flex: 1; font-size: 7px; }
 .sched-next { color: #4a8a4a; font-size: 7px; margin: 0 4px; white-space: nowrap; }
 .btn-trigger { background: #1a4a3a; color: #40b080; border: 1px solid #2a7a5a; border-radius: 2px; cursor: pointer; font-size: 7px; padding: 2px 4px; }
 .btn-trigger:hover { background: #2a6a5a; }
-
-/* Log */
 .log-list { max-height: 110px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
 .log-item { font-size: 8px; padding: 2px 3px; background: #0d170d; border-radius: 2px; }
 .log-time { color: #4a7a4a; margin-right: 4px; }
 .log-msg { color: #90c090; }
-
-/* Result */
 .result-box { background: #0a150a; border: 1px solid #1e4a1e; border-radius: 3px; padding: 7px; font-size: 8px; color: #80bb80; max-height: 130px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; }
-
 .status-bar { font-size: 9px; color: #4a8a4a; text-align: center; padding: 3px; }
-
-/* Note body modal */
 .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; }
 .modal-overlay.open { display:flex; }
 .modal { background:#111a11; border:2px solid #2a6a2a; border-radius:6px; padding:16px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; }
@@ -119,100 +89,58 @@ body {
 </style>
 </head>
 <body>
-<div class="title">
-  StudioOgawa AI Office
-  <span class="auto-badge">● AUTO 24/7</span>
-</div>
+<div class="title">StudioOgawa AI Office<span class="auto-badge">● AUTO 24/7</span></div>
 <div class="wrapper">
   <div id="game-container"></div>
   <div class="sidebar">
-
-    <!-- 手動実行 -->
     <div class="panel">
       <div class="panel-title">🎬 手動実行（台本骨子）</div>
-      <input id="theme-input" class="theme-input"
-             placeholder="テーマ（例：年金だけでは足りない）"
-             value="年金だけでは足りないと気づいた日">
+      <input id="theme-input" class="theme-input" placeholder="テーマ（例：年金だけでは足りない）" value="年金だけでは足りないと気づいた日">
       <button id="run-btn" class="btn btn-green" onclick="runManual()">▶ 脚本エージェント起動</button>
     </div>
-
-    <!-- 菊地進捗 -->
     <div class="kikuchi-panel">
       <div class="kikuchi-title">👤 菊地（外注）進捗</div>
       <div class="kikuchi-ep" id="kk-episode">読み込み中...</div>
       <div class="kikuchi-due" id="kk-due"></div>
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="kk-bar" style="width:0%"></div>
-      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="kk-bar" style="width:0%"></div></div>
       <div class="progress-text" id="kk-pct">0%</div>
       <div class="kikuchi-checks" id="kk-checks">
-        <div class="check-item">①</div>
-        <div class="check-item">②</div>
-        <div class="check-item">③</div>
-        <div class="check-item">④</div>
-        <div class="check-item">⑤</div>
+        <div class="check-item">①</div><div class="check-item">②</div>
+        <div class="check-item">③</div><div class="check-item">④</div><div class="check-item">⑤</div>
       </div>
     </div>
-
-    <!-- 承認待ちキュー -->
     <div class="panel">
       <div class="panel-title">📥 承認待ちキュー</div>
       <div class="tab-bar">
-        <button class="tab active" id="tab-x"    onclick="showTab('x')">
-          𝕏 X投稿 <span class="badge red" id="x-pending-count">0</span>
-        </button>
-        <button class="tab"        id="tab-note" onclick="showTab('note')">
-          📝 note <span class="badge red" id="note-pending-count">0</span>
-        </button>
+        <button class="tab active" id="tab-x"    onclick="showTab('x')">𝕏 X投稿 <span class="badge red" id="x-pending-count">0</span></button>
+        <button class="tab"        id="tab-note" onclick="showTab('note')">📝 note <span class="badge red" id="note-pending-count">0</span></button>
       </div>
-      <div class="approval-list" id="x-pending-list">
-        <div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成</div>
-      </div>
-      <div class="approval-list hidden" id="note-pending-list">
-        <div class="empty-msg">承認待ちのnote記事はありません<br>毎週月曜10時に自動生成</div>
-      </div>
+      <div class="approval-list" id="x-pending-list"><div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成</div></div>
+      <div class="approval-list hidden" id="note-pending-list"><div class="empty-msg">承認待ちのnote記事はありません<br>毎週月曜10時に自動生成</div></div>
     </div>
-
-    <!-- 承認済みキュー -->
     <div class="panel">
       <div class="panel-title">✅ 承認済みキュー</div>
       <div class="queue-summary">
-        <div class="q-item">
-          <span class="q-label">𝕏 投稿待ち</span>
-          <span class="q-count" id="x-approved-count">0</span>
-        </div>
-        <div class="q-item">
-          <span class="q-label">📝 公開待ち</span>
-          <span class="q-count" id="note-approved-count">0</span>
-        </div>
+        <div class="q-item"><span class="q-label">𝕏 投稿待ち</span><span class="q-count" id="x-approved-count">0</span></div>
+        <div class="q-item"><span class="q-label">📝 公開待ち</span><span class="q-count" id="note-approved-count">0</span></div>
       </div>
     </div>
-
-    <!-- スケジュール -->
     <div class="panel">
       <div class="panel-title">⏰ 自動スケジュール</div>
-      <div class="schedule-list" id="schedule-list">
-        <div class="empty-msg">読み込み中...</div>
-      </div>
+      <div class="schedule-list" id="schedule-list"><div class="empty-msg">読み込み中...</div></div>
     </div>
-
-    <!-- ログ -->
     <div class="panel">
       <div class="panel-title">📋 ログ</div>
       <div class="log-list" id="log-list"></div>
     </div>
-
-    <!-- 成果物 -->
     <div class="panel">
       <div class="panel-title">💡 最新の成果物</div>
       <div class="result-box" id="result-box">成果物はここに表示されます</div>
     </div>
-
     <div class="status-bar" id="status-bar">●  IDLE</div>
   </div>
 </div>
 
-<!-- Note body modal -->
 <div class="modal-overlay" id="note-modal">
   <div class="modal">
     <div class="modal-title" id="modal-title"></div>
@@ -227,415 +155,647 @@ body {
 
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
-// ─── Dept & agent config ──────────────────────────────────────────────────
-const AGENTS_CFG = {
-  researcher:       { x: 100, y: 230, name: '幸子リサーチャー', dept:'sachiko' },
-  scriptwriter:     { x: 210, y: 230, name: '脚本家',          dept:'sachiko' },
-  x_strategist:     { x: 340, y: 205, name: 'X戦略家',         dept:'xmkt' },
-  x_writer:         { x: 455, y: 205, name: 'X投稿ライター',   dept:'xmkt' },
-  x_poster:         { x: 397, y: 350, name: 'X投稿管理',       dept:'xmkt' },
-  note_researcher:  { x: 600, y: 230, name: 'noteリサーチャー', dept:'note' },
-  note_writer:      { x: 710, y: 230, name: 'note記事ライター', dept:'note' },
-  tieup_researcher: { x: 830, y: 220, name: 'タイアップ探索',  dept:'bizdev' },
-  kikuchi:          { x: 970, y: 280, name: '菊地（外注）',    dept:'external' },
+// ── Canvas / Room layout ────────────────────────────────────────────────────
+const CW = 1140, CH = 530;
+// Room definitions  (x, y, w, h)  — 5 thick walls between them
+const ROOMS = {
+  sachiko:  { x:8,   y:38, w:229, h:454 },
+  xmkt:     { x:255, y:38, w:238, h:454 },
+  note:     { x:507, y:38, w:234, h:454 },
+  bizdev:   { x:755, y:38, w:172, h:454 },
+  external: { x:937, y:38, w:195, h:454 },
+};
+// Walk bounds for idle wandering (keep chars inside room, away from walls/ceiling)
+const WALK_BOUNDS = {
+  sachiko:  {x1:28,  y1:95, x2:228, y2:478},
+  xmkt:     {x1:272, y1:95, x2:484, y2:478},
+  note:     {x1:524, y1:95, x2:732, y2:478},
+  bizdev:   {x1:772, y1:95, x2:916, y2:478},
+  external: {x1:954, y1:95, x2:1120,y2:478},
 };
 const DEPT = {
-  sachiko:  { wall:0x3a8a4a, bg:0x003300 },
-  xmkt:     { wall:0x3a4a8a, bg:0x000033 },
-  note:     { wall:0x6a3a8a, bg:0x110022 },
-  bizdev:   { wall:0x8a6a2a, bg:0x221100 },
-  external: { wall:0x5a5a8a, bg:0x111122 },
+  sachiko:  {wall:0x2d8a4a, accent:0x4acc6a, floor1:0xc4985a, floor2:0xb8894e, label:'幸子チャンネル部'},
+  xmkt:     {wall:0x2a4a9a, accent:0x4a7acc, floor1:0xb89060, floor2:0xa88052, label:'Xマーケ部'},
+  note:     {wall:0x7a2a9a, accent:0xaa4acc, floor1:0xb08858, floor2:0xa07848, label:'noteコンテンツ部'},
+  bizdev:   {wall:0x9a6a1a, accent:0xcc9a2a, floor1:0xc0a060, floor2:0xb09050, label:'事業開発部'},
+  external: {wall:0x4a5a8a, accent:0x7a8acc, floor1:0xa09080, floor2:0x908070, label:'外注管理'},
 };
-const SC = { idle:0x6b7280, working:0xfbbf24, done:0x34d399, error:0xef4444 };
-const DEPT_LABELS = {
-  sachiko:'幸子チャンネル部署', xmkt:'Xマーケティング部署',
-  note:'noteコンテンツ部署', bizdev:'事業開発部署', external:'外注管理'
+const AGENTS_CFG = {
+  researcher:       {x:115, y:220, name:'幸子リサーチャー', dept:'sachiko'},
+  scriptwriter:     {x:185, y:355, name:'脚本家',          dept:'sachiko'},
+  x_strategist:     {x:340, y:200, name:'X戦略家',         dept:'xmkt'},
+  x_writer:         {x:458, y:200, name:'Xライター',        dept:'xmkt'},
+  x_poster:         {x:400, y:365, name:'X投稿管理',        dept:'xmkt'},
+  note_researcher:  {x:592, y:220, name:'noteリサーチャー', dept:'note'},
+  note_writer:      {x:698, y:220, name:'noteライター',     dept:'note'},
+  tieup_researcher: {x:844, y:220, name:'タイアップ探索',   dept:'bizdev'},
+  kikuchi:          {x:1030,y:280, name:'菊地（外注）',    dept:'external'},
 };
+const SC = {idle:0x6b7280, working:0xfbbf24, done:0x34d399, error:0xef4444};
+const S = 3; // pixel scale for characters
 
-// ─── Phaser Scene ─────────────────────────────────────────────────────────
+// ── Global bridge between fetch and update() ────────────────────────────────
+window._agentStates = {};
+
+// ── Phaser Scene ────────────────────────────────────────────────────────────
 class OfficeScene extends Phaser.Scene {
   constructor() { super('Office'); }
 
   create() {
     this.agentObjs = {};
-    // Floor tiles
-    const gf = this.add.graphics();
-    for (let r=0; r<17; r++) for (let c=0; c<36; c++) {
-      gf.fillStyle((r+c)%2===0?0x0d1a0d:0x0a150a);
-      gf.fillRect(c*32, r*32, 32, 32);
-    }
-    // Rooms (5 rooms)
-    drawRoom(this,  10,  40, 230, 460, 'sachiko');
-    drawRoom(this, 250,  40, 240, 460, 'xmkt');
-    drawRoom(this, 500,  40, 240, 460, 'note');
-    drawRoom(this, 750,  40, 170, 460, 'bizdev');
-    drawRoom(this, 930,  40, 200, 460, 'external');
+    this._bgG   = this.add.graphics().setDepth(0);
+    this._furG  = this.add.graphics().setDepth(1); // chair backs, desk bases (behind chars)
+    this._deskG = this.add.graphics().setDepth(3); // desk surfaces (in front of chars = hide legs)
+    this._decG  = this.add.graphics().setDepth(5); // plants, cooler
+
+    this.drawOffice();
+    Object.entries(AGENTS_CFG).forEach(([id,cfg]) => this.buildAgent(id, cfg));
+
+    this.time.addEvent({delay:1600, callback:this.fetchStatus, callbackScope:this, loop:true});
+    setTimeout(() => this.fetchStatus(), 300);
+  }
+
+  // ── Background ─────────────────────────────────────────────────────────
+  drawOffice() {
+    const g  = this._bgG;
+    const fg = this._furG;
+    const ds = this._deskG;
+    const dc = this._decG;
+
+    // canvas background (walls / corridor)
+    g.fillStyle(0x040707); g.fillRect(0,0,CW,CH);
+
+    Object.entries(ROOMS).forEach(([dept, r]) => {
+      const d = DEPT[dept];
+
+      // Room floor (warm wood plank tiles)
+      const tH=20, tW=28;
+      for (let ty=r.y+50; ty<r.y+r.h; ty+=tH) {
+        for (let tx=r.x; tx<r.x+r.w; tx+=tW) {
+          const alt = ((Math.floor(ty/tH)+Math.floor(tx/tW))%2===0);
+          g.fillStyle(alt?d.floor1:d.floor2, 0.85);
+          g.fillRect(tx, ty, tW-1, tH-1);
+        }
+      }
+      // Plank grain lines (subtle horizontal)
+      g.lineStyle(1, d.floor2, 0.25);
+      for (let ty=r.y+50; ty<r.y+r.h; ty+=tH) {
+        g.moveTo(r.x,ty+tH/2); g.lineTo(r.x+r.w,ty+tH/2); g.strokePath();
+      }
+
+      // Ceiling band
+      g.fillStyle(0x0a0e0a,1); g.fillRect(r.x, r.y, r.w, 50);
+      // Ceiling-to-wall shadow strip
+      g.fillStyle(0x000000, 0.4); g.fillRect(r.x, r.y+48, r.w, 6);
+
+      // Fluorescent ceiling lights
+      const numL = Math.max(1, Math.floor(r.w/80));
+      const lSp  = r.w/(numL+1);
+      for (let i=1;i<=numL;i++) {
+        const lx = r.x + lSp*i;
+        // Fixture housing
+        g.fillStyle(0x1a1a1a); g.fillRect(lx-22,r.y+8,44,8);
+        // Tube glow spread
+        g.fillStyle(0xffffc8, 0.06); g.fillCircle(lx,r.y+14,50);
+        g.fillStyle(0xffffc8, 0.04); g.fillCircle(lx,r.y+14,80);
+        // Tube bright
+        g.fillStyle(0xffffee,0.95); g.fillRect(lx-20,r.y+10,40,5);
+        // Tube highlight
+        g.fillStyle(0xffffff,0.7);  g.fillRect(lx-18,r.y+10,36,2);
+      }
+
+      // Room border
+      g.lineStyle(2, d.wall, 0.7); g.strokeRect(r.x, r.y, r.w, r.h);
+      // Inner shadow on top
+      g.lineStyle(1, d.wall, 0.2); g.strokeRect(r.x+2, r.y+2, r.w-4, 50);
+    });
+
+    // Thick wall dividers between rooms (drawn on top of floors)
+    const wallXs = [237, 493, 741, 927];
+    wallXs.forEach(wx => {
+      g.fillStyle(0x050808); g.fillRect(wx, 38, 18, 454);
+      // Inner wall trim
+      g.fillStyle(0x111111, 0.8); g.fillRect(wx+1, 38, 2, 454);
+      g.fillStyle(0x111111, 0.8); g.fillRect(wx+15, 38, 2, 454);
+      // Door opening in center of each wall
+      const doorY = 220, doorH = 90;
+      const adjDept = wx < 500 ? 'sachiko' : wx < 750 ? 'xmkt' : wx < 930 ? 'note' : 'bizdev';
+      g.fillStyle(DEPT[adjDept].floor2, 0.5);
+      g.fillRect(wx+3, doorY, 12, doorH);
+      // Door frame top/bottom
+      g.fillStyle(0x3a3020, 0.8);
+      g.fillRect(wx+2, doorY-2, 14, 3);
+      g.fillRect(wx+2, doorY+doorH, 14, 3);
+    });
+
+    // Windows on outer walls
+    this.drawWindow(g, ROOMS.sachiko.x+3, 115);
+    this.drawWindow(g, ROOMS.external.x+ROOMS.external.w-35, 115);
+
+    // Whiteboards on back walls
+    Object.entries(ROOMS).forEach(([dept, r]) => {
+      this.drawWhiteboard(g, r.x + r.w/2 - 28, r.y + 58, DEPT[dept].wall);
+    });
+
+    // Baseboard at bottom
+    g.fillStyle(0x0a0e0a, 0.9);
+    Object.entries(ROOMS).forEach(([_, r]) => {
+      g.fillRect(r.x, r.y+r.h-10, r.w, 10);
+      g.lineStyle(1, 0x1a2a1a, 0.5);
+      g.moveTo(r.x, r.y+r.h-10); g.lineTo(r.x+r.w, r.y+r.h-10); g.strokePath();
+    });
+
+    // Dept labels as Phaser text
+    Object.entries(ROOMS).forEach(([dept, r]) => {
+      this.add.text(r.x+r.w/2, r.y+25, DEPT[dept].label, {
+        fontSize:'7px', color:'#d0ffd0', fontFamily:'Courier New', align:'center'
+      }).setOrigin(0.5).setDepth(6);
+    });
+
+    // Static desk furniture (chair back + desk base at depth 1, desk surface at depth 3)
+    Object.entries(AGENTS_CFG).forEach(([id, cfg]) => {
+      const d = DEPT[cfg.dept];
+      drawChairBack(fg, cfg.x, cfg.y, d.wall);
+      drawDeskBase(fg, cfg.x, cfg.y);
+      drawDeskSurface(ds, cfg.x, cfg.y, d.wall);
+    });
+
     // Decorations
-    [242,244,492,493,742,744].forEach((x,i)=> drawPlant(this, x, 140 + (i%2)*220));
-    drawCooler(this, 230, 430);
-    drawCooler(this, 480, 430);
-    drawCooler(this, 730, 430);
-    drawCooler(this, 916, 430);
-    // Bookshelf on walls
-    drawBookshelf(this,  18, 80);
-    drawBookshelf(this, 258, 80);
-    drawBookshelf(this, 508, 80);
-    drawBookshelf(this, 758, 80);
-    drawBookshelf(this, 938, 80);
-    // Agents
-    Object.entries(AGENTS_CFG).forEach(([id, cfg]) => this.buildAgent(id, cfg));
-    // Poll
-    this.time.addEvent({ delay:1500, callback:this.fetchStatus, callbackScope:this, loop:true });
+    Object.entries(ROOMS).forEach(([dept, r]) => {
+      drawPlant(dc, r.x+14,       r.y+r.h-28);
+      drawPlant(dc, r.x+r.w-14,   r.y+r.h-28);
+    });
+    drawCooler(dc, ROOMS.sachiko.x+ROOMS.sachiko.w-18, 370);
+    drawCooler(dc, ROOMS.note.x+ROOMS.note.w-18, 370);
+    drawBookshelf(dc, ROOMS.bizdev.x+8, r_y(ROOMS.bizdev)+58);
+    drawBookshelf(dc, ROOMS.external.x+8, r_y(ROOMS.external)+58);
   }
 
+  drawWindow(g, x, y) {
+    const w=30, h=45;
+    g.fillStyle(0x2a3030); g.fillRect(x,y,w,h);
+    // Sky gradient (fake with layers)
+    g.fillStyle(0x5a8acc,0.8); g.fillRect(x+2,y+2,w-4,h-4);
+    g.fillStyle(0x7aaade,0.5); g.fillRect(x+2,y+2,(w-5)/2,(h-5)/2);
+    g.fillStyle(0x4a72b0,0.4); g.fillRect(x+2+(w-5)/2+1,y+2,(w-5)/2,(h-5)/2);
+    g.fillStyle(0x6090c0,0.3); g.fillRect(x+2,y+2+(h-5)/2+1,w-4,(h-5)/2);
+    // Window cross
+    g.fillStyle(0x2a3030,0.9);
+    g.fillRect(x,    y+h/2-1, w, 2);
+    g.fillRect(x+w/2-1, y, 2, h);
+    // Sill
+    g.fillStyle(0x3a4040); g.fillRect(x-2, y+h, w+4, 4);
+    // Inner glow (daylight)
+    g.fillStyle(0xaaccff,0.04); g.fillCircle(x+w/2, y+h/2, 30);
+  }
+
+  drawWhiteboard(g, x, y, wallColor) {
+    const w=56, h=32;
+    g.fillStyle(0x1a1a1a); g.fillRect(x,y,w,h);
+    g.fillStyle(0xeaeaea,0.92); g.fillRect(x+2,y+2,w-4,h-4);
+    // Colored writing lines
+    const r=(wallColor>>16)&0xff, gr=(wallColor>>8)&0xff, b=wallColor&0xff;
+    g.lineStyle(1, (r<<16)|(gr<<8)|b, 0.5);
+    [8,16,22].forEach(ly => {
+      const lw = 10+Math.sin(y+ly)*12+12;
+      g.moveTo(x+5,y+ly); g.lineTo(x+5+lw,y+ly); g.strokePath();
+    });
+    // A small diagram/box
+    g.lineStyle(1, 0x6666aa, 0.4);
+    g.strokeRect(x+38, y+8, 12, 10);
+    // Marker tray
+    g.fillStyle(0x2a2a2a); g.fillRect(x,y+h,w,4);
+    // Marker on tray
+    g.fillStyle(0xcc3030); g.fillRect(x+8,y+h+1,6,2);
+    g.fillStyle(0x3030cc); g.fillRect(x+18,y+h+1,6,2);
+  }
+
+  // ── Agent setup ─────────────────────────────────────────────────────────
   buildAgent(id, cfg) {
-    const dc = DEPT[cfg.dept];
-    const c  = this.add.container(cfg.x, cfg.y);
-    // Chair (drawn first = behind everything)
-    drawChair(this, c, 0, 0, dc.wall);
-    // Desk
-    drawDesk(this, c, 0, 14, dc.wall);
-    // Glow
+    const d  = DEPT[cfg.dept];
+    const c  = this.add.container(cfg.x, cfg.y).setDepth(2);
+
     const glow = this.add.graphics();
-    glow.fillStyle(SC.idle, 0.2); glow.fillCircle(0,0,18);
+    glow.fillStyle(SC.idle, 0.1); glow.fillCircle(0,0,14);
     c.add(glow);
-    // Body
+
     const body = this.add.graphics();
-    drawChar(body, 0, 0, dc.wall); c.add(body);
-    // Name
-    c.add(this.add.text(0, 42, cfg.name, { fontSize:'7px', color:'#a0d0a0', fontFamily:'Courier New', align:'center' }).setOrigin(0.5));
-    // Badge
-    const badge = this.add.text(0, -38, 'idle', { fontSize:'6px', color:'#6b7280', fontFamily:'Courier New', backgroundColor:'#0a0f0a', padding:{x:3,y:1} }).setOrigin(0.5);
-    c.add(badge);
-    this.agentObjs[id] = { c, glow, body, badge };
+    drawCharIdle(body, 0, 0, d.wall);
+    c.add(body);
+
+    // Floating labels (separate, follow container pos in update)
+    const nameT = this.add.text(cfg.x, cfg.y+34, cfg.name, {
+      fontSize:'7px', color:'#b0ddb0', fontFamily:'Courier New',
+    }).setOrigin(0.5).setDepth(8);
+    const badge = this.add.text(cfg.x, cfg.y-33, 'idle', {
+      fontSize:'6px', color:'#6b7280', fontFamily:'Courier New',
+      backgroundColor:'#050808', padding:{x:2,y:1},
+    }).setOrigin(0.5).setDepth(9);
+
+    this.agentObjs[id] = {
+      c, glow, body, nameT, badge,
+      homeX:cfg.x, homeY:cfg.y, dept:cfg.dept,
+      walkTarget: null,
+      walkPause:  Math.random()*2000,
+      facing:     true,
+      walkFrame:  Math.floor(Math.random()*4),
+      lastFrameT: -999,
+      lastStatus: '',
+    };
   }
 
-  updateAgent(id, data) {
-    const o  = this.agentObjs[id]; if(!o) return;
-    const sc = SC[data.status] || SC.idle;
-    o.glow.clear();
-    const alpha = data.status==='working'?0.45:0.18;
-    const r     = data.status==='working'?24:16;
-    o.glow.fillStyle(sc, alpha); o.glow.fillCircle(0,0,r);
-    o.body.clear();
-    const dc = DEPT[AGENTS_CFG[id].dept];
-    drawChar(o.body, 0, 0, data.status==='working'?sc:dc.wall);
-    o.badge.setText(data.status==='working' && data.task ? data.task.slice(0,18) : data.status)
-            .setColor('#'+sc.toString(16).padStart(6,'0'));
-    if (data.status==='working') {
-      this.tweens.add({ targets:o.c, y:AGENTS_CFG[id].y-5, duration:450, yoyo:true, repeat:-1, ease:'Sine.easeInOut' });
-    } else {
-      this.tweens.killTweensOf(o.c); o.c.setY(AGENTS_CFG[id].y);
-    }
-  }
-
+  // ── Data fetch ──────────────────────────────────────────────────────────
   fetchStatus() {
     fetch('/api/status').then(r=>r.json()).then(data=>{
-      Object.entries(data.agents||{}).forEach(([id,a])=>this.updateAgent(id,a));
+      Object.entries(data.agents||{}).forEach(([id,a]) => {
+        window._agentStates[id] = a;
+        const obj = this.agentObjs[id]; if(!obj) return;
+        const sc = SC[a.status]||SC.idle;
+        obj.badge
+          .setText(a.status==='working'&&a.task ? a.task.slice(0,20) : a.status)
+          .setColor('#'+sc.toString(16).padStart(6,'0'));
+      });
       window._updateUI(data);
     }).catch(()=>{});
   }
+
+  // ── Animation loop (60fps) ──────────────────────────────────────────────
+  update(time, delta) {
+    if (!delta || delta>250) return;
+    const WALK_SPD   = 38;  // px/s idle
+    const RETURN_SPD = 75;  // px/s returning to desk
+    const FRAME_MS   = 200; // walk animation frame interval
+
+    Object.entries(this.agentObjs).forEach(([id, obj]) => {
+      const st       = (window._agentStates[id]||{}).status || 'idle';
+      const goHome   = (st==='working'||st==='done');
+      const d        = DEPT[AGENTS_CFG[id].dept];
+
+      // ── Decide target ──────────────────────────────────────────────────
+      let tX=obj.c.x, tY=obj.c.y;
+      if (goHome) {
+        tX=obj.homeX; tY=obj.homeY;
+      } else {
+        // Wander around room
+        const atT = obj.walkTarget &&
+          Math.abs(obj.c.x-obj.walkTarget.x)<6 &&
+          Math.abs(obj.c.y-obj.walkTarget.y)<6;
+        if (atT || !obj.walkTarget) {
+          obj.walkPause -= delta;
+          if (obj.walkPause<=0) {
+            const b = WALK_BOUNDS[AGENTS_CFG[id].dept];
+            obj.walkTarget = {
+              x: b.x1 + Math.random()*(b.x2-b.x1),
+              y: b.y1 + Math.random()*(b.y2-b.y1),
+            };
+            obj.walkPause = 500 + Math.random()*2800;
+          }
+        }
+        if (obj.walkTarget) { tX=obj.walkTarget.x; tY=obj.walkTarget.y; }
+      }
+
+      // ── Move ───────────────────────────────────────────────────────────
+      const dx=tX-obj.c.x, dy=tY-obj.c.y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      const spd=(goHome?RETURN_SPD:WALK_SPD);
+      const moving=dist>2.5;
+      if (moving) {
+        const step=Math.min(spd*delta/1000, dist);
+        obj.c.x += (dx/dist)*step;
+        obj.c.y += (dy/dist)*step;
+        if (Math.abs(dx)>1) obj.facing = dx>0;
+      }
+
+      // Sync floating labels
+      obj.nameT.setPosition(obj.c.x, obj.c.y+34);
+      obj.badge.setPosition(obj.c.x, obj.c.y-33);
+
+      // ── Sprite redraw (every FRAME_MS) ─────────────────────────────────
+      const isAtDesk = Math.abs(obj.c.x-obj.homeX)<5 && Math.abs(obj.c.y-obj.homeY)<5;
+      const seated   = isAtDesk && goHome;
+      const timeForFrame = (time-obj.lastFrameT)>FRAME_MS;
+
+      if (timeForFrame) {
+        obj.lastFrameT = time;
+        if (moving) obj.walkFrame=(obj.walkFrame+1)%4;
+        obj.body.clear();
+        if (seated) {
+          drawCharSeated(obj.body, 0, 0, d.wall, st==='working');
+        } else if (moving) {
+          drawCharWalk(obj.body, 0, 0, d.wall, obj.walkFrame, obj.facing);
+        } else {
+          drawCharIdle(obj.body, 0, 0, d.wall);
+        }
+      }
+
+      // ── Glow ───────────────────────────────────────────────────────────
+      const sc = SC[st]||SC.idle;
+      if (st==='working') {
+        const pulse = 0.28+0.12*Math.sin(time*0.0028);
+        const pr    = 18+4*Math.sin(time*0.0028);
+        obj.glow.clear();
+        obj.glow.fillStyle(sc, pulse); obj.glow.fillCircle(0,0,pr);
+        obj.glow.fillStyle(sc, 0.05); obj.glow.fillCircle(0,0,34);
+      } else if (st !== obj.lastStatus) {
+        obj.glow.clear();
+        const a  = st==='done'?0.28:st==='error'?0.32:0.08;
+        const pr = st==='done'?16:st==='error'?16:12;
+        obj.glow.fillStyle(sc,a); obj.glow.fillCircle(0,0,pr);
+      }
+      obj.lastStatus = st;
+    });
+  }
 }
 
-// ─── Drawing helpers ──────────────────────────────────────────────────────
-function drawRoom(scene, x, y, w, h, dept) {
-  const dc = DEPT[dept];
-  const g  = scene.add.graphics();
-  // Floor
-  g.fillStyle(dc.bg, 0.65); g.fillRect(x,y,w,h);
-  // Wall top (header)
-  g.fillStyle(dc.wall, 0.85); g.fillRect(x,y,w,24);
-  // Border
-  g.lineStyle(2, dc.wall, 0.9); g.strokeRect(x,y,w,h);
-  // Inner shadow
-  g.lineStyle(1, dc.wall, 0.2); g.strokeRect(x+3,y+3,w-6,h-6);
-  scene.add.text(x+w/2, y+12, DEPT_LABELS[dept], { fontSize:'7px', color:'#e0ffe0', fontFamily:'Courier New' }).setOrigin(0.5);
-  // Floor grid subtle lines
-  g.lineStyle(1, dc.wall, 0.05);
-  for(let lx=x+40; lx<x+w; lx+=40) { g.moveTo(lx,y+24); g.lineTo(lx,y+h); g.strokePath(); }
-  for(let ly=y+60; ly<y+h; ly+=60) { g.moveTo(x,ly); g.lineTo(x+w,ly); g.strokePath(); }
+// ── Character draw functions ─────────────────────────────────────────────────
+function drawCharIdle(g, x, y, shirt) {
+  g.fillStyle(0x2a1a08); g.fillRect(x-2*S,y-10*S,4*S,S);       // hair
+  g.fillStyle(0xf5cba7); g.fillRect(x-2*S,y-9*S,4*S,4*S);       // face
+  g.fillStyle(0x1a1a1a); g.fillRect(x-S,  y-8*S, S,S);          // eye L
+  g.fillRect(x+S,        y-8*S, S,S);                            // eye R
+  g.fillStyle(shirt);    g.fillRect(x-2*S,y-5*S,4*S,5*S);       // torso
+  g.fillRect(x-3*S,y-5*S,S,3*S);                                  // arm L
+  g.fillRect(x+2*S,y-5*S,S,3*S);                                  // arm R
+  g.fillStyle(0xf5cba7); g.fillRect(x-3*S,y-2*S,S,S);           // hand L
+  g.fillRect(x+2*S,y-2*S,S,S);                                    // hand R
+  g.fillStyle(0x2c3e50); g.fillRect(x-2*S,y,2*S,3*S);           // leg L
+  g.fillRect(x,y,2*S,3*S);                                        // leg R
+  g.fillStyle(0x1a1a1a); g.fillRect(x-2*S,y+3*S,2*S,S);        // shoe L
+  g.fillRect(x,y+3*S,2*S,S);                                      // shoe R
 }
 
-function drawDesk(scene, container, dx, dy, color) {
-  const g = scene.add.graphics();
-  // Desk legs
-  g.fillStyle(0x3a2510);
-  g.fillRect(dx-24, dy+16, 4, 9);
-  g.fillRect(dx+20, dy+16, 4, 9);
-  // Desk body (3D side)
-  g.fillStyle(0x3a2510, 0.8); g.fillRect(dx-26, dy+13, 52, 4);
-  // Desk surface
-  g.fillStyle(0x6b4020, 1.0); g.fillRect(dx-28, dy, 56, 14);
-  // Surface highlight
-  g.fillStyle(0x8a5830, 0.6); g.fillRect(dx-28, dy, 56, 3);
-  // Surface shadow
-  g.fillStyle(0x3a2010, 0.5); g.fillRect(dx-28, dy+11, 56, 3);
-  // Papers on desk
-  g.fillStyle(0xeeeedd, 0.85); g.fillRect(dx+9, dy+2, 12, 8);
-  g.fillStyle(0xddddcc, 0.6); g.fillRect(dx+10, dy+3, 10, 2);
-  g.fillStyle(0xddddcc, 0.4); g.fillRect(dx+10, dy+6, 8, 1);
-  // Monitor neck
-  g.fillStyle(0x111111); g.fillRect(dx-1, dy-6, 2, 7);
-  // Monitor base
-  g.fillStyle(0x1a1a2a); g.fillRect(dx-6, dy-6, 12, 3);
-  // Monitor frame
-  g.fillStyle(0x111122); g.fillRect(dx-11, dy-27, 22, 22);
-  g.fillStyle(0x0a0a1a); g.strokeRect(dx-11, dy-27, 22, 22);
-  // Screen glow (color by dept)
-  const r=(color>>16)&0xff, gr=(color>>8)&0xff, b=color&0xff;
-  const screenCol = (Math.floor(r*0.3)<<16)|(Math.floor(gr*0.3)<<8)|Math.floor(b*0.3+80);
-  g.fillStyle(screenCol, 0.9); g.fillRect(dx-10, dy-26, 20, 20);
-  g.fillStyle(0xffffff, 0.12); g.fillRect(dx-10, dy-26, 20, 5);
-  container.add(g);
-}
-
-function drawChair(scene, container, dx, dy, color) {
-  const g = scene.add.graphics();
-  const c2 = (color & 0xfefefe) >> 1;
-  // Chair legs
-  g.fillStyle(0x2a2a3a);
-  g.fillRect(dx-11, dy+22, 3, 10);
-  g.fillRect(dx+8,  dy+22, 3, 10);
-  // Seat
-  g.fillStyle(c2, 0.8); g.fillRect(dx-13, dy+14, 26, 9);
-  g.fillStyle(color, 0.4); g.fillRect(dx-13, dy+14, 26, 2);
-  // Chair back (tall, visible behind character)
-  g.fillStyle(c2, 0.85); g.fillRect(dx-10, dy-28, 20, 18);
-  g.fillStyle(color, 0.35); g.fillRect(dx-10, dy-28, 20, 4);
-  // Back support bar
-  g.fillStyle(0x2a2a3a); g.fillRect(dx-9, dy-10, 18, 3);
-  container.add(g);
-}
-
-function drawChar(g, x, y, shirt) {
-  const S=3;
+function drawCharWalk(g, x, y, shirt, frame, faceRight) {
+  const bob = (frame%2)?-1:0;
   // Hair
-  g.fillStyle(0x2a1a08); g.fillRect(x-2*S,y-10*S,4*S,S);
+  g.fillStyle(0x2a1a08); g.fillRect(x-2*S,y-10*S+bob,4*S,S);
   // Face
-  g.fillStyle(0xf5cba7); g.fillRect(x-2*S,y-9*S,4*S,4*S);
-  // Eyes
-  g.fillStyle(0x333333); g.fillRect(x-S,y-8*S,S,S); g.fillRect(x+S,y-8*S,S,S);
-  // Body/shirt
-  g.fillStyle(shirt); g.fillRect(x-2*S,y-5*S,4*S,5*S);
-  // Arms
-  g.fillRect(x-3*S,y-5*S,S,3*S); g.fillRect(x+2*S,y-5*S,S,3*S);
-  // Hands
-  g.fillStyle(0xf5cba7); g.fillRect(x-3*S,y-2*S,S,S); g.fillRect(x+2*S,y-2*S,S,S);
-  // Pants
-  g.fillStyle(0x2c3e50); g.fillRect(x-2*S,y,2*S,3*S); g.fillRect(x,y,2*S,3*S);
-  // Shoes
-  g.fillStyle(0x1a1a1a); g.fillRect(x-2*S,y+3*S,2*S,S); g.fillRect(x,y+3*S,2*S,S);
+  g.fillStyle(0xf5cba7); g.fillRect(x-2*S,y-9*S+bob,4*S,4*S);
+  // Eyes (shifted toward facing direction)
+  g.fillStyle(0x1a1a1a);
+  const eOff = faceRight ? S : -2*S;
+  g.fillRect(x+eOff,   y-8*S+bob, S,S);
+  g.fillRect(x+eOff+S, y-8*S+bob, S,S);
+  // Torso
+  g.fillStyle(shirt); g.fillRect(x-2*S,y-5*S+bob,4*S,5*S);
+  // Arms swing (opposite to legs)
+  const aFwd = (frame<2)?-S:0;
+  g.fillStyle(shirt);
+  g.fillRect(x-3*S, y-5*S+bob+aFwd,     S,3*S);
+  g.fillRect(x+2*S, y-5*S+bob+(S-aFwd), S,3*S);
+  g.fillStyle(0xf5cba7);
+  g.fillRect(x-3*S, y-2*S+bob+aFwd,     S,S);
+  g.fillRect(x+2*S, y-2*S+bob+(S-aFwd), S,S);
+  // Legs alternate
+  g.fillStyle(0x2c3e50);
+  if (frame===0||frame===2) {
+    // right foot forward
+    g.fillRect(x-2*S, y+bob,    2*S,2*S);
+    g.fillRect(x-2*S, y+2*S+bob,2*S,S);
+    g.fillRect(x,     y-S+bob,  2*S,3*S);
+  } else {
+    g.fillRect(x-2*S, y-S+bob,  2*S,3*S);
+    g.fillRect(x,     y+bob,    2*S,2*S);
+    g.fillRect(x,     y+2*S+bob,2*S,S);
+  }
+  g.fillStyle(0x1a1a1a);
+  if (frame===0||frame===2) {
+    g.fillRect(x-2*S, y+2*S+bob,2*S,S);
+    g.fillRect(x,     y+2*S+bob,3*S,S);
+  } else {
+    g.fillRect(x-2*S, y+2*S+bob,3*S,S);
+    g.fillRect(x,     y+2*S+bob,2*S,S);
+  }
 }
 
-function drawPlant(scene, x, y) {
-  const g=scene.add.graphics();
+function drawCharSeated(g, x, y, shirt, typing) {
+  // Upper body only — desk surface (depth 3) hides legs
+  g.fillStyle(0x2a1a08); g.fillRect(x-2*S,y-10*S,4*S,S);        // hair
+  g.fillStyle(0xf5cba7); g.fillRect(x-2*S,y-9*S, 4*S,4*S);       // face
+  g.fillStyle(0x1a1a1a); g.fillRect(x-S,  y-8*S, S,S);           // eye L
+  g.fillRect(x+S,        y-8*S,S,S);                              // eye R
+  g.fillStyle(shirt);    g.fillRect(x-2*S,y-5*S,4*S,4*S);        // torso
+  // Arms reaching forward onto desk (at y-2*S = desk surface level)
+  g.fillRect(x-5*S,y-2*S,3*S,2*S);  // arm L
+  g.fillRect(x+2*S,y-2*S,3*S,2*S);  // arm R
+  g.fillStyle(0xf5cba7);
+  g.fillRect(x-6*S,y-2*S,S,2*S);    // hand L
+  g.fillRect(x+5*S,y-2*S,S,2*S);    // hand R
+}
+
+// ── Static furniture helpers ────────────────────────────────────────────────
+function drawChairBack(g, x, y, wall) {
+  const c = darken(wall, 0.55);
+  // Chair back rectangle (depth 1 = behind character)
+  g.fillStyle(c, 0.92); g.fillRect(x-12,y-35,24,20);
+  g.fillStyle(c, 0.5);  g.fillRect(x-12,y-35,24,3);   // top highlight
+  // Armrests
+  g.fillStyle(0x1a1a22); g.fillRect(x-15,y-24,4,12);
+  g.fillStyle(0x1a1a22); g.fillRect(x+11, y-24,4,12);
+  // Chair legs
+  g.fillStyle(0x222222);
+  g.fillRect(x-10,y+16,3,10);
+  g.fillRect(x+7, y+16,3,10);
+  // Seat
+  g.fillStyle(c, 0.7); g.fillRect(x-13,y+14,26,6);
+}
+
+function drawDeskBase(g, x, y) {
+  // Desk legs (depth 1 = behind character)
+  g.fillStyle(0x4a2808);
+  g.fillRect(x-26,y+12,4,10);
+  g.fillRect(x+22, y+12,4,10);
+  // Desk side panel (3D look)
+  g.fillStyle(0x3a1a06,0.8); g.fillRect(x-28,y+10,56,4);
+}
+
+function drawDeskSurface(g, x, y, wall) {
+  // Desk surface (depth 3 = IN FRONT of character, visually hides legs when seated)
+  // Surface
+  g.fillStyle(0x7a4820); g.fillRect(x-28,y-7,56,15);
+  // Highlight strip
+  g.fillStyle(0x9a6030,0.6); g.fillRect(x-28,y-7,56,3);
+  // Shadow underside
+  g.fillStyle(0x2a0e00,0.5); g.fillRect(x-28,y+6,56,2);
+  // Papers
+  g.fillStyle(0xeeeedd,0.8); g.fillRect(x+6,y-5,15,10);
+  g.fillStyle(0xddddcc,0.5); g.fillRect(x+7,y-4,11,2);
+  g.fillStyle(0xddddcc,0.3); g.fillRect(x+7,y-1,8,1);
+  // Monitor neck
+  g.fillStyle(0x101010); g.fillRect(x-1,y-20,2,14);
+  // Monitor base
+  g.fillStyle(0x181820); g.fillRect(x-7,y-20,14,4);
+  // Monitor frame (depth 3 = in front of character's head too)
+  g.fillStyle(0x0d0d1a); g.fillRect(x-13,y-44,26,25);
+  g.lineStyle(1,0x2a2a40,0.9); g.strokeRect(x-13,y-44,26,25);
+  // Screen (dept-colored tint)
+  const r=(wall>>16)&0xff, gr=(wall>>8)&0xff, b=wall&0xff;
+  const sc = (Math.max(0,r-80)<<16)|(Math.max(0,gr-60)<<8)|Math.max(50,b+20);
+  g.fillStyle(sc,0.95); g.fillRect(x-12,y-43,24,23);
+  g.fillStyle(0xffffff,0.1); g.fillRect(x-12,y-43,24,6); // screen glare
+}
+
+function drawPlant(g, x, y) {
   // Pot
-  g.fillStyle(0x8B4513); g.fillRect(x-5,y+7,10,9);
-  g.fillStyle(0xA0522D, 0.5); g.fillRect(x-5,y+7,10,2);
-  // Soil
-  g.fillStyle(0x3a2010); g.fillRect(x-4,y+8,8,3);
+  g.fillStyle(0x7a4010); g.fillRect(x-5,y+6,10,10);
+  g.fillStyle(0x9a5820,0.5); g.fillRect(x-5,y+6,10,2);
+  g.fillStyle(0x2a1005); g.fillRect(x-4,y+7,8,4);
   // Leaves
-  g.fillStyle(0x2d8a2d); g.fillCircle(x,y,9);
-  g.fillStyle(0x22aa22); g.fillCircle(x-5,y+3,5); g.fillCircle(x+5,y+3,5);
-  g.fillStyle(0x38cc38, 0.5); g.fillCircle(x,y-3,5);
+  g.fillStyle(0x2a8030); g.fillCircle(x,y,10);
+  g.fillStyle(0x1aaa28); g.fillCircle(x-6,y+3,6); g.fillCircle(x+6,y+3,6);
+  g.fillStyle(0x35cc40,0.45); g.fillCircle(x,y-4,6);
 }
 
-function drawCooler(scene, x, y) {
-  const g=scene.add.graphics();
-  // Body
-  g.fillStyle(0x2a4a6a); g.fillRect(x-6,y-18,12,22);
-  // Highlight
-  g.fillStyle(0x3a6a9a, 0.5); g.fillRect(x-5,y-17,4,8);
-  // Water tank
-  g.fillStyle(0x88ccee, 0.7); g.fillRect(x-4,y-16,8,9);
-  g.fillStyle(0xaaddff, 0.4); g.fillRect(x-3,y-15,3,4);
-  // Base
-  g.fillStyle(0x1a3a5a); g.fillRect(x-7,y+4,14,3);
+function drawCooler(g, x, y) {
+  g.fillStyle(0x1a3a5a); g.fillRect(x-7,y-22,14,26);
+  g.fillStyle(0x2a5a8a,0.5); g.fillRect(x-6,y-21,5,10);
+  g.fillStyle(0x70b8e0,0.7); g.fillRect(x-5,y-20,10,11);
+  g.fillStyle(0x99d4f8,0.4); g.fillRect(x-4,y-19,4,5);
+  g.fillStyle(0x0a2a4a); g.fillRect(x-8,y+4,16,3);
+  // Buttons
+  g.fillStyle(0xcc3030); g.fillRect(x-4,y-4,3,3);
+  g.fillStyle(0x3030cc); g.fillRect(x+1, y-4,3,3);
 }
 
-function drawBookshelf(scene, x, y) {
-  const g = scene.add.graphics();
-  g.fillStyle(0x3a2510); g.fillRect(x, y, 28, 40);
-  g.fillStyle(0x2a1a08); g.fillRect(x, y+19, 28, 2);
-  // Books bottom row
-  const bc = [0x8a2a2a,0x2a6a8a,0x2a8a4a,0x8a7a2a,0x6a2a8a,0x8a4a2a];
-  for(let i=0;i<6;i++){
-    g.fillStyle(bc[i]); g.fillRect(x+2+i*4, y+22, 3, 15);
-  }
-  // Books top row
-  const bc2 = [0x5a3a7a,0x7a5a2a,0x2a5a4a,0x5a2a2a];
-  for(let i=0;i<4;i++){
-    g.fillStyle(bc2[i]); g.fillRect(x+2+i*6, y+3, 5, 13);
-  }
+function drawBookshelf(g, x, y) {
+  g.fillStyle(0x3a2010); g.fillRect(x,y,30,44);
+  g.fillStyle(0x2a1808); g.fillRect(x,y+21,30,2);
+  const bc=[0x8a2020,0x205a8a,0x208a40,0x8a7820,0x6a2080,0x8a4020];
+  for(let i=0;i<6;i++){g.fillStyle(bc[i]);g.fillRect(x+2+i*4,y+24,3,17);}
+  const bc2=[0x5a2870,0x70501a,0x1a5040,0x5a1818];
+  for(let i=0;i<4;i++){g.fillStyle(bc2[i]);g.fillRect(x+2+i*6,y+3,5,15);}
 }
 
-// Phaser init
-new Phaser.Game({ type:Phaser.AUTO, width:1140, height:510, backgroundColor:'#0a0f0a',
-  parent:'game-container', pixelArt:true, roundPixels:true, antialias:false, scene:[OfficeScene] });
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function darken(color, f) {
+  return (Math.floor(((color>>16)&0xff)*f)<<16) |
+         (Math.floor(((color>>8)&0xff)*f)<<8)  |
+          Math.floor((color&0xff)*f);
+}
+function r_y(room) { return room.y; }
 
-// ─── Sidebar UI ──────────────────────────────────────────────────────────
-let _currentTab = 'x';
+// ── Phaser init ──────────────────────────────────────────────────────────────
+new Phaser.Game({
+  type: Phaser.AUTO, width: CW, height: CH,
+  backgroundColor: '#040707',
+  parent: 'game-container', pixelArt: true, roundPixels: true, antialias: false,
+  scene: [OfficeScene],
+});
 
-function showTab(tab) {
-  _currentTab = tab;
-  document.getElementById('tab-x').classList.toggle('active', tab==='x');
-  document.getElementById('tab-note').classList.toggle('active', tab==='note');
-  document.getElementById('x-pending-list').classList.toggle('hidden', tab!=='x');
-  document.getElementById('note-pending-list').classList.toggle('hidden', tab!=='note');
+// ── Sidebar UI ───────────────────────────────────────────────────────────────
+let _currentTab='x';
+function showTab(tab){
+  _currentTab=tab;
+  document.getElementById('tab-x').classList.toggle('active',tab==='x');
+  document.getElementById('tab-note').classList.toggle('active',tab==='note');
+  document.getElementById('x-pending-list').classList.toggle('hidden',tab!=='x');
+  document.getElementById('note-pending-list').classList.toggle('hidden',tab!=='note');
 }
 
 function renderPendingX(posts) {
-  const el = document.getElementById('x-pending-list');
-  if (!posts || posts.length===0) {
-    el.innerHTML = '<div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成</div>';
-    return;
-  }
-  el.innerHTML = posts.map(p => `
-    <div class="pend-item" id="px-${p.id}">
-      <div class="pend-text">${escHtml(p.text)}</div>
-      <div class="pend-meta">${p.created_at}</div>
-      <div class="pend-actions">
-        <button class="btn-approve" onclick="approveItem('x_posts','${p.id}')">✓ 承認</button>
-        <button class="btn-reject"  onclick="rejectItem('x_posts','${p.id}')">✗ 却下</button>
-      </div>
-    </div>`).join('');
+  const el=document.getElementById('x-pending-list');
+  if(!posts||!posts.length){el.innerHTML='<div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成（AI副業/YouTube収益化テーマ）</div>';return;}
+  el.innerHTML=posts.map(p=>`<div class="pend-item" id="px-${p.id}">
+    <div class="pend-text">${escHtml(p.text)}</div>
+    <div class="pend-meta">${p.created_at}</div>
+    <div class="pend-actions">
+      <button class="btn-approve" onclick="approveItem('x_posts','${p.id}')">✓ 承認</button>
+      <button class="btn-reject"  onclick="rejectItem('x_posts','${p.id}')">✗ 却下</button>
+    </div></div>`).join('');
 }
 
 function renderPendingNote(drafts) {
-  const el = document.getElementById('note-pending-list');
-  if (!drafts || drafts.length===0) {
-    el.innerHTML = '<div class="empty-msg">承認待ちのnote記事はありません<br>毎週月曜10時に自動生成</div>';
-    return;
-  }
-  el.innerHTML = drafts.map(d => `
-    <div class="pend-item" id="nd-${d.id}">
-      <div class="pend-title">${escHtml(d.title)}</div>
-      <div class="pend-meta">${d.created_at}</div>
-      <div class="pend-actions">
-        <button class="btn-approve" onclick="previewNote('${d.id}')">👁 確認・承認</button>
-        <button class="btn-reject"  onclick="rejectItem('note_drafts','${d.id}')">✗ 却下</button>
-      </div>
-    </div>`).join('');
+  const el=document.getElementById('note-pending-list');
+  if(!drafts||!drafts.length){el.innerHTML='<div class="empty-msg">承認待ちのnote記事はありません<br>毎週月曜10時に自動生成</div>';return;}
+  el.innerHTML=drafts.map(d=>`<div class="pend-item" id="nd-${d.id}">
+    <div class="pend-title">${escHtml(d.title)}</div>
+    <div class="pend-meta">${d.created_at}</div>
+    <div class="pend-actions">
+      <button class="btn-approve" onclick="previewNote('${d.id}')">👁 確認・承認</button>
+      <button class="btn-reject"  onclick="rejectItem('note_drafts','${d.id}')">✗ 却下</button>
+    </div></div>`).join('');
 }
 
-function approveItem(type, id) {
-  fetch('/api/approve', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({type, id})
-  }).then(()=>{
-    document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove();
-  }).catch(()=>{});
+function approveItem(type,id){
+  fetch('/api/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,id})})
+    .then(()=>document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove()).catch(()=>{});
 }
-
-function rejectItem(type, id) {
-  fetch('/api/reject', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({type, id})
-  }).then(()=>{
-    document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove();
-  }).catch(()=>{});
+function rejectItem(type,id){
+  fetch('/api/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,id})})
+    .then(()=>document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove()).catch(()=>{});
 }
-
-function previewNote(id) {
+function previewNote(id){
   fetch('/api/note_body/'+id).then(r=>r.json()).then(data=>{
-    document.getElementById('modal-title').textContent = data.title;
-    document.getElementById('modal-body').textContent  = data.body;
-    document.getElementById('modal-approve-btn').onclick = ()=>{ approveItem('note_drafts',id); closeModal(); };
-    document.getElementById('modal-reject-btn').onclick  = ()=>{ rejectItem('note_drafts',id); closeModal(); };
+    document.getElementById('modal-title').textContent=data.title;
+    document.getElementById('modal-body').textContent=data.body;
+    document.getElementById('modal-approve-btn').onclick=()=>{approveItem('note_drafts',id);closeModal();};
+    document.getElementById('modal-reject-btn').onclick=()=>{rejectItem('note_drafts',id);closeModal();};
     document.getElementById('note-modal').classList.add('open');
   }).catch(()=>{});
 }
-function closeModal() { document.getElementById('note-modal').classList.remove('open'); }
+function closeModal(){document.getElementById('note-modal').classList.remove('open');}
 
-// Kikuchi progress
-function updateKikuchi(data) {
-  if (!data || data.error) return;
-  document.getElementById('kk-episode').textContent = data.episode || '-';
-  document.getElementById('kk-due').textContent = data.due ? `納期: ${data.due}  ${data.status||''}` : '';
-  const pct = data.progress || 0;
-  document.getElementById('kk-bar').style.width = pct + '%';
-  document.getElementById('kk-pct').textContent = pct + '% (' + (data.done||0) + '/' + (data.total||5) + '章)';
-  // Update check items
-  const checks = document.querySelectorAll('#kk-checks .check-item');
-  const labels = ['①', '②', '③', '④', '⑤'];
-  checks.forEach((el, i) => {
-    const isDone = i < (data.done || 0);
-    el.textContent = isDone ? '✓' + labels[i] : labels[i];
-    el.classList.toggle('done', isDone);
+function updateKikuchi(data){
+  if(!data||data.error) return;
+  document.getElementById('kk-episode').textContent=data.episode||'-';
+  document.getElementById('kk-due').textContent=data.due?`納期: ${data.due}  ${data.status||''}`:'';
+  const pct=data.progress||0;
+  document.getElementById('kk-bar').style.width=pct+'%';
+  document.getElementById('kk-pct').textContent=`${pct}% (${data.done||0}/${data.total||5}章)`;
+  const checks=document.querySelectorAll('#kk-checks .check-item');
+  ['①','②','③','④','⑤'].forEach((lb,i)=>{
+    const done=i<(data.done||0);
+    checks[i].textContent=done?'✓'+lb:lb;
+    checks[i].classList.toggle('done',done);
   });
 }
 
-// Poll kikuchi every 5 minutes
-function pollKikuchi() {
-  fetch('/api/kikuchi_progress').then(r=>r.json()).then(updateKikuchi).catch(()=>{});
-}
-pollKikuchi();
-setInterval(pollKikuchi, 300000);
+function pollKikuchi(){fetch('/api/kikuchi_progress').then(r=>r.json()).then(updateKikuchi).catch(()=>{});}
+pollKikuchi(); setInterval(pollKikuchi,300000);
 
-window._updateUI = function(data) {
-  // Status bar
-  const sb = document.getElementById('status-bar');
-  if (data.running) { sb.textContent='⚡ RUNNING'; sb.style.color='#fbbf24'; }
-  else              { sb.textContent='●  IDLE';    sb.style.color='#4a8a4a'; }
-
-  // Run button
-  const btn = document.getElementById('run-btn');
-  btn.disabled = data.running;
-  btn.className = data.running ? 'btn btn-disabled' : 'btn btn-green';
-  btn.textContent = data.running ? '⏳ 実行中...' : '▶ 脚本エージェント起動';
-
-  // Pending queue
-  const xp = (data.pending?.x_posts    || []);
-  const np = (data.pending?.note_drafts || []);
-  document.getElementById('x-pending-count').textContent   = xp.length;
-  document.getElementById('note-pending-count').textContent = np.length;
-  renderPendingX(xp);
-  renderPendingNote(np);
-
-  // Approved queue counts
-  const xa = (data.approved?.x_posts    || []).filter(p=>!p.posted).length;
-  const na = (data.approved?.note_drafts|| []).filter(d=>!d.published).length;
-  document.getElementById('x-approved-count').textContent   = xa;
-  document.getElementById('note-approved-count').textContent = na;
-
-  // Schedule
-  if (data.schedule?.length) {
-    document.getElementById('schedule-list').innerHTML = data.schedule.map(s =>
+window._updateUI=function(data){
+  const sb=document.getElementById('status-bar');
+  if(data.running){sb.textContent='⚡ RUNNING';sb.style.color='#fbbf24';}
+  else{sb.textContent='●  IDLE';sb.style.color='#4a8a4a';}
+  const btn=document.getElementById('run-btn');
+  btn.disabled=data.running;
+  btn.className=data.running?'btn btn-disabled':'btn btn-green';
+  btn.textContent=data.running?'⏳ 実行中...':'▶ 脚本エージェント起動';
+  const xp=data.pending?.x_posts||[];
+  const np=data.pending?.note_drafts||[];
+  document.getElementById('x-pending-count').textContent=xp.length;
+  document.getElementById('note-pending-count').textContent=np.length;
+  renderPendingX(xp); renderPendingNote(np);
+  const xa=(data.approved?.x_posts||[]).filter(p=>!p.posted).length;
+  const na=(data.approved?.note_drafts||[]).filter(d=>!d.published).length;
+  document.getElementById('x-approved-count').textContent=xa;
+  document.getElementById('note-approved-count').textContent=na;
+  if(data.schedule?.length){
+    document.getElementById('schedule-list').innerHTML=data.schedule.map(s=>
       `<div class="sched-item">
         <span class="sched-name">${s.name}</span>
         <span class="sched-next">${s.next_run}</span>
         <button class="btn-trigger" onclick="triggerJob('${s.id}')">▶</button>
-       </div>`).join('');
+      </div>`).join('');
   }
-
-  // Logs
-  if (data.logs?.length) {
-    document.getElementById('log-list').innerHTML = data.logs.slice(0,15).map(l=>
+  if(data.logs?.length){
+    document.getElementById('log-list').innerHTML=data.logs.slice(0,15).map(l=>
       `<div class="log-item"><span class="log-time">${l.time}</span><span class="log-msg">${escHtml(l.msg)}</span></div>`
     ).join('');
   }
-
-  // Result
-  if (data.result) document.getElementById('result-box').textContent = data.result;
-
-  // Kikuchi from state
-  if (data.kikuchi_progress) updateKikuchi(data.kikuchi_progress);
+  if(data.result) document.getElementById('result-box').textContent=data.result;
+  if(data.kikuchi_progress) updateKikuchi(data.kikuchi_progress);
 };
 
-function runManual() {
-  const theme = document.getElementById('theme-input').value.trim();
-  if (!theme) return;
-  fetch('/api/run', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({theme}) }).catch(()=>{});
+function runManual(){
+  const theme=document.getElementById('theme-input').value.trim();
+  if(!theme)return;
+  fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({theme})}).catch(()=>{});
 }
-function triggerJob(id) {
-  fetch('/api/trigger/'+id, { method:'POST' }).catch(()=>{});
-}
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function triggerJob(id){fetch('/api/trigger/'+id,{method:'POST'}).catch(()=>{});}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-document.getElementById('theme-input').addEventListener('keydown', e=>{ if(e.key==='Enter') runManual(); });
-document.getElementById('note-modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+document.getElementById('theme-input').addEventListener('keydown',e=>{if(e.key==='Enter')runManual();});
+document.getElementById('note-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 </script>
 </body>
 </html>
