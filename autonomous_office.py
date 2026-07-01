@@ -572,7 +572,8 @@ def job_kikuchi_progress_update():
         done     = sum(1 for c in checks if c.upper() == "TRUE")
         total    = len(checks)
         pct      = int(done / total * 100) if total > 0 else 0
-        agent_status = "working" if 0 < pct < 100 else ("done" if pct >= 100 else "idle")
+        # 菊地は担当エピソードがある間は常に working（着座）
+        agent_status = "done" if pct >= 100 else "working"
         with lock:
             state["agents"]["kikuchi"]["status"] = agent_status
             state["agents"]["kikuchi"]["task"]   = f"{ep_name} {pct}%"
@@ -598,8 +599,8 @@ scheduler.add_job(job_generate_x_drafts,    CronTrigger(hour=9,  minute=0,  time
 scheduler.add_job(job_x_random_post,        CronTrigger(hour=8,  minute=0,  timezone=JST), id="x_post_morning",    name="X投稿（朝8時）")
 scheduler.add_job(job_x_random_post,        CronTrigger(hour=12, minute=0,  timezone=JST), id="x_post_noon",       name="X投稿（昼12時）")
 scheduler.add_job(job_x_random_post,        CronTrigger(hour=20, minute=0,  timezone=JST), id="x_post_evening",    name="X投稿（夜20時）")
-# Hourly — 菊地進捗
-scheduler.add_job(job_kikuchi_progress_update, CronTrigger(minute=0, timezone=JST), id="kikuchi_check", name="菊地進捗チェック")
+# 30分ごと — 菊地進捗（毎時0分・30分）
+scheduler.add_job(job_kikuchi_progress_update, CronTrigger(minute="0,30", timezone=JST), id="kikuchi_check", name="菊地進捗チェック（30分ごと）")
 # Weekly
 scheduler.add_job(job_x_strategy_learn,    CronTrigger(day_of_week="sun", hour=23, minute=0,  timezone=JST), id="x_strategy_weekly",   name="X戦略学習（週1）")
 scheduler.add_job(job_note_research,        CronTrigger(day_of_week="sun", hour=23, minute=30, timezone=JST), id="note_research_weekly", name="noteリサーチ（週1）")
@@ -702,6 +703,8 @@ def api_reject():
 
 @app.route("/api/kikuchi_progress")
 def api_kikuchi_progress():
+    # スプシから最新を取得してから返す（キャッシュより最新優先）
+    threading.Thread(target=job_kikuchi_progress_update, daemon=True).start()
     with lock:
         return jsonify(state.get("kikuchi_progress", {}))
 
