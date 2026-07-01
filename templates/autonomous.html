@@ -37,7 +37,7 @@ body {
   animation: pulse 2s infinite;
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
-.wrapper { display: flex; gap: 10px; align-items: flex-start; width: 100%; max-width: 1210px; }
+.wrapper { display: flex; gap: 10px; align-items: flex-start; width: 100%; max-width: 1460px; }
 #game-container canvas { display: block; border: 3px solid #1a4a1a; image-rendering: pixelated; }
 .sidebar { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 7px; }
 .panel { background: #111a11; border: 1px solid #1e4a1e; border-radius: 4px; padding: 7px 9px; }
@@ -76,6 +76,18 @@ body {
 .q-item { flex: 1; background: #0d170d; border-radius: 3px; padding: 4px 6px; text-align: center; }
 .q-label { color: #4a8a4a; font-size: 7px; display: block; margin-bottom: 2px; }
 .q-count { color: #30cc70; font-size: 14px; font-family: 'Press Start 2P', monospace; }
+
+/* Kikuchi progress */
+.kikuchi-panel { background: #0d1522; border: 1px solid #1e3a5e; border-radius: 4px; padding: 7px 9px; }
+.kikuchi-title { font-size: 9px; color: #4a7aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; border-bottom: 1px solid #1e3a5e; padding-bottom: 3px; }
+.kikuchi-ep { font-size: 11px; color: #7ab0e0; font-weight: bold; margin-bottom: 4px; }
+.kikuchi-due { font-size: 8px; color: #5a8aaa; margin-bottom: 6px; }
+.progress-bar-bg { background: #0a1520; border: 1px solid #1e3a5e; border-radius: 3px; height: 14px; overflow: hidden; margin-bottom: 4px; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, #1a5a9a, #3a9adf); transition: width 0.5s ease; border-radius: 2px; }
+.progress-text { font-size: 9px; color: #7ab0e0; text-align: right; }
+.kikuchi-checks { display: flex; gap: 3px; margin-top: 5px; }
+.check-item { flex: 1; background: #0a1520; border: 1px solid #1e3a5e; border-radius: 2px; padding: 2px; text-align: center; font-size: 7px; color: #3a6a9a; }
+.check-item.done { background: #0a2a40; border-color: #3a7aaa; color: #7ab0e0; }
 
 /* Schedule */
 .schedule-list { display: flex; flex-direction: column; gap: 4px; max-height: 130px; overflow-y: auto; }
@@ -124,6 +136,24 @@ body {
       <button id="run-btn" class="btn btn-green" onclick="runManual()">▶ 脚本エージェント起動</button>
     </div>
 
+    <!-- 菊地進捗 -->
+    <div class="kikuchi-panel">
+      <div class="kikuchi-title">👤 菊地（外注）進捗</div>
+      <div class="kikuchi-ep" id="kk-episode">読み込み中...</div>
+      <div class="kikuchi-due" id="kk-due"></div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="kk-bar" style="width:0%"></div>
+      </div>
+      <div class="progress-text" id="kk-pct">0%</div>
+      <div class="kikuchi-checks" id="kk-checks">
+        <div class="check-item">①</div>
+        <div class="check-item">②</div>
+        <div class="check-item">③</div>
+        <div class="check-item">④</div>
+        <div class="check-item">⑤</div>
+      </div>
+    </div>
+
     <!-- 承認待ちキュー -->
     <div class="panel">
       <div class="panel-title">📥 承認待ちキュー</div>
@@ -136,7 +166,7 @@ body {
         </button>
       </div>
       <div class="approval-list" id="x-pending-list">
-        <div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:30に自動生成</div>
+        <div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成</div>
       </div>
       <div class="approval-list hidden" id="note-pending-list">
         <div class="empty-msg">承認待ちのnote記事はありません<br>毎週月曜10時に自動生成</div>
@@ -199,25 +229,27 @@ body {
 <script>
 // ─── Dept & agent config ──────────────────────────────────────────────────
 const AGENTS_CFG = {
-  researcher:       { x:  90, y: 225, name: '幸子リサーチャー', dept:'sachiko' },
-  scriptwriter:     { x: 205, y: 225, name: '脚本家',          dept:'sachiko' },
-  x_strategist:     { x: 330, y: 200, name: 'X戦略家',         dept:'xmkt' },
-  x_writer:         { x: 445, y: 200, name: 'X投稿ライター',   dept:'xmkt' },
-  x_poster:         { x: 387, y: 340, name: 'X投稿管理',       dept:'xmkt' },
-  note_researcher:  { x: 582, y: 225, name: 'noteリサーチャー','dept':'note' },
-  note_writer:      { x: 697, y: 225, name: 'note記事ライター','dept':'note' },
-  tieup_researcher: { x: 840, y: 260, name: 'タイアップ探索',  dept:'bizdev' },
+  researcher:       { x: 100, y: 230, name: '幸子リサーチャー', dept:'sachiko' },
+  scriptwriter:     { x: 210, y: 230, name: '脚本家',          dept:'sachiko' },
+  x_strategist:     { x: 340, y: 205, name: 'X戦略家',         dept:'xmkt' },
+  x_writer:         { x: 455, y: 205, name: 'X投稿ライター',   dept:'xmkt' },
+  x_poster:         { x: 397, y: 350, name: 'X投稿管理',       dept:'xmkt' },
+  note_researcher:  { x: 600, y: 230, name: 'noteリサーチャー', dept:'note' },
+  note_writer:      { x: 710, y: 230, name: 'note記事ライター', dept:'note' },
+  tieup_researcher: { x: 830, y: 220, name: 'タイアップ探索',  dept:'bizdev' },
+  kikuchi:          { x: 970, y: 280, name: '菊地（外注）',    dept:'external' },
 };
 const DEPT = {
-  sachiko: { wall:0x3a8a4a, bg:0x003300 },
-  xmkt:    { wall:0x3a4a8a, bg:0x000033 },
-  note:    { wall:0x6a3a8a, bg:0x110022 },
-  bizdev:  { wall:0x8a6a2a, bg:0x221100 },
+  sachiko:  { wall:0x3a8a4a, bg:0x003300 },
+  xmkt:     { wall:0x3a4a8a, bg:0x000033 },
+  note:     { wall:0x6a3a8a, bg:0x110022 },
+  bizdev:   { wall:0x8a6a2a, bg:0x221100 },
+  external: { wall:0x5a5a8a, bg:0x111122 },
 };
 const SC = { idle:0x6b7280, working:0xfbbf24, done:0x34d399, error:0xef4444 };
 const DEPT_LABELS = {
   sachiko:'幸子チャンネル部署', xmkt:'Xマーケティング部署',
-  note:'noteコンテンツ部署', bizdev:'事業開発部署'
+  note:'noteコンテンツ部署', bizdev:'事業開発部署', external:'外注管理'
 };
 
 // ─── Phaser Scene ─────────────────────────────────────────────────────────
@@ -228,20 +260,28 @@ class OfficeScene extends Phaser.Scene {
     this.agentObjs = {};
     // Floor tiles
     const gf = this.add.graphics();
-    for (let r=0; r<18; r++) for (let c=0; c<30; c++) {
+    for (let r=0; r<17; r++) for (let c=0; c<36; c++) {
       gf.fillStyle((r+c)%2===0?0x0d1a0d:0x0a150a);
       gf.fillRect(c*32, r*32, 32, 32);
     }
-    // Rooms
-    drawRoom(this, 20,  40, 240, 450, 'sachiko');
-    drawRoom(this, 280, 40, 230, 450, 'xmkt');
-    drawRoom(this, 530, 40, 230, 450, 'note');
-    drawRoom(this, 780, 40, 170, 450, 'bizdev');
+    // Rooms (5 rooms)
+    drawRoom(this,  10,  40, 230, 460, 'sachiko');
+    drawRoom(this, 250,  40, 240, 460, 'xmkt');
+    drawRoom(this, 500,  40, 240, 460, 'note');
+    drawRoom(this, 750,  40, 170, 460, 'bizdev');
+    drawRoom(this, 930,  40, 200, 460, 'external');
     // Decorations
-    [262,263,519,521,767,769].forEach((x,i)=> drawPlant(this, x, 150 + (i%2)*200));
-    drawCooler(this, 230, 420);
-    drawCooler(this, 490, 420);
-    drawCooler(this, 745, 420);
+    [242,244,492,493,742,744].forEach((x,i)=> drawPlant(this, x, 140 + (i%2)*220));
+    drawCooler(this, 230, 430);
+    drawCooler(this, 480, 430);
+    drawCooler(this, 730, 430);
+    drawCooler(this, 916, 430);
+    // Bookshelf on walls
+    drawBookshelf(this,  18, 80);
+    drawBookshelf(this, 258, 80);
+    drawBookshelf(this, 508, 80);
+    drawBookshelf(this, 758, 80);
+    drawBookshelf(this, 938, 80);
     // Agents
     Object.entries(AGENTS_CFG).forEach(([id, cfg]) => this.buildAgent(id, cfg));
     // Poll
@@ -251,14 +291,21 @@ class OfficeScene extends Phaser.Scene {
   buildAgent(id, cfg) {
     const dc = DEPT[cfg.dept];
     const c  = this.add.container(cfg.x, cfg.y);
-    drawDesk(this, c, 0, 12, dc.wall);
+    // Chair (drawn first = behind everything)
+    drawChair(this, c, 0, 0, dc.wall);
+    // Desk
+    drawDesk(this, c, 0, 14, dc.wall);
+    // Glow
     const glow = this.add.graphics();
-    glow.fillStyle(SC.idle, 0.2); glow.fillCircle(0,0,17);
+    glow.fillStyle(SC.idle, 0.2); glow.fillCircle(0,0,18);
     c.add(glow);
+    // Body
     const body = this.add.graphics();
     drawChar(body, 0, 0, dc.wall); c.add(body);
-    c.add(this.add.text(0, 38, cfg.name, { fontSize:'7px', color:'#a0d0a0', fontFamily:'Courier New', align:'center' }).setOrigin(0.5));
-    const badge = this.add.text(0, -36, 'idle', { fontSize:'6px', color:'#6b7280', fontFamily:'Courier New', backgroundColor:'#0a0f0a', padding:{x:3,y:1} }).setOrigin(0.5);
+    // Name
+    c.add(this.add.text(0, 42, cfg.name, { fontSize:'7px', color:'#a0d0a0', fontFamily:'Courier New', align:'center' }).setOrigin(0.5));
+    // Badge
+    const badge = this.add.text(0, -38, 'idle', { fontSize:'6px', color:'#6b7280', fontFamily:'Courier New', backgroundColor:'#0a0f0a', padding:{x:3,y:1} }).setOrigin(0.5);
     c.add(badge);
     this.agentObjs[id] = { c, glow, body, badge };
   }
@@ -268,14 +315,15 @@ class OfficeScene extends Phaser.Scene {
     const sc = SC[data.status] || SC.idle;
     o.glow.clear();
     const alpha = data.status==='working'?0.45:0.18;
-    const r     = data.status==='working'?22:15;
+    const r     = data.status==='working'?24:16;
     o.glow.fillStyle(sc, alpha); o.glow.fillCircle(0,0,r);
     o.body.clear();
     const dc = DEPT[AGENTS_CFG[id].dept];
     drawChar(o.body, 0, 0, data.status==='working'?sc:dc.wall);
-    o.badge.setText(data.status).setColor('#'+sc.toString(16).padStart(6,'0'));
+    o.badge.setText(data.status==='working' && data.task ? data.task.slice(0,18) : data.status)
+            .setColor('#'+sc.toString(16).padStart(6,'0'));
     if (data.status==='working') {
-      this.tweens.add({ targets:o.c, y:AGENTS_CFG[id].y-4, duration:400, yoyo:true, repeat:-1, ease:'Sine.easeInOut' });
+      this.tweens.add({ targets:o.c, y:AGENTS_CFG[id].y-5, duration:450, yoyo:true, repeat:-1, ease:'Sine.easeInOut' });
     } else {
       this.tweens.killTweensOf(o.c); o.c.setY(AGENTS_CFG[id].y);
     }
@@ -293,47 +341,140 @@ class OfficeScene extends Phaser.Scene {
 function drawRoom(scene, x, y, w, h, dept) {
   const dc = DEPT[dept];
   const g  = scene.add.graphics();
-  g.fillStyle(dc.bg, 0.6); g.fillRect(x,y,w,h);
-  g.lineStyle(2, dc.wall); g.strokeRect(x,y,w,h);
-  g.fillStyle(dc.wall, 0.8); g.fillRect(x,y,w,22);
-  scene.add.text(x+w/2, y+11, DEPT_LABELS[dept], { fontSize:'7px', color:'#e0ffe0', fontFamily:'Courier New' }).setOrigin(0.5);
+  // Floor
+  g.fillStyle(dc.bg, 0.65); g.fillRect(x,y,w,h);
+  // Wall top (header)
+  g.fillStyle(dc.wall, 0.85); g.fillRect(x,y,w,24);
+  // Border
+  g.lineStyle(2, dc.wall, 0.9); g.strokeRect(x,y,w,h);
+  // Inner shadow
+  g.lineStyle(1, dc.wall, 0.2); g.strokeRect(x+3,y+3,w-6,h-6);
+  scene.add.text(x+w/2, y+12, DEPT_LABELS[dept], { fontSize:'7px', color:'#e0ffe0', fontFamily:'Courier New' }).setOrigin(0.5);
+  // Floor grid subtle lines
+  g.lineStyle(1, dc.wall, 0.05);
+  for(let lx=x+40; lx<x+w; lx+=40) { g.moveTo(lx,y+24); g.lineTo(lx,y+h); g.strokePath(); }
+  for(let ly=y+60; ly<y+h; ly+=60) { g.moveTo(x,ly); g.lineTo(x+w,ly); g.strokePath(); }
 }
+
 function drawDesk(scene, container, dx, dy, color) {
-  const g=scene.add.graphics();
-  g.fillStyle(color, 0.9); g.fillRect(dx-22,dy,44,13);
-  g.fillStyle(0x2a2a2a); g.fillRect(dx-9,dy+2,18,5);
+  const g = scene.add.graphics();
+  // Desk legs
+  g.fillStyle(0x3a2510);
+  g.fillRect(dx-24, dy+16, 4, 9);
+  g.fillRect(dx+20, dy+16, 4, 9);
+  // Desk body (3D side)
+  g.fillStyle(0x3a2510, 0.8); g.fillRect(dx-26, dy+13, 52, 4);
+  // Desk surface
+  g.fillStyle(0x6b4020, 1.0); g.fillRect(dx-28, dy, 56, 14);
+  // Surface highlight
+  g.fillStyle(0x8a5830, 0.6); g.fillRect(dx-28, dy, 56, 3);
+  // Surface shadow
+  g.fillStyle(0x3a2010, 0.5); g.fillRect(dx-28, dy+11, 56, 3);
+  // Papers on desk
+  g.fillStyle(0xeeeedd, 0.85); g.fillRect(dx+9, dy+2, 12, 8);
+  g.fillStyle(0xddddcc, 0.6); g.fillRect(dx+10, dy+3, 10, 2);
+  g.fillStyle(0xddddcc, 0.4); g.fillRect(dx+10, dy+6, 8, 1);
+  // Monitor neck
+  g.fillStyle(0x111111); g.fillRect(dx-1, dy-6, 2, 7);
+  // Monitor base
+  g.fillStyle(0x1a1a2a); g.fillRect(dx-6, dy-6, 12, 3);
+  // Monitor frame
+  g.fillStyle(0x111122); g.fillRect(dx-11, dy-27, 22, 22);
+  g.fillStyle(0x0a0a1a); g.strokeRect(dx-11, dy-27, 22, 22);
+  // Screen glow (color by dept)
+  const r=(color>>16)&0xff, gr=(color>>8)&0xff, b=color&0xff;
+  const screenCol = (Math.floor(r*0.3)<<16)|(Math.floor(gr*0.3)<<8)|Math.floor(b*0.3+80);
+  g.fillStyle(screenCol, 0.9); g.fillRect(dx-10, dy-26, 20, 20);
+  g.fillStyle(0xffffff, 0.12); g.fillRect(dx-10, dy-26, 20, 5);
   container.add(g);
 }
+
+function drawChair(scene, container, dx, dy, color) {
+  const g = scene.add.graphics();
+  const c2 = (color & 0xfefefe) >> 1;
+  // Chair legs
+  g.fillStyle(0x2a2a3a);
+  g.fillRect(dx-11, dy+22, 3, 10);
+  g.fillRect(dx+8,  dy+22, 3, 10);
+  // Seat
+  g.fillStyle(c2, 0.8); g.fillRect(dx-13, dy+14, 26, 9);
+  g.fillStyle(color, 0.4); g.fillRect(dx-13, dy+14, 26, 2);
+  // Chair back (tall, visible behind character)
+  g.fillStyle(c2, 0.85); g.fillRect(dx-10, dy-28, 20, 18);
+  g.fillStyle(color, 0.35); g.fillRect(dx-10, dy-28, 20, 4);
+  // Back support bar
+  g.fillStyle(0x2a2a3a); g.fillRect(dx-9, dy-10, 18, 3);
+  container.add(g);
+}
+
 function drawChar(g, x, y, shirt) {
   const S=3;
+  // Hair
+  g.fillStyle(0x2a1a08); g.fillRect(x-2*S,y-10*S,4*S,S);
+  // Face
   g.fillStyle(0xf5cba7); g.fillRect(x-2*S,y-9*S,4*S,4*S);
-  g.fillStyle(0x3b2a1a); g.fillRect(x-2*S,y-10*S,4*S,S);
+  // Eyes
   g.fillStyle(0x333333); g.fillRect(x-S,y-8*S,S,S); g.fillRect(x+S,y-8*S,S,S);
+  // Body/shirt
   g.fillStyle(shirt); g.fillRect(x-2*S,y-5*S,4*S,5*S);
+  // Arms
   g.fillRect(x-3*S,y-5*S,S,3*S); g.fillRect(x+2*S,y-5*S,S,3*S);
+  // Hands
+  g.fillStyle(0xf5cba7); g.fillRect(x-3*S,y-2*S,S,S); g.fillRect(x+2*S,y-2*S,S,S);
+  // Pants
   g.fillStyle(0x2c3e50); g.fillRect(x-2*S,y,2*S,3*S); g.fillRect(x,y,2*S,3*S);
+  // Shoes
   g.fillStyle(0x1a1a1a); g.fillRect(x-2*S,y+3*S,2*S,S); g.fillRect(x,y+3*S,2*S,S);
 }
+
 function drawPlant(scene, x, y) {
   const g=scene.add.graphics();
-  g.fillStyle(0x1a3a1a); g.fillRect(x-4,y+8,8,8);
+  // Pot
+  g.fillStyle(0x8B4513); g.fillRect(x-5,y+7,10,9);
+  g.fillStyle(0xA0522D, 0.5); g.fillRect(x-5,y+7,10,2);
+  // Soil
+  g.fillStyle(0x3a2010); g.fillRect(x-4,y+8,8,3);
+  // Leaves
   g.fillStyle(0x2d8a2d); g.fillCircle(x,y,9);
-  g.fillStyle(0x22aa22); g.fillCircle(x-4,y+3,5); g.fillCircle(x+4,y+3,5);
+  g.fillStyle(0x22aa22); g.fillCircle(x-5,y+3,5); g.fillCircle(x+5,y+3,5);
+  g.fillStyle(0x38cc38, 0.5); g.fillCircle(x,y-3,5);
 }
+
 function drawCooler(scene, x, y) {
   const g=scene.add.graphics();
-  g.fillStyle(0x2a4a6a); g.fillRect(x-5,y-12,10,15);
-  g.fillStyle(0x88ccee); g.fillRect(x-3,y-10,6,7);
+  // Body
+  g.fillStyle(0x2a4a6a); g.fillRect(x-6,y-18,12,22);
+  // Highlight
+  g.fillStyle(0x3a6a9a, 0.5); g.fillRect(x-5,y-17,4,8);
+  // Water tank
+  g.fillStyle(0x88ccee, 0.7); g.fillRect(x-4,y-16,8,9);
+  g.fillStyle(0xaaddff, 0.4); g.fillRect(x-3,y-15,3,4);
+  // Base
+  g.fillStyle(0x1a3a5a); g.fillRect(x-7,y+4,14,3);
+}
+
+function drawBookshelf(scene, x, y) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x3a2510); g.fillRect(x, y, 28, 40);
+  g.fillStyle(0x2a1a08); g.fillRect(x, y+19, 28, 2);
+  // Books bottom row
+  const bc = [0x8a2a2a,0x2a6a8a,0x2a8a4a,0x8a7a2a,0x6a2a8a,0x8a4a2a];
+  for(let i=0;i<6;i++){
+    g.fillStyle(bc[i]); g.fillRect(x+2+i*4, y+22, 3, 15);
+  }
+  // Books top row
+  const bc2 = [0x5a3a7a,0x7a5a2a,0x2a5a4a,0x5a2a2a];
+  for(let i=0;i<4;i++){
+    g.fillStyle(bc2[i]); g.fillRect(x+2+i*6, y+3, 5, 13);
+  }
 }
 
 // Phaser init
-new Phaser.Game({ type:Phaser.AUTO, width:960, height:500, backgroundColor:'#0a0f0a',
+new Phaser.Game({ type:Phaser.AUTO, width:1140, height:510, backgroundColor:'#0a0f0a',
   parent:'game-container', pixelArt:true, roundPixels:true, antialias:false, scene:[OfficeScene] });
 
 // ─── Sidebar UI ──────────────────────────────────────────────────────────
 let _currentTab = 'x';
-let _pendingData = { x_posts:[], note_drafts:[] };
-let _modalItemId = null;
 
 function showTab(tab) {
   _currentTab = tab;
@@ -346,7 +487,7 @@ function showTab(tab) {
 function renderPendingX(posts) {
   const el = document.getElementById('x-pending-list');
   if (!posts || posts.length===0) {
-    el.innerHTML = '<div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:30に自動生成</div>';
+    el.innerHTML = '<div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成</div>';
     return;
   }
   el.innerHTML = posts.map(p => `
@@ -397,7 +538,6 @@ function rejectItem(type, id) {
 
 function previewNote(id) {
   fetch('/api/note_body/'+id).then(r=>r.json()).then(data=>{
-    _modalItemId = id;
     document.getElementById('modal-title').textContent = data.title;
     document.getElementById('modal-body').textContent  = data.body;
     document.getElementById('modal-approve-btn').onclick = ()=>{ approveItem('note_drafts',id); closeModal(); };
@@ -406,6 +546,31 @@ function previewNote(id) {
   }).catch(()=>{});
 }
 function closeModal() { document.getElementById('note-modal').classList.remove('open'); }
+
+// Kikuchi progress
+function updateKikuchi(data) {
+  if (!data || data.error) return;
+  document.getElementById('kk-episode').textContent = data.episode || '-';
+  document.getElementById('kk-due').textContent = data.due ? `納期: ${data.due}  ${data.status||''}` : '';
+  const pct = data.progress || 0;
+  document.getElementById('kk-bar').style.width = pct + '%';
+  document.getElementById('kk-pct').textContent = pct + '% (' + (data.done||0) + '/' + (data.total||5) + '章)';
+  // Update check items
+  const checks = document.querySelectorAll('#kk-checks .check-item');
+  const labels = ['①', '②', '③', '④', '⑤'];
+  checks.forEach((el, i) => {
+    const isDone = i < (data.done || 0);
+    el.textContent = isDone ? '✓' + labels[i] : labels[i];
+    el.classList.toggle('done', isDone);
+  });
+}
+
+// Poll kikuchi every 5 minutes
+function pollKikuchi() {
+  fetch('/api/kikuchi_progress').then(r=>r.json()).then(updateKikuchi).catch(()=>{});
+}
+pollKikuchi();
+setInterval(pollKikuchi, 300000);
 
 window._updateUI = function(data) {
   // Status bar
@@ -420,18 +585,18 @@ window._updateUI = function(data) {
   btn.textContent = data.running ? '⏳ 実行中...' : '▶ 脚本エージェント起動';
 
   // Pending queue
-  const xp   = (data.pending?.x_posts    || []);
-  const np   = (data.pending?.note_drafts || []);
-  document.getElementById('x-pending-count').textContent    = xp.length;
-  document.getElementById('note-pending-count').textContent  = np.length;
+  const xp = (data.pending?.x_posts    || []);
+  const np = (data.pending?.note_drafts || []);
+  document.getElementById('x-pending-count').textContent   = xp.length;
+  document.getElementById('note-pending-count').textContent = np.length;
   renderPendingX(xp);
   renderPendingNote(np);
 
   // Approved queue counts
   const xa = (data.approved?.x_posts    || []).filter(p=>!p.posted).length;
   const na = (data.approved?.note_drafts|| []).filter(d=>!d.published).length;
-  document.getElementById('x-approved-count').textContent    = xa;
-  document.getElementById('note-approved-count').textContent  = na;
+  document.getElementById('x-approved-count').textContent   = xa;
+  document.getElementById('note-approved-count').textContent = na;
 
   // Schedule
   if (data.schedule?.length) {
@@ -452,6 +617,9 @@ window._updateUI = function(data) {
 
   // Result
   if (data.result) document.getElementById('result-box').textContent = data.result;
+
+  // Kikuchi from state
+  if (data.kikuchi_progress) updateKikuchi(data.kikuchi_progress);
 };
 
 function runManual() {

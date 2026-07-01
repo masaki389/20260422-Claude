@@ -119,8 +119,11 @@ state = {
         "note_writer":     {"name": "note記事ライター",    "dept": "note",   "status": "idle", "task": ""},
         # 事業開発部署
         "tieup_researcher":{"name": "タイアップ探索",      "dept": "bizdev", "status": "idle", "task": ""},
+        # 外注
+        "kikuchi":          {"name": "菊地（外注）",        "dept": "external","status": "idle", "task": ""},
     },
     "logs": [],
+    "kikuchi_progress": {"episode": "-", "progress": 0, "status": "-", "due": "-"},
 }
 
 
@@ -331,17 +334,15 @@ def job_x_strategy_learn():
     log("🧠 X戦略学習エージェント起動")
     try:
         set_status("x_strategist", "working", "X戦略をリサーチ中...")
-        agent = make_agent(
-            "Xマーケティング戦略家",
-            "日本語Xで伸びる投稿パターンを分析しシニア向けコンテンツへ応用する戦略を立案する",
-            "X(旧Twitter)のアルゴリズム・バズる型・日本語クリエイターの事例を熟知。ターゲット：55-65歳女性。")
+        agent = make_agent_soul("x_strategist")
         result = run_single(
-            "「老後・年金・節約・シニアライフ」ジャンルでXを伸ばす法則を分析:\n"
+            "AI副業・YouTube収益化・一人会社運営ジャンルでXを伸ばす最新法則を分析:\n"
             "①バズる投稿の型5つ（テンプレート付き）\n"
             "②最適な投稿頻度・時間帯（JST）\n"
-            "③シニア向けで特に刺さるキーワード15個\n"
+            "③このジャンルで特に刺さるキーワード15個\n"
             "④避けるべきNG表現\n"
-            "⑤フォロワーを増やすエンゲージメント戦術3つ",
+            "⑤フォロワーを増やすエンゲージメント戦術3つ\n"
+            "⑥noteへの自然な誘導を組み込む方法",
             "Xマーケティング戦略ガイド（マークダウン形式）", agent)
         set_status("x_strategist", "done", "戦略ガイド更新 ✓")
         (RESEARCH_DIR / "x_strategy.md").write_text(
@@ -360,14 +361,13 @@ def job_generate_x_drafts():
     try:
         set_status("x_writer", "working", "投稿ドラフト生成中...")
         strategy = _read_strategy("x_strategy.md")
-        agent = make_agent(
-            "Xコンテンツクリエイター",
-            "幸子チャンネル向けX投稿ドラフトを7件作成する。毎回バリエーションを変える。",
-            ("学習済みX戦略:\n" + strategy + "\n\n" if strategy else "") +
-            "幸子チャンネル（65歳主婦の老後物語）担当。視聴者は55-65歳女性。")
+        agent = make_agent_soul("x_writer")
+        if strategy:
+            agent.backstory = agent.backstory + f"\n\n最新戦略:\n{strategy[:1500]}"
         result = run_single(
-            "幸子チャンネルのX投稿を7件作成。各投稿140文字以内・ハッシュタグ2〜3個・絵文字あり。\n"
-            "バリエーション必須：年金豆知識・NISAあるある・職場エピソード・節約術・感情共感系・スカッと系・学び系\n"
+            "X投稿を7件作成してください。SOUL.mdのゴール・ターゲット・テーマの柱に従うこと。\n"
+            "テーマのローテーション必須（AI実績の数字・制作ノウハウ・一人会社リアル・逆張り・読者の悩みへの共感）\n"
+            "各投稿140文字以内・絵文字あり・ハッシュタグ2〜3個。\n"
             "各投稿の前に【投稿1】【投稿2】...と番号を必ず付けること。",
             "7件のX投稿ドラフト（各140文字以内）", agent)
         posts = parse_x_posts(result)
@@ -520,32 +520,105 @@ def job_tieup_research():
         set_status("tieup_researcher", "error", "エラー")
 
 
+# ─── Job: 台本骨子ドラフト生成 (daily 09:00) ─────────────────────────────
+def job_scriptwriter_daily():
+    today = datetime.now(JST).strftime("%Y%m%d")
+    log("🎬 台本骨子ドラフト生成開始")
+    try:
+        set_status("scriptwriter", "working", "台本骨子を執筆中...")
+        research_file = RESEARCH_DIR / f"sachiko_auto_{today}.txt"
+        research_hint = research_file.read_text(encoding="utf-8")[:1500] if research_file.exists() else ""
+        agent = make_agent_soul("scriptwriter")
+        result = run_single(
+            "今日の幸子チャンネル向けエピソードの台本骨子を1本作成してください。\n" +
+            (f"参考リサーチ:\n{research_hint}\n\n" if research_hint else "") +
+            "SOUL.mdの指定フォーマット通りに出力すること（タイトル案2つ・6フェーズ・メタファー・田中の一言・中島のフォロー）",
+            "台本骨子（6フェーズ・800〜1200文字）", agent)
+        set_status("scriptwriter", "done", "台本骨子完了 ✓")
+        (RESEARCH_DIR / f"script_draft_{today}.txt").write_text(
+            f"=== 台本骨子ドラフト {today} ===\n\n{result}", encoding="utf-8")
+        log(f"💾 台本骨子保存: script_draft_{today}.txt")
+        with lock:
+            state["result"] = f"🎬 台本骨子ドラフト\n\n{result}"
+    except Exception as e:
+        log(f"❌ 台本骨子エラー: {str(e)[:200]}")
+        set_status("scriptwriter", "error", "エラー")
+
+
+# ─── Job: 菊地進捗チェック (hourly) ──────────────────────────────────────
+def job_kikuchi_progress_update():
+    import urllib.request
+    try:
+        url = ("https://docs.google.com/spreadsheets/d/"
+               "1xHIRrC4e4eJGuvnE84n7xERZYEzu4SApTroB4xYknM0"
+               "/export?format=csv&gid=595521756")
+        with urllib.request.urlopen(url, timeout=15) as resp:
+            content = resp.read().decode("utf-8")
+        lines = content.split("\n")
+        current_ep = None
+        for line in lines[2:]:
+            parts = line.split(",")
+            if len(parts) >= 6 and "菊地" in parts[1]:
+                status = parts[4].strip()
+                if status in ("制作中", "未着手"):
+                    current_ep = parts
+                    break
+        if not current_ep:
+            return
+        ep_name  = current_ep[0].strip()
+        status   = current_ep[4].strip()
+        due_date = current_ep[2].strip()
+        checks   = [current_ep[i].strip() for i in range(5, 10) if i < len(current_ep)]
+        done     = sum(1 for c in checks if c.upper() == "TRUE")
+        total    = len(checks)
+        pct      = int(done / total * 100) if total > 0 else 0
+        agent_status = "working" if 0 < pct < 100 else ("done" if pct >= 100 else "idle")
+        with lock:
+            state["agents"]["kikuchi"]["status"] = agent_status
+            state["agents"]["kikuchi"]["task"]   = f"{ep_name} {pct}%"
+            state["kikuchi_progress"] = {
+                "episode": ep_name, "progress": pct,
+                "done": done, "total": total,
+                "status": status, "due": due_date
+            }
+        log(f"📊 菊地進捗更新: {ep_name} {pct}% ({done}/{total}章)", "kikuchi")
+    except Exception as e:
+        log(f"⚠ 菊地進捗取得失敗: {str(e)[:80]}")
+
+
 # ─── Scheduler ───────────────────────────────────────────────────────────────
-scheduler = BackgroundScheduler(timezone=JST)
-# Daily
-scheduler.add_job(job_secretary_briefing, CronTrigger(hour=7,  minute=30, timezone=JST), id="secretary_daily",  name="秘書ブリーフィング")
-scheduler.add_job(job_sachiko_research,   CronTrigger(hour=9,  minute=0,  timezone=JST), id="sachiko_daily",    name="幸子リサーチ")
-scheduler.add_job(job_generate_x_drafts,  CronTrigger(hour=9,  minute=30, timezone=JST), id="x_draft_daily",   name="X投稿ドラフト生成")
-scheduler.add_job(job_x_random_post,      CronTrigger(hour=8,  minute=0,  timezone=JST), id="x_post_morning",  name="X投稿（朝8時）")
-scheduler.add_job(job_x_random_post,      CronTrigger(hour=12, minute=0,  timezone=JST), id="x_post_noon",     name="X投稿（昼12時）")
-scheduler.add_job(job_x_random_post,      CronTrigger(hour=20, minute=0,  timezone=JST), id="x_post_evening",  name="X投稿（夜20時）")
+scheduler = BackgroundScheduler(timezone=JST, job_defaults={"misfire_grace_time": 300})
+# Daily 07:30 — 秘書
+scheduler.add_job(job_secretary_briefing,   CronTrigger(hour=7,  minute=30, timezone=JST), id="secretary_daily",   name="秘書ブリーフィング")
+# Daily 09:00 — 並列4ジョブ（幸子リサーチ・台本骨子・X投稿・note下書き）
+scheduler.add_job(job_sachiko_research,     CronTrigger(hour=9,  minute=0,  timezone=JST), id="sachiko_daily",     name="幸子リサーチ")
+scheduler.add_job(job_scriptwriter_daily,   CronTrigger(hour=9,  minute=0,  timezone=JST), id="scriptwriter_daily",name="台本骨子ドラフト生成")
+scheduler.add_job(job_generate_x_drafts,    CronTrigger(hour=9,  minute=0,  timezone=JST), id="x_draft_daily",     name="X投稿ドラフト生成")
+# Daily X投稿
+scheduler.add_job(job_x_random_post,        CronTrigger(hour=8,  minute=0,  timezone=JST), id="x_post_morning",    name="X投稿（朝8時）")
+scheduler.add_job(job_x_random_post,        CronTrigger(hour=12, minute=0,  timezone=JST), id="x_post_noon",       name="X投稿（昼12時）")
+scheduler.add_job(job_x_random_post,        CronTrigger(hour=20, minute=0,  timezone=JST), id="x_post_evening",    name="X投稿（夜20時）")
+# Hourly — 菊地進捗
+scheduler.add_job(job_kikuchi_progress_update, CronTrigger(minute=0, timezone=JST), id="kikuchi_check", name="菊地進捗チェック")
 # Weekly
-scheduler.add_job(job_x_strategy_learn,   CronTrigger(day_of_week="sun", hour=23, minute=0,  timezone=JST), id="x_strategy_weekly",   name="X戦略学習（週1）")
-scheduler.add_job(job_note_research,       CronTrigger(day_of_week="sun", hour=23, minute=30, timezone=JST), id="note_research_weekly", name="noteリサーチ（週1）")
-scheduler.add_job(job_generate_note_draft, CronTrigger(day_of_week="mon", hour=10, minute=0,  timezone=JST), id="note_draft_weekly",    name="note記事ドラフト生成")
-scheduler.add_job(job_tieup_research,      CronTrigger(day_of_week="mon", hour=11, minute=0,  timezone=JST), id="tieup_weekly",         name="タイアップリサーチ")
+scheduler.add_job(job_x_strategy_learn,    CronTrigger(day_of_week="sun", hour=23, minute=0,  timezone=JST), id="x_strategy_weekly",   name="X戦略学習（週1）")
+scheduler.add_job(job_note_research,        CronTrigger(day_of_week="sun", hour=23, minute=30, timezone=JST), id="note_research_weekly", name="noteリサーチ（週1）")
+scheduler.add_job(job_generate_note_draft,  CronTrigger(day_of_week="mon", hour=10, minute=0,  timezone=JST), id="note_draft_weekly",    name="note記事ドラフト生成")
+scheduler.add_job(job_tieup_research,       CronTrigger(day_of_week="mon", hour=11, minute=0,  timezone=JST), id="tieup_weekly",         name="タイアップリサーチ")
 
 JOB_FUNCS = {
-    "secretary_daily":     job_secretary_briefing,
-    "sachiko_daily":       job_sachiko_research,
-    "x_draft_daily":       job_generate_x_drafts,
-    "x_post_morning":      job_x_random_post,
-    "x_post_noon":         job_x_random_post,
-    "x_post_evening":      job_x_random_post,
-    "x_strategy_weekly":   job_x_strategy_learn,
-    "note_research_weekly":job_note_research,
-    "note_draft_weekly":   job_generate_note_draft,
-    "tieup_weekly":        job_tieup_research,
+    "secretary_daily":      job_secretary_briefing,
+    "sachiko_daily":        job_sachiko_research,
+    "scriptwriter_daily":   job_scriptwriter_daily,
+    "x_draft_daily":        job_generate_x_drafts,
+    "x_post_morning":       job_x_random_post,
+    "x_post_noon":          job_x_random_post,
+    "x_post_evening":       job_x_random_post,
+    "kikuchi_check":        job_kikuchi_progress_update,
+    "x_strategy_weekly":    job_x_strategy_learn,
+    "note_research_weekly": job_note_research,
+    "note_draft_weekly":    job_generate_note_draft,
+    "tieup_weekly":         job_tieup_research,
 }
 
 
@@ -625,6 +698,12 @@ def api_reject():
         log(f"🗑 却下: {type_} [{item_id}]")
         return jsonify({"ok": True})
     return jsonify({"error": "item not found"}), 404
+
+
+@app.route("/api/kikuchi_progress")
+def api_kikuchi_progress():
+    with lock:
+        return jsonify(state.get("kikuchi_progress", {}))
 
 
 @app.route("/api/note_body/<item_id>")
