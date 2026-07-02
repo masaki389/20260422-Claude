@@ -910,6 +910,40 @@ def api_kikuchi_progress():
         return jsonify(state.get("kikuchi_progress", {}))
 
 
+@app.route("/api/chat", methods=["POST"])
+def api_chat():
+    data = request.get_json() or {}
+    agent_id = data.get("agent_id", "").strip()
+    message  = data.get("message", "").strip()
+    if not agent_id or not message:
+        return jsonify({"error": "agent_id と message が必要です"}), 400
+    if agent_id not in state["agents"]:
+        return jsonify({"error": "不明なエージェントID"}), 404
+    soul = load_soul(agent_id)
+    if not soul:
+        return jsonify({"error": f"SOUL.md が見つかりません: {agent_id}"}), 404
+    try:
+        agent_name = state["agents"][agent_id]["name"]
+        set_status(agent_id, "working", "チャット中...")
+        log(f"💬 [{agent_name}] ← {message[:40]}", agent_id)
+        agent_obj = make_agent_soul(agent_id)
+        result = run_single(
+            f"監督からの質問・指示：{message}\n\n"
+            "SOUL.mdの役割・知識に基づき日本語で回答してください。"
+            "簡潔に（300文字程度）。箇条書き歓迎。",
+            "日本語での返答（300文字目安）",
+            agent_obj
+        )
+        set_status(agent_id, "done", "チャット完了 ✓")
+        log(f"💬 [{agent_name}] → 返答完了", agent_id)
+        return jsonify({"ok": True, "response": result, "agent": agent_name})
+    except Exception as e:
+        import traceback
+        set_status(agent_id, "error", "チャットエラー")
+        log(f"❌ チャットエラー [{agent_id}]: {str(e)[:100]}")
+        return jsonify({"error": str(e)[:200]}), 500
+
+
 @app.route("/api/note_body/<item_id>")
 def api_note_body(item_id):
     for path in [PENDING_PATH, APPROVED_PATH]:

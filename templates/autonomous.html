@@ -71,6 +71,16 @@ body { background:#070c07; color:#c9d1d9; font-family:'Courier New',monospace; d
 .modal-body { font-size:10px; color:#80bb80; white-space:pre-wrap; line-height:1.6; margin-bottom:12px; }
 .modal-actions { display:flex; gap:8px; }
 .modal-close { background:#2d3a2d; color:#6a8a6a; border:1px solid #3a5a3a; border-radius:3px; cursor:pointer; font-size:9px; padding:5px 10px; }
+.chat-messages { max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; margin-bottom:6px; }
+.chat-msg-user { background:#0a1a2a; border:1px solid #1a4a6a; border-radius:3px; padding:4px 6px; font-size:9px; color:#90bbdd; word-break:break-all; }
+.chat-msg-agent { background:#0d1a0d; border:1px solid #1a4a1a; border-radius:3px; padding:4px 6px; font-size:9px; color:#8abca0; word-break:break-all; white-space:pre-wrap; line-height:1.5; }
+.chat-meta { font-size:7px; color:#4a8a5a; display:block; margin-bottom:2px; }
+.chat-meta-user { font-size:7px; color:#4a6a9a; display:block; margin-bottom:2px; }
+.chat-agent-badge { font-size:9px; color:#40cc70; background:#0a2a1a; border:1px solid #2a6a3a; border-radius:3px; padding:3px 7px; margin-bottom:6px; cursor:default; }
+.chat-input { flex:1; background:#0a1a0a; border:1px solid #2a6a2a; color:#90ee90; padding:4px 6px; font-family:'Courier New',monospace; font-size:10px; border-radius:3px; }
+.chat-input-row { display:flex; gap:4px; align-items:center; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+.chat-loading { animation:blink 1s infinite; color:#fbbf24; font-size:9px; }
 </style>
 </head>
 <body>
@@ -121,6 +131,15 @@ body { background:#070c07; color:#c9d1d9; font-family:'Courier New',monospace; d
     <div class="panel">
       <div class="panel-title">💡 最新の成果物</div>
       <div class="result-box" id="result-box">成果物はここに表示されます</div>
+    </div>
+    <div class="panel" id="chat-panel">
+      <div class="panel-title">💬 エージェントに話しかける</div>
+      <div id="chat-agent-badge" class="chat-agent-badge">← キャラクターをクリックして選択</div>
+      <div class="chat-messages" id="chat-messages"><div class="empty-msg">オフィス内のキャラクターをクリック<br>すると話しかけられます</div></div>
+      <div class="chat-input-row">
+        <input id="chat-input" class="chat-input" placeholder="メッセージを入力...">
+        <button onclick="sendChat()" class="btn-trigger" style="padding:5px 9px;font-size:9px;white-space:nowrap">送信</button>
+      </div>
     </div>
     <div class="status-bar" id="status-bar">●  IDLE</div>
   </div>
@@ -333,6 +352,10 @@ class OfficeScene extends Phaser.Scene {
     const nameT=this.add.text(cfg.x,cfg.y+34,cfg.name,{fontSize:'7px',color:'#b0ddb0',fontFamily:'Courier New'}).setOrigin(0.5).setDepth(8);
     const badge=this.add.text(cfg.x,cfg.y-33,'idle',{fontSize:'6px',color:'#6b7280',fontFamily:'Courier New',backgroundColor:'#050808',padding:{x:2,y:1}}).setOrigin(0.5).setDepth(9);
     this.agentObjs[id]={c,glow,body,nameT,badge,homeX:cfg.x,homeY:cfg.y,dept:cfg.dept,walkTarget:null,walkPause:Math.random()*2000,facing:true,walkFrame:Math.floor(Math.random()*4),lastFrameT:-999,lastStatus:''};
+    c.setInteractive(new Phaser.Geom.Rectangle(-20,-48,40,90),Phaser.Geom.Rectangle.Contains);
+    c.on('pointerdown',()=>window._selectChatAgent(id,cfg.name));
+    c.on('pointerover',()=>this.input.setDefaultCursor('pointer'));
+    c.on('pointerout', ()=>this.input.setDefaultCursor('default'));
   }
 
   fetchStatus() {
@@ -524,6 +547,52 @@ function triggerJob(id){fetch('/api/trigger/'+id,{method:'POST'}).catch(()=>{});
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 document.getElementById('theme-input').addEventListener('keydown',e=>{if(e.key==='Enter')runManual();});
 document.getElementById('note-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ── Chat ─────────────────────────────────────────────────────────────────────
+let _chatAgentId='', _chatHistory=JSON.parse(localStorage.getItem('studioChat')||'[]'), _chatLoading=false;
+
+window._selectChatAgent=function(id,name){
+  _chatAgentId=id;
+  document.getElementById('chat-agent-badge').textContent='💬 '+name+' と話す';
+  renderChatMessages();
+  document.getElementById('chat-input').focus();
+  document.getElementById('chat-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+
+function sendChat(){
+  if(_chatLoading||!_chatAgentId)return;
+  const inp=document.getElementById('chat-input');
+  const msg=inp.value.trim(); if(!msg)return;
+  const t=new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  _chatHistory.push({role:'user',msg,agentId:_chatAgentId,time:t});
+  inp.value=''; _chatLoading=true;
+  _chatHistory.push({role:'loading',msg:'考え中...',agentId:_chatAgentId,time:''});
+  renderChatMessages();
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agent_id:_chatAgentId,message:msg})})
+    .then(r=>r.json()).then(data=>{
+      _chatHistory.pop();
+      _chatHistory.push({role:'agent',msg:data.response||data.error||'エラー',agentId:_chatAgentId,agentName:data.agent||'',time:new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})});
+      localStorage.setItem('studioChat',JSON.stringify(_chatHistory.slice(-40)));
+      _chatLoading=false; renderChatMessages();
+    }).catch(()=>{
+      _chatHistory.pop();
+      _chatHistory.push({role:'agent',msg:'タイムアウトまたはエラー',agentId:_chatAgentId,agentName:'',time:''});
+      _chatLoading=false; renderChatMessages();
+    });
+}
+
+function renderChatMessages(){
+  const el=document.getElementById('chat-messages');
+  const msgs=_chatHistory.filter(m=>m.agentId===_chatAgentId);
+  if(!msgs.length){el.innerHTML='<div class="empty-msg">メッセージを入力して送信</div>';return;}
+  el.innerHTML=msgs.map(m=>{
+    if(m.role==='loading')return`<div class="chat-msg-agent"><span class="chat-loading">⏳ ${escHtml(m.msg)}</span></div>`;
+    if(m.role==='user')return`<div class="chat-msg-user"><span class="chat-meta-user">${m.time} あなた</span>${escHtml(m.msg)}</div>`;
+    return`<div class="chat-msg-agent"><span class="chat-meta">${m.time} ${escHtml(m.agentName||m.agentId)}</span>${escHtml(m.msg)}</div>`;
+  }).join('');
+  el.scrollTop=el.scrollHeight;
+}
+document.getElementById('chat-input').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
 </script>
 </body>
 </html>
