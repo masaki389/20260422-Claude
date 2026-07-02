@@ -19,12 +19,66 @@ from pathlib import Path
 from flask import Flask, render_template, jsonify, request
 from dotenv import load_dotenv
 from crewai import Agent, Task, Crew, Process
+from crewai.tools import tool as crewai_tool
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
 
 load_dotenv()
 os.environ.setdefault("GEMINI_API_KEY", os.getenv("GOOGLE_API_KEY", ""))
+
+
+# ─── Search Tools（CrewAIエージェントに渡すツール） ────────────────────────────
+
+@crewai_tool("YouTube動画検索")
+def youtube_search_tool(query: str) -> str:
+    """YouTube Data APIでJP向け動画を検索し、タイトル・チャンネル名・説明を返す。
+    シニア向けYouTubeトレンドリサーチに使う。"""
+    import urllib.request, urllib.parse, json as _json
+    api_key = os.getenv("GOOGLE_API_KEY", "")
+    if not api_key:
+        return "YouTube API key not configured"
+    try:
+        params = urllib.parse.urlencode({
+            "part": "snippet",
+            "q": query,
+            "type": "video",
+            "maxResults": 10,
+            "order": "viewCount",
+            "regionCode": "JP",
+            "relevanceLanguage": "ja",
+            "key": api_key,
+        })
+        url = f"https://www.googleapis.com/youtube/v3/search?{params}"
+        with urllib.request.urlopen(url, timeout=15) as resp:
+            data = _json.loads(resp.read())
+        items = data.get("items", [])
+        if not items:
+            return "検索結果なし"
+        lines = [
+            f"・「{it['snippet']['title']}」({it['snippet']['channelTitle']}) — "
+            f"{it['snippet']['description'][:80]}"
+            for it in items
+        ]
+        return "\n".join(lines)
+    except Exception as e:
+        return f"YouTube検索エラー: {str(e)[:100]}"
+
+
+@crewai_tool("Webサイト検索")
+def web_search_tool(query: str) -> str:
+    """DuckDuckGoでWeb検索を行い最新記事・ニュース・トレンドを返す。
+    YouTubeトレンド分析や業界調査に使う。"""
+    try:
+        from duckduckgo_search import DDGS
+        with DDGS() as ddgs:
+            results = list(ddgs.text(query, max_results=5, region="jp-jp"))
+        if not results:
+            return "検索結果なし"
+        lines = [f"【{r.get('title', '')}】{r.get('body', '')[:150]}" for r in results]
+        return "\n\n".join(lines)
+    except Exception as e:
+        return f"Web検索エラー: {str(e)[:100]}"
 
 
 def _restore_session(env_var: str, dest_path: Path):
@@ -222,8 +276,23 @@ def make_agent_soul(agent_id: str):
     )
 
 
+def make_researcher_with_tools() -> Agent:
+    """YouTube + DuckDuckGo 検索ツール付きの幸子リサーチャーを生成する。"""
+    soul = load_soul("researcher")
+    return Agent(
+        role=soul.get("role", "幸子リサーチャー"),
+        goal=soul.get("goal", ""),
+        backstory=soul.get("backstory", ""),
+        tools=[youtube_search_tool, web_search_tool],
+        verbose=False,
+        allow_delegation=False,
+        llm=LLM,
+    )
+
+
 # ─── Manual Run ──────────────────────────────────────────────────────────────
 def run_crew(theme: str):
+    """YouTube/Web検索 → 聖書準拠脚本家の2フェーズパイプライン（手動トリガー用）。"""
     with lock:
         state["running"] = True
         state["theme"]   = theme
@@ -233,7 +302,7 @@ def run_crew(theme: str):
 
     log(f"🏢 台本エージェント起動 — {theme}")
     try:
-        set_status("researcher", "working", f"「{theme}」分析中...")
+        set_status("researcher", "working", f"「{theme}」YouTube・Webリサーチ中...")
         sequence, tick = ["researcher", "scriptwriter"], [0]
 
         def cb(output):
@@ -243,20 +312,41 @@ def run_crew(theme: str):
                 nxt = sequence[tick[0]]
                 set_status(nxt, "working", "台本骨子を執筆中..." if nxt == "scriptwriter" else "作業中...")
 
-        ra = make_agent("シニア動画リサーチャー",
-                        "指定テーマについてシニア女性視聴者が共感する切り口と台本の方向性を提案する",
-                        "幸子チャンネル（累計95万再生）専門。冒頭30秒で45%離脱するデータを熟知。")
-        sa = make_agent("シニアドラマ脚本家",
-                        "リサーチを元に幸子チャンネル用台本骨子を黄金フォーマット6フェーズで作成する",
-                        "幸子（65歳）・田中さん（57歳・無自覚悪役）・中島さん（67歳・サポーター）の三角関係が基本構造。")
-        t1 = Task(description=f"テーマ「{theme}」の①痛みポイント3つ ②メタファー2つ ③冒頭案2つ ④田中の一言2つ を提案。",
-                  expected_output="4項目の日本語レポート", agent=ra)
-        t2 = Task(description="t1をもとに黄金フォーマット6フェーズの台本骨子を作成。各フェーズにセリフ・心の声・カメラ指示を含める。",
-                  expected_output="6フェーズ台本骨子（800〜1200文字）", agent=sa)
+        # Phase1: 検索ツール付きリサーチャー
+        ra = make_researcher_with_tools()
+        # Phase2: 聖書ルール内蔵の脚本家（SOUL.md から読み込み済み）
+        sa = make_agent_soul("scriptwriter")
+
+        t1 = Task(
+            description=(
+                f"テーマ「{theme}」について幸子チャンネル向けのリサーチを実施してください。\n"
+                "必ずyoutube_search_toolとweb_search_toolを使うこと（AIの記憶だけで書かない）。\n"
+                "① 類似テーマでYouTubeで伸びている動画のタイトル・共通パターン（ツール検索結果から）\n"
+                "② 視聴者が「これ私のことだ」と感じるポイント3つ\n"
+                "③ メタファー候補2つ（前半→後半で意味が変わるもの）\n"
+                "④ 田中さんの無自覚な一言の例2つ（本人は心配しているつもりの発言）"
+            ),
+            expected_output="4項目のリサーチレポート（ツール取得データを根拠として明記）",
+            agent=ra,
+        )
+        t2 = Task(
+            description=(
+                "リサーチ結果をもとに、SOUL.mdの台本聖書ルールに完全準拠した台本骨子を1本作成してください。\n"
+                "必ず以下のフォーマット通りに出力すること：\n"
+                "【タイトル案】A・B各1つ / 【冒頭の一景（0-5秒）】/ 【メタファー】/ "
+                "【第一幕〜第五幕】各100文字 / 【田中さんの一言】/ 【中島さんのフォロー】"
+            ),
+            expected_output="台本骨子（SOUL.md指定フォーマット・800〜1200文字）",
+            agent=sa,
+        )
         crew = Crew(agents=[ra, sa], tasks=[t1, t2], process=Process.sequential,
                     verbose=False, task_callback=cb)
+        result = str(crew.kickoff())
+        today = datetime.now(JST).strftime("%Y%m%d")
+        (RESEARCH_DIR / f"script_draft_{today}.txt").write_text(
+            f"=== 台本骨子ドラフト {today} ===\nテーマ：{theme}\n\n{result}", encoding="utf-8")
         with lock:
-            state["result"] = str(crew.kickoff())
+            state["result"] = result
         log("✅ 台本骨子完了！")
     except Exception as e:
         log(f"❌ エラー: {str(e)[:200]}")
@@ -343,17 +433,23 @@ def job_secretary_briefing():
 # ─── Job: 幸子デイリーリサーチ (daily 09:00) ─────────────────────────────
 def job_sachiko_research():
     today = datetime.now(JST).strftime("%Y%m%d")
-    log("🌅 幸子チャンネル デイリーリサーチ開始")
+    log("🌅 幸子チャンネル デイリーリサーチ開始（YouTube・Web検索）")
     try:
-        set_status("researcher", "working", "トレンドリサーチ中...")
-        agent = make_agent(
-            "シニア動画トレンドリサーチャー",
-            "シニア女性YouTubeチャンネル向けの今週最適エピソードテーマを3つ提案する",
-            "幸子チャンネル（登録2900人・累計95万再生）専門。バズるテーマの公式：すかっとする・感動・共感。")
+        set_status("researcher", "working", "YouTube・Webリサーチ中...")
+        agent = make_researcher_with_tools()
         result = run_single(
-            "幸子チャンネル向けエピソードテーマを3つ提案。\n"
-            "各テーマ：①タイトル案 ②冒頭の一景（0-5秒） ③メタファー候補 ④田中さんの一言",
-            "テーマ提案3件（各4項目）の日本語レポート", agent)
+            "幸子チャンネル向けエピソードテーマを3つ提案してください。\n"
+            "必ずyoutube_search_toolとweb_search_toolを使うこと（AIの記憶だけで書かない）。\n"
+            "検索クエリ例：「シニア 年金 YouTube」「老後 パート 女性 動画」「65歳 主婦 悩み」\n\n"
+            "各テーマ：\n"
+            "①タイトル案（60文字目安）\n"
+            "②冒頭の一景（0-5秒）\n"
+            "③メタファー候補（前半→後半で意味が変わる物）\n"
+            "④田中さんの無自覚な一言（本人は心配しているつもりの発言）\n\n"
+            "参考：幸子65歳・スーパーレジパート・年金10.3万・視聴者55-64歳女性70%",
+            "テーマ提案3件（各4項目・ツール検索データ根拠付き）",
+            agent,
+        )
         set_status("researcher", "done", "リサーチ完了 ✓")
         (RESEARCH_DIR / f"sachiko_auto_{today}.txt").write_text(
             f"=== 幸子デイリーリサーチ {today} ===\n\n{result}", encoding="utf-8")

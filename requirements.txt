@@ -6,3 +6,4 @@ python-dotenv==1.2.2
 playwright==1.60.0
 litellm>=1.0.0
 google-generativeai>=0.8.0
+duckduckgo-search>=6.0.0
