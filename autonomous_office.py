@@ -121,8 +121,10 @@ state = {
         # 転職アニメ部
         "tenshi_analyst":      {"name": "転職アニメ分析",      "dept": "tenshi",   "status": "idle", "task": ""},
         "tenshi_scriptwriter": {"name": "転職脚本家",          "dept": "tenshi",   "status": "idle", "task": ""},
-        # 事業開発
-        "tieup_researcher":    {"name": "タイアップ探索",      "dept": "bizdev",   "status": "idle", "task": ""},
+        # 新規事業部
+        "tieup_researcher":    {"name": "タイアップ探索",      "dept": "newbiz",   "status": "idle", "task": ""},
+        "ip_strategist":       {"name": "IP戦略家",            "dept": "newbiz",   "status": "idle", "task": ""},
+        "bizdev_researcher":   {"name": "外部マネタイズ探索",   "dept": "newbiz",   "status": "idle", "task": ""},
         # 外注
         "kikuchi":             {"name": "菊地（外注）",        "dept": "external", "status": "idle", "task": ""},
     },
@@ -302,12 +304,14 @@ def job_secretary_briefing():
             f"最近の生成ファイル: {', '.join(recent) if recent else 'なし'}\n"
             + roadmap_hint +
             "\n\n今日の自動実行:\n"
+            "・08:30 X戦略家デイリーリサーチ（AIアニメXトレンド把握・毎日）\n"
             "・09:00 幸子テーマリサーチ＋台本骨子＋Xドラフト7件生成\n"
             "・09:30 営業リサーチ→提案書生成（毎日）\n"
             "・10:00 転職アニメ分析（毎日）\n"
             "・10:30 note記事ドラフト生成（毎日）\n"
             "・11:00 タイアップリサーチ（毎日）\n"
             "・11:30 転職脚本（GO判定時のみ）\n"
+            "・月曜8:00 全部門週次サマリーレポート生成\n"
             "・8/12/18/20時 承認済みX投稿から自動投稿（1日4回）"
         )
         agent = make_agent_soul("secretary")
@@ -357,29 +361,35 @@ def job_sachiko_research():
         set_status("researcher", "error", "エラー")
 
 
-# ─── Job: X戦略学習 (weekly Sun 23:00) ──────────────────────────────────
+# ─── Job: X戦略デイリーリサーチ (daily 08:30) ───────────────────────────
 def job_x_strategy_learn():
-    log("🧠 X戦略学習エージェント起動")
+    today = datetime.now(JST).strftime("%Y/%m/%d")
+    log("🧠 X戦略家デイリーリサーチ開始")
     try:
-        set_status("x_strategist", "working", "X戦略をリサーチ中...")
+        set_status("x_strategist", "working", "AIアニメXトレンドをリサーチ中...")
         agent = make_agent_soul("x_strategist")
         result = run_single(
-            "AI副業・YouTube収益化・一人会社運営ジャンルでXを伸ばす最新法則を分析:\n"
-            "①バズる投稿の型5つ（テンプレート付き）\n"
-            "②最適な投稿頻度・時間帯（JST）\n"
-            "③このジャンルで特に刺さるキーワード15個\n"
-            "④避けるべきNG表現\n"
-            "⑤フォロワーを増やすエンゲージメント戦術3つ\n"
-            "⑥noteへの自然な誘導を組み込む方法",
-            "Xマーケティング戦略ガイド（マークダウン形式）", agent)
-        set_status("x_strategist", "done", "戦略ガイド更新 ✓")
-        (RESEARCH_DIR / "x_strategy.md").write_text(
-            f"# X投稿戦略ガイド\n更新: {datetime.now(JST).strftime('%Y-%m-%d')}\n\n{result}", encoding="utf-8")
-        log("💾 X戦略ガイド更新: research/x_strategy.md")
+            f"今日（{today}）のAIアニメ・AI動画・YouTube収益化界隈のXトレンドを分析してください。\n\n"
+            "SOUL.mdの形式に従い以下を必ず含めること:\n"
+            "①今日のAIアニメ界隈トレンド（AIコンテスト情報含む。コロテック等のコンテストがあれば必ず記録）\n"
+            "②今日のXマーケティング学習（1つの具体的な知識・データ）\n"
+            "③明日の投稿戦略（テーマ2〜3つ・参加すべき会話・避けるテーマ）\n\n"
+            f"必ずこの形式で出力すること:\n"
+            f"=== Xデイリー戦略レポート {today} ===\n\n"
+            "【本日のAIアニメ界隈トレンド】\n"
+            "【本日のXマーケ学習】\n"
+            "【明日の投稿戦略】",
+            "Xデイリー戦略レポート（マークダウン形式）", agent)
+        set_status("x_strategist", "done", "デイリーレポート完成 ✓")
+        # 既存ファイルの先頭に追記（最新が上）
+        strategy_path = RESEARCH_DIR / "x_strategy.md"
+        existing = strategy_path.read_text(encoding="utf-8") if strategy_path.exists() else ""
+        strategy_path.write_text(result + "\n\n---\n\n" + existing, encoding="utf-8")
+        log("💾 X戦略デイリーレポート追記: research/x_strategy.md")
         with lock:
             state["result"] = result
     except Exception as e:
-        log(f"❌ X戦略学習エラー: {str(e)[:200]}")
+        log(f"❌ X戦略リサーチエラー: {str(e)[:200]}")
         set_status("x_strategist", "error", "エラー")
 
 
@@ -605,6 +615,7 @@ def job_kikuchi_progress_update():
         # 菊地は担当エピソードがある間は常に working（着座）
         agent_status = "done" if pct >= 100 else "working"
         with lock:
+            prev_pct = state["kikuchi_progress"].get("progress", -1)
             state["agents"]["kikuchi"]["status"] = agent_status
             state["agents"]["kikuchi"]["task"]   = f"{ep_name} {pct}%"
             state["kikuchi_progress"] = {
@@ -612,7 +623,9 @@ def job_kikuchi_progress_update():
                 "done": done, "total": total,
                 "status": status, "due": due_date
             }
-        log(f"📊 菊地進捗更新: {ep_name} {pct}% ({done}/{total}章)", "kikuchi")
+        # 進捗率が変化したときだけログ出力（30分ごとの無音更新は記録しない）
+        if pct != prev_pct:
+            log(f"📊 菊地進捗: {ep_name} {pct}% ({done}/{total}章)", "kikuchi")
     except Exception as e:
         log(f"⚠ 菊地進捗取得失敗: {str(e)[:80]}")
 
@@ -775,6 +788,129 @@ def job_tenshi_script():
         set_status("tenshi_scriptwriter", "error", "エラー")
 
 
+# ─── Job: IP戦略デイリーリサーチ (daily 13:00) ──────────────────────────
+def job_ip_strategy():
+    today = datetime.now(JST).strftime("%Y/%m/%d")
+    log("💎 IP戦略家デイリーリサーチ開始", "ip_strategist")
+    try:
+        set_status("ip_strategist", "working", "IPトレンドをリサーチ中...")
+        agent = make_agent_soul("ip_strategist")
+        # 既存のビズデブ情報を参考に
+        existing = _read_strategy("ip_strategy.md")[:600]
+        result = run_single(
+            f"今日（{today}）のIP市場をリサーチし、幸子IPの育成・外部展開について提案してください。\n\n"
+            "SOUL.mdの形式に従い以下を必ず含めること:\n"
+            "①今日のIP市場インサイト（AIアニメIPや独立系キャラクターIPの事例）\n"
+            "②幸子IP 今日の提案（施策名・難易度・期待効果・Next Action）\n"
+            "③クオリティ投資タイミング判断（Seedance 2.0等への投資判断）\n\n"
+            "幸子の現状：95万再生・登録者2,900人・月収益数万円・6ヶ月以内月100万目標\n"
+            + (f"\n直近のIPリサーチ（参考）:\n{existing}" if existing else ""),
+            "IP戦略デイリーレポート", agent)
+        set_status("ip_strategist", "done", "IPレポート完成 ✓")
+        ip_path = RESEARCH_DIR / "ip_strategy.md"
+        existing_full = ip_path.read_text(encoding="utf-8") if ip_path.exists() else ""
+        ip_path.write_text(result + "\n\n---\n\n" + existing_full, encoding="utf-8")
+        log("💾 IPレポート追記: research/ip_strategy.md", "ip_strategist")
+        with lock:
+            state["result"] = result
+    except Exception as e:
+        log(f"❌ IP戦略エラー: {str(e)[:200]}")
+        set_status("ip_strategist", "error", "エラー")
+
+
+# ─── Job: 外部マネタイズ探索 (daily 13:30) ──────────────────────────────
+def job_bizdev_research():
+    today = datetime.now(JST).strftime("%Y/%m/%d")
+    log("🚀 外部マネタイズ探索開始", "bizdev_researcher")
+    try:
+        set_status("bizdev_researcher", "working", "新収益源を探索中...")
+        agent = make_agent_soul("bizdev_researcher")
+        existing = _read_strategy("bizdev.md")[:600]
+        result = run_single(
+            f"今日（{today}）、StudioOgawaが取り組めるAdSense以外の新しい収益源を調査してください。\n\n"
+            "SOUL.mdの形式に従い以下を必ず含めること:\n"
+            "①今日発掘した収益源（施策名・概要・初期コスト・月次収益予測・着手時期・難易度）\n"
+            "②優先度評価（今すぐ実装すべき理由 or 理由なし）\n"
+            "③今週のFOCUS（今日の推薦1件と具体的なFirst Step）\n\n"
+            "前提：一人会社・30歳・アウトバウンド営業嫌い・AIアニメ得意・月100万目標\n"
+            + (f"\n直近の探索結果（重複提案を避けるため）:\n{existing}" if existing else ""),
+            "外部マネタイズ探索レポート", agent)
+        set_status("bizdev_researcher", "done", "マネタイズ案完成 ✓")
+        bd_path = RESEARCH_DIR / "bizdev.md"
+        existing_full = bd_path.read_text(encoding="utf-8") if bd_path.exists() else ""
+        bd_path.write_text(result + "\n\n---\n\n" + existing_full, encoding="utf-8")
+        log("💾 外部マネタイズレポート追記: research/bizdev.md", "bizdev_researcher")
+        with lock:
+            state["result"] = result
+    except Exception as e:
+        log(f"❌ 外部マネタイズ探索エラー: {str(e)[:200]}")
+        set_status("bizdev_researcher", "error", "エラー")
+
+
+# ─── Job: 週次サマリーレポート (Mon 08:00) ────────────────────────────────
+def job_weekly_summary():
+    today = datetime.now(JST)
+    week_label = today.strftime("%Y年%m月第%Wの週")
+    date_label = today.strftime("%Y-%m-%d")
+    log("📋 週次サマリーレポート生成開始")
+    try:
+        # 各部門の直近ファイルを収集
+        def _latest(pattern: str, chars: int = 800) -> str:
+            files = sorted(RESEARCH_DIR.glob(pattern))
+            if not files:
+                return "（今週のデータなし）"
+            return files[-1].read_text(encoding="utf-8")[:chars]
+
+        sachiko  = _latest("sachiko_auto_*.txt")
+        tieup    = _latest("tieup_auto_*.txt")
+        sales    = _latest("sales_prospects_*.txt")
+        proposal = _latest("proposals_*.txt")
+        tenshi   = _latest("tenshi_analysis_*.txt")
+        script   = _latest("script_draft_*.txt")
+        x_strat  = _read_strategy("x_strategy.md")[:800]
+        note_str = _read_strategy("note_strategy.md")[:500]
+        ip_str   = _read_strategy("ip_strategy.md")[:600]
+        bd_str   = _read_strategy("bizdev.md")[:600]
+
+        context = (
+            f"【幸子リサーチ】\n{sachiko}\n\n"
+            f"【タイアップリサーチ】\n{tieup}\n\n"
+            f"【営業見込み客リスト】\n{sales}\n\n"
+            f"【提案書】\n{proposal}\n\n"
+            f"【転職アニメ分析】\n{tenshi}\n\n"
+            f"【台本骨子】\n{script}\n\n"
+            f"【X戦略（直近）】\n{x_strat}\n\n"
+            f"【note戦略】\n{note_str}\n\n"
+            f"【IP戦略（直近）】\n{ip_str}\n\n"
+            f"【外部マネタイズ探索（直近）】\n{bd_str}"
+        )
+        agent = make_agent(
+            "事業サマリーアナリスト",
+            "各部門の週次実績を1枚のレポートにまとめ、監督が5分で状況を把握できるようにする",
+            "StudioOgawa専属。幸子チャンネル・Xマーケ・営業・転職アニメの4部門を横断管理。")
+        result = run_single(
+            f"以下の今週の各部門アウトプットをもとに、週次サマリーレポートを作成してください。\n\n"
+            f"{context}\n\n"
+            "形式（必ず守ること）:\n"
+            f"# StudioOgawa 週次サマリー {week_label}\n\n"
+            "## 幸子チャンネル部\n- 今週のリサーチ結果一言\n- 台本骨子のテーマ\n\n"
+            "## Xマーケティング部\n- 今週の主要トレンド2つ\n- 学んだXマーケ知識1つ\n\n"
+            "## 営業部\n- 優先度「高」の見込み客TOP3\n- 提案書の状況\n\n"
+            "## 転職アニメ部\n- 分析結果（GO/WAIT/方向転換）\n- 理由一言\n\n"
+            "## note部\n- 今週のドラフトテーマ\n\n"
+            "## 新規事業部\n- IP戦略の今週の提案TOP1\n- 外部マネタイズ探索の今週のFOCUS案\n\n"
+            "## 今週の総評と来週のFOCUS\n- 最も重要な動き1つ\n- 来週最優先でやること1つ\n\n"
+            "簡潔に。各項目2〜3行まで。",
+            "週次サマリーレポート（Markdown）", agent)
+        out_path = RESEARCH_DIR / f"weekly_summary_{date_label}.md"
+        out_path.write_text(result, encoding="utf-8")
+        log(f"💾 週次サマリー保存: weekly_summary_{date_label}.md")
+        with lock:
+            state["result"] = f"📋 週次サマリー {week_label}\n\n{result}"
+    except Exception as e:
+        log(f"❌ 週次サマリーエラー: {str(e)[:200]}")
+
+
 # ─── Scheduler ───────────────────────────────────────────────────────────────
 scheduler = BackgroundScheduler(timezone=JST, job_defaults={"misfire_grace_time": 300})
 # Daily 07:30 — 秘書
@@ -790,8 +926,11 @@ scheduler.add_job(job_x_random_post,        CronTrigger(hour=18, minute=0,  time
 scheduler.add_job(job_x_random_post,        CronTrigger(hour=20, minute=0,  timezone=JST), id="x_post_evening",    name="X投稿（夜20時）")
 # 30分ごと — 菊地進捗（毎時0分・30分）
 scheduler.add_job(job_kikuchi_progress_update, CronTrigger(minute="0,30", timezone=JST), id="kikuchi_check", name="菊地進捗チェック（30分ごと）")
-# Weekly — コンテンツ
-scheduler.add_job(job_x_strategy_learn,    CronTrigger(day_of_week="sun", hour=23, minute=0,  timezone=JST), id="x_strategy_weekly",    name="X戦略学習（週1）")
+# Daily 08:30 — X戦略デイリーリサーチ
+scheduler.add_job(job_x_strategy_learn,    CronTrigger(hour=8,  minute=30, timezone=JST), id="x_strategy_daily",    name="X戦略デイリーリサーチ（毎日）")
+# Weekly Mon 08:00 — 週次サマリーレポート
+scheduler.add_job(job_weekly_summary,      CronTrigger(day_of_week="mon", hour=8, minute=0, timezone=JST), id="weekly_summary",         name="週次サマリーレポート（月曜8時）")
+# Weekly — noteリサーチ
 scheduler.add_job(job_note_research,        CronTrigger(day_of_week="sun", hour=23, minute=30, timezone=JST), id="note_research_weekly",  name="noteリサーチ（週1）")
 scheduler.add_job(job_generate_note_draft,  CronTrigger(hour=10, minute=30, timezone=JST), id="note_draft_daily",      name="note記事ドラフト生成（毎日）")
 scheduler.add_job(job_tieup_research,       CronTrigger(hour=11, minute=0,  timezone=JST), id="tieup_daily",           name="タイアップリサーチ（毎日）")
@@ -802,6 +941,9 @@ scheduler.add_job(job_sales_research,       CronTrigger(hour=9,  minute=30, time
 # Daily — 転職分析（毎日10:00）+ 脚本（毎日11:30）
 scheduler.add_job(job_tenshi_analyze,       CronTrigger(hour=10, minute=0,  timezone=JST), id="tenshi_analysis_daily",  name="転職アニメ分析（毎日）")
 scheduler.add_job(job_tenshi_script,        CronTrigger(hour=11, minute=30, timezone=JST), id="tenshi_script_daily",    name="転職アニメ脚本（毎日・GO判定時のみ生成）")
+# Daily — 新規事業部（13:00〜）
+scheduler.add_job(job_ip_strategy,          CronTrigger(hour=13, minute=0,  timezone=JST), id="ip_strategy_daily",      name="IP戦略デイリーリサーチ（毎日）")
+scheduler.add_job(job_bizdev_research,      CronTrigger(hour=13, minute=30, timezone=JST), id="bizdev_daily",           name="外部マネタイズ探索（毎日）")
 
 JOB_FUNCS = {
     "secretary_daily":      job_secretary_briefing,
@@ -813,7 +955,8 @@ JOB_FUNCS = {
     "x_post_afternoon":     job_x_random_post,
     "x_post_evening":       job_x_random_post,
     "kikuchi_check":          job_kikuchi_progress_update,
-    "x_strategy_weekly":      job_x_strategy_learn,
+    "x_strategy_daily":       job_x_strategy_learn,
+    "weekly_summary":         job_weekly_summary,
     "note_research_weekly":   job_note_research,
     "note_draft_daily":       job_generate_note_draft,
     "tieup_daily":            job_tieup_research,
@@ -821,6 +964,9 @@ JOB_FUNCS = {
     "sales_research_daily":   job_sales_research,
     "tenshi_analysis_daily":  job_tenshi_analyze,
     "tenshi_script_daily":    job_tenshi_script,
+    "ip_strategy_daily":      job_ip_strategy,
+    "bizdev_daily":           job_bizdev_research,
+    "weekly_summary":         job_weekly_summary,
 }
 
 
