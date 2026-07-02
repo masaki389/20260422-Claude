@@ -354,6 +354,8 @@ class OfficeScene extends Phaser.Scene {
       const st=(window._agentStates[id]||{}).status||'idle';
       const goHome=(st==='working'||st==='done');
       const d=DEPT[AGENTS_CFG[id].dept];
+      // 仕事開始の瞬間は即座に机にテレポート
+      if(obj.lastStatus!=='working'&&st==='working'){obj.c.x=obj.homeX;obj.c.y=obj.homeY;obj.walkTarget=null;}
       let tX=obj.c.x, tY=obj.c.y;
       if (goHome) { tX=obj.homeX; tY=obj.homeY; }
       else {

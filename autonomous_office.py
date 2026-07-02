@@ -411,8 +411,10 @@ def job_generate_x_drafts():
         with lock:
             state["result"] = result
     except Exception as e:
-        log(f"❌ X投稿生成エラー: {str(e)[:200]}")
-        set_status("x_writer", "error", "エラー")
+        import traceback
+        log(f"❌ X投稿生成エラー [{type(e).__name__}]: {str(e)[:300]}")
+        log(f"詳細: {traceback.format_exc()[-300:]}")
+        set_status("x_writer", "error", f"{type(e).__name__}")
 
 
 # ─── Job: X承認済みをランダム投稿 (08:00 / 12:00 / 20:00) ──────────────
