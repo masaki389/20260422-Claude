@@ -910,6 +910,28 @@ def api_kikuchi_progress():
         return jsonify(state.get("kikuchi_progress", {}))
 
 
+@app.route("/api/edit_pending", methods=["POST"])
+def api_edit_pending():
+    data    = request.get_json() or {}
+    type_   = data.get("type")
+    item_id = data.get("id")
+    q = _load_queue(PENDING_PATH)
+    item = next((i for i in q.get(type_, []) if i["id"] == item_id), None)
+    if not item:
+        return jsonify({"error": "item not found"}), 404
+    if type_ == "x_posts" and "text" in data:
+        item["text"] = data["text"]
+    elif type_ == "note_drafts":
+        if "title" in data:
+            item["title"] = data["title"]
+        if "body" in data:
+            item["body"] = data["body"]
+    item["edited_at"] = datetime.now(JST).strftime("%Y-%m-%d %H:%M")
+    _save_queue(PENDING_PATH, q)
+    log(f"✏ 編集保存: {type_} [{item_id}]")
+    return jsonify({"ok": True})
+
+
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     data = request.get_json() or {}

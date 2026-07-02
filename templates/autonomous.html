@@ -81,6 +81,12 @@ body { background:#070c07; color:#c9d1d9; font-family:'Courier New',monospace; d
 .chat-input-row { display:flex; gap:4px; align-items:center; }
 @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
 .chat-loading { animation:blink 1s infinite; color:#fbbf24; font-size:9px; }
+.pend-edit-area { width:100%; background:#0a140a; border:1px solid #3a7a3a; color:#90ee90; padding:5px; font-family:'Courier New',monospace; font-size:9px; border-radius:3px; resize:vertical; min-height:70px; margin-bottom:4px; display:none; }
+.pend-title-edit { width:100%; background:#0a140a; border:1px solid #3a7a3a; color:#90ee90; padding:4px; font-family:'Courier New',monospace; font-size:9px; border-radius:3px; margin-bottom:4px; display:none; }
+.btn-edit { flex:1; background:#1a3a4a; color:#60aacc; border:1px solid #2a6a8a; border-radius:2px; cursor:pointer; font-size:8px; padding:3px; font-family:'Courier New',monospace; }
+.btn-edit:hover { background:#2a5a7a; }
+.btn-save { flex:1; background:#3a2a0a; color:#ccaa30; border:1px solid #8a7a1a; border-radius:2px; cursor:pointer; font-size:8px; padding:3px; font-family:'Courier New',monospace; }
+.btn-save:hover { background:#5a4a1a; }
 </style>
 </head>
 <body>
@@ -147,10 +153,18 @@ body { background:#070c07; color:#c9d1d9; font-family:'Courier New',monospace; d
 
 <div class="modal-overlay" id="note-modal">
   <div class="modal">
-    <div class="modal-title" id="modal-title"></div>
-    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-title">📝 note記事の確認・編集</div>
+    <div style="margin-bottom:6px">
+      <div style="font-size:8px;color:#4a8a4a;margin-bottom:3px">タイトル</div>
+      <input id="modal-title" style="width:100%;background:#0a140a;border:1px solid #2a6a2a;color:#90ee90;padding:5px;font-family:'Courier New',monospace;font-size:10px;border-radius:3px;">
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="font-size:8px;color:#4a8a4a;margin-bottom:3px">本文（編集可能）</div>
+      <textarea id="modal-body" style="width:100%;height:300px;background:#0a140a;border:1px solid #2a6a2a;color:#80bb80;padding:6px;font-family:'Courier New',monospace;font-size:9px;border-radius:3px;resize:vertical;line-height:1.5;"></textarea>
+    </div>
     <div class="modal-actions">
       <button class="btn-approve" id="modal-approve-btn">✓ 承認して公開待ちに追加</button>
+      <button class="btn-save" id="modal-save-btn" style="flex:1">💾 編集を保存</button>
       <button class="btn-reject" id="modal-reject-btn">✗ 却下</button>
       <button class="modal-close" onclick="closeModal()">閉じる</button>
     </div>
@@ -516,11 +530,19 @@ new Phaser.Game({type:Phaser.AUTO,width:CW,height:CH,backgroundColor:'#040707',p
 // ── Sidebar UI ───────────────────────────────────────────────────────────────
 let _currentTab='x';
 function showTab(t){_currentTab=t;document.getElementById('tab-x').classList.toggle('active',t==='x');document.getElementById('tab-note').classList.toggle('active',t==='note');document.getElementById('x-pending-list').classList.toggle('hidden',t!=='x');document.getElementById('note-pending-list').classList.toggle('hidden',t!=='note');}
-function renderPendingX(posts){const el=document.getElementById('x-pending-list');if(!posts||!posts.length){el.innerHTML='<div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成（AI副業/YouTube収益化）</div>';return;}el.innerHTML=posts.map(p=>`<div class="pend-item" id="px-${p.id}"><div class="pend-text">${escHtml(p.text)}</div><div class="pend-meta">${p.created_at}</div><div class="pend-actions"><button class="btn-approve" onclick="approveItem('x_posts','${p.id}')">✓ 承認</button><button class="btn-reject" onclick="rejectItem('x_posts','${p.id}')">✗ 却下</button></div></div>`).join('');}
-function renderPendingNote(drafts){const el=document.getElementById('note-pending-list');if(!drafts||!drafts.length){el.innerHTML='<div class="empty-msg">承認待ちのnote記事はありません<br>毎日10:30に自動生成</div>';return;}el.innerHTML=drafts.map(d=>`<div class="pend-item" id="nd-${d.id}"><div class="pend-title">${escHtml(d.title)}</div><div class="pend-meta">${d.created_at}</div><div class="pend-actions"><button class="btn-approve" onclick="previewNote('${d.id}')">👁 確認・承認</button><button class="btn-reject" onclick="rejectItem('note_drafts','${d.id}')">✗ 却下</button></div></div>`).join('');}
+function renderPendingX(posts){const el=document.getElementById('x-pending-list');if(!posts||!posts.length){el.innerHTML='<div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成（AI副業/YouTube収益化）</div>';return;}el.innerHTML=posts.map(p=>`<div class="pend-item" id="px-${p.id}"><div class="pend-text" id="pt-${p.id}">${escHtml(p.text)}</div><textarea class="pend-edit-area" id="pe-${p.id}" rows="4">${escHtml(p.text)}</textarea><div class="pend-meta">${p.created_at}</div><div class="pend-actions"><button class="btn-edit" id="eb-${p.id}" onclick="toggleEditX('${p.id}')">✏ 編集</button><button class="btn-approve" onclick="approveItem('x_posts','${p.id}')">✓ 承認</button><button class="btn-reject" onclick="rejectItem('x_posts','${p.id}')">✗ 却下</button></div></div>`).join('');}
+function renderPendingNote(drafts){const el=document.getElementById('note-pending-list');if(!drafts||!drafts.length){el.innerHTML='<div class="empty-msg">承認待ちのnote記事はありません<br>毎日10:30に自動生成</div>';return;}el.innerHTML=drafts.map(d=>`<div class="pend-item" id="nd-${d.id}"><div class="pend-title" id="nt-${d.id}">${escHtml(d.title)}</div><div class="pend-meta">${d.created_at}</div><div class="pend-actions"><button class="btn-edit" onclick="previewNote('${d.id}')">✏ 確認・編集</button><button class="btn-approve" onclick="approveItem('note_drafts','${d.id}')">✓ 承認</button><button class="btn-reject" onclick="rejectItem('note_drafts','${d.id}')">✗ 却下</button></div></div>`).join('');}
+let _editingX={};
+function toggleEditX(id){
+  const txt=document.getElementById('pt-'+id),ta=document.getElementById('pe-'+id),btn=document.getElementById('eb-'+id);
+  if(!_editingX[id]){_editingX[id]=true;txt.style.display='none';ta.style.display='block';ta.value=ta.value;btn.textContent='💾 保存';btn.className='btn-save';}
+  else{const newText=ta.value.trim();if(!newText)return;fetch('/api/edit_pending',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'x_posts',id,text:newText})}).then(()=>{txt.textContent=newText;txt.style.display='';ta.style.display='none';btn.textContent='✏ 編集';btn.className='btn-edit';_editingX[id]=false;}).catch(()=>{});}
+}
 function approveItem(type,id){fetch('/api/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,id})}).then(()=>document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove()).catch(()=>{});}
 function rejectItem(type,id){fetch('/api/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,id})}).then(()=>document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove()).catch(()=>{});}
-function previewNote(id){fetch('/api/note_body/'+id).then(r=>r.json()).then(data=>{document.getElementById('modal-title').textContent=data.title;document.getElementById('modal-body').textContent=data.body;document.getElementById('modal-approve-btn').onclick=()=>{approveItem('note_drafts',id);closeModal();};document.getElementById('modal-reject-btn').onclick=()=>{rejectItem('note_drafts',id);closeModal();};document.getElementById('note-modal').classList.add('open');}).catch(()=>{});}
+let _noteModalId='';
+function previewNote(id){_noteModalId=id;fetch('/api/note_body/'+id).then(r=>r.json()).then(data=>{document.getElementById('modal-title').value=data.title||'';document.getElementById('modal-body').value=data.body||'';document.getElementById('modal-approve-btn').onclick=()=>{approveItem('note_drafts',id);closeModal();};document.getElementById('modal-reject-btn').onclick=()=>{rejectItem('note_drafts',id);closeModal();};document.getElementById('modal-save-btn').onclick=()=>saveNoteEdit(id);document.getElementById('note-modal').classList.add('open');}).catch(()=>{});}
+function saveNoteEdit(id){const title=document.getElementById('modal-title').value.trim();const body=document.getElementById('modal-body').value.trim();fetch('/api/edit_pending',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'note_drafts',id,title,body})}).then(()=>{const nt=document.getElementById('nt-'+id);if(nt)nt.textContent=title;}).catch(()=>{});}
 function closeModal(){document.getElementById('note-modal').classList.remove('open');}
 function updateKikuchi(data){if(!data||data.error)return;document.getElementById('kk-episode').textContent=data.episode||'-';document.getElementById('kk-due').textContent=data.due?`納期: ${data.due}  ${data.status||''}`:'';const pct=data.progress||0;document.getElementById('kk-bar').style.width=pct+'%';document.getElementById('kk-pct').textContent=`${pct}% (${data.done||0}/${data.total||5}章)`;const checks=document.querySelectorAll('#kk-checks .check-item');['①','②','③','④','⑤'].forEach((lb,i)=>{const done=i<(data.done||0);checks[i].textContent=done?'✓'+lb:lb;checks[i].classList.toggle('done',done);});}
 function pollKikuchi(){fetch('/api/kikuchi_progress').then(r=>r.json()).then(updateKikuchi).catch(()=>{});}
