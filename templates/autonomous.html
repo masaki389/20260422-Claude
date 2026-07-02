@@ -7,86 +7,108 @@
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background:#070c07; color:#c9d1d9; font-family:'Courier New',monospace; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:10px; }
+body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Kaku Gothic ProN',Meiryo,sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:10px; font-size:13px; }
 .title { font-family:'Press Start 2P',monospace; font-size:11px; color:#00ff88; text-shadow:0 0 16px rgba(0,255,136,0.7); margin-bottom:8px; letter-spacing:2px; }
-.auto-badge { display:inline-block; background:#0a3a1a; color:#30cc70; border:1px solid #1a6a3a; border-radius:10px; padding:2px 8px; font-size:8px; margin-left:8px; animation:pulse 2s infinite; }
+.auto-badge { display:inline-block; background:#0a3a1a; color:#30cc70; border:1px solid #1a6a3a; border-radius:10px; padding:2px 8px; font-size:10px; margin-left:8px; animation:pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
 .wrapper { display:flex; gap:10px; align-items:flex-start; width:100%; max-width:1720px; }
 #game-container canvas { display:block; border:2px solid #1a3a1a; image-rendering:pixelated; }
-.sidebar { width:300px; flex-shrink:0; display:flex; flex-direction:column; gap:7px; }
-.panel { background:#111a11; border:1px solid #1e4a1e; border-radius:4px; padding:7px 9px; }
-.panel-title { font-size:9px; color:#4a9a4a; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; border-bottom:1px solid #1e4a1e; padding-bottom:3px; }
-.theme-input { width:100%; background:#0a1a0a; border:1px solid #2a6a2a; color:#90ee90; padding:5px 7px; font-family:'Courier New',monospace; font-size:11px; border-radius:3px; margin-bottom:5px; }
-.btn { width:100%; padding:6px; font-family:'Press Start 2P',monospace; font-size:8px; border:none; border-radius:3px; cursor:pointer; transition:opacity 0.2s; }
+/* ── Sidebar ── */
+.sidebar { width:310px; flex-shrink:0; display:flex; flex-direction:column; gap:7px; }
+.panel { background:#111a11; border:1px solid #1e4a1e; border-radius:4px; padding:8px 10px; }
+.panel-title { font-size:11px; font-weight:600; color:#5ab55a; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; border-bottom:1px solid #1e4a1e; padding-bottom:4px; }
+.theme-input { width:100%; background:#0a1a0a; border:1px solid #2a6a2a; color:#90ee90; padding:6px 8px; font-family:'Courier New',monospace; font-size:12px; border-radius:3px; margin-bottom:5px; }
+.btn { width:100%; padding:7px; font-size:12px; font-weight:600; border:none; border-radius:3px; cursor:pointer; transition:opacity 0.2s; }
 .btn:hover { opacity:0.85; }
 .btn-green { background:#2d6a2d; color:#90ee90; }
 .btn-disabled { background:#1a3a1a; color:#4a6a4a; cursor:not-allowed; }
+.script-desc { font-size:11px; color:#4a8a4a; margin-top:4px; line-height:1.5; }
 .tab-bar { display:flex; gap:4px; margin-bottom:6px; }
-.tab { flex:1; background:#0a1a0a; border:1px solid #1e4a1e; color:#6a8a6a; font-size:8px; font-family:'Courier New',monospace; padding:4px; cursor:pointer; border-radius:3px; transition:all 0.2s; }
-.tab.active { background:#1a4a1a; color:#90ee90; border-color:#3a7a3a; }
-.badge { display:inline-block; background:#1a4a1a; color:#30cc70; border-radius:8px; padding:0 5px; font-size:7px; margin-left:3px; }
+.tab { flex:1; background:#0a1a0a; border:1px solid #1e4a1e; color:#7a9a7a; font-size:11px; padding:5px; cursor:pointer; border-radius:3px; transition:all 0.2s; }
+.tab.active { background:#1a4a1a; color:#90ee90; border-color:#3a7a3a; font-weight:600; }
+.badge { display:inline-block; background:#1a4a1a; color:#30cc70; border-radius:8px; padding:1px 6px; font-size:10px; margin-left:3px; }
 .badge.red { background:#4a1a1a; color:#ff8080; }
-.approval-list { max-height:160px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; }
+.approval-list { max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:5px; }
 .approval-list.hidden { display:none; }
-.pend-item { background:#0d1a0d; border:1px solid #1a4a1a; border-radius:3px; padding:5px; }
-.pend-text,.pend-title { font-size:9px; color:#8abca0; line-height:1.4; margin-bottom:4px; word-break:break-all; }
+.pend-item { background:#0d1a0d; border:1px solid #1a4a1a; border-radius:3px; padding:7px; }
+.pend-text,.pend-title { font-size:12px; color:#a0cca8; line-height:1.5; margin-bottom:5px; word-break:break-all; }
 .pend-title { font-weight:bold; }
-.pend-meta { font-size:7px; color:#4a7a5a; margin-bottom:4px; }
+.pend-meta { font-size:10px; color:#5a8a6a; margin-bottom:5px; }
 .pend-actions { display:flex; gap:4px; }
-.btn-approve { flex:1; background:#0a3a1a; color:#30cc70; border:1px solid #1a6a3a; border-radius:2px; cursor:pointer; font-size:8px; padding:3px; font-family:'Courier New',monospace; }
-.btn-reject  { flex:1; background:#3a0a0a; color:#cc3030; border:1px solid #6a1a1a; border-radius:2px; cursor:pointer; font-size:8px; padding:3px; font-family:'Courier New',monospace; }
+.btn-approve { flex:1; background:#0a3a1a; color:#30cc70; border:1px solid #1a6a3a; border-radius:2px; cursor:pointer; font-size:11px; padding:4px; }
+.btn-reject  { flex:1; background:#3a0a0a; color:#cc3030; border:1px solid #6a1a1a; border-radius:2px; cursor:pointer; font-size:11px; padding:4px; }
 .btn-approve:hover { background:#1a5a2a; }
 .btn-reject:hover  { background:#5a1a1a; }
-.empty-msg { font-size:9px; color:#3a6a3a; text-align:center; padding:10px 0; }
+.empty-msg { font-size:11px; color:#3a6a3a; text-align:center; padding:12px 0; line-height:1.6; }
 .queue-summary { display:flex; gap:6px; }
-.q-item { flex:1; background:#0d170d; border-radius:3px; padding:4px 6px; text-align:center; }
-.q-label { color:#4a8a4a; font-size:7px; display:block; margin-bottom:2px; }
-.q-count { color:#30cc70; font-size:14px; font-family:'Press Start 2P',monospace; }
-.kikuchi-panel { background:#0d1522; border:1px solid #1e3a5e; border-radius:4px; padding:7px 9px; }
-.kikuchi-title { font-size:9px; color:#4a7aaa; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; border-bottom:1px solid #1e3a5e; padding-bottom:3px; }
-.kikuchi-ep { font-size:11px; color:#7ab0e0; font-weight:bold; margin-bottom:4px; }
-.kikuchi-due { font-size:8px; color:#5a8aaa; margin-bottom:6px; }
+.q-item { flex:1; background:#0d170d; border-radius:3px; padding:6px; text-align:center; }
+.q-label { color:#5a9a5a; font-size:11px; display:block; margin-bottom:3px; }
+.q-count { color:#30cc70; font-size:20px; font-weight:700; display:block; }
+.kikuchi-panel { background:#0d1522; border:1px solid #1e3a5e; border-radius:4px; padding:8px 10px; }
+.kikuchi-title { font-size:11px; font-weight:600; color:#5a8aaa; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; border-bottom:1px solid #1e3a5e; padding-bottom:4px; }
+.kikuchi-ep { font-size:13px; color:#7ab0e0; font-weight:bold; margin-bottom:4px; }
+.kikuchi-due { font-size:11px; color:#5a8aaa; margin-bottom:6px; }
 .progress-bar-bg { background:#0a1520; border:1px solid #1e3a5e; border-radius:3px; height:14px; overflow:hidden; margin-bottom:4px; }
 .progress-bar-fill { height:100%; background:linear-gradient(90deg,#1a5a9a,#3a9adf); transition:width 0.5s; border-radius:2px; }
-.progress-text { font-size:9px; color:#7ab0e0; text-align:right; }
+.progress-text { font-size:11px; color:#7ab0e0; text-align:right; }
 .kikuchi-checks { display:flex; gap:3px; margin-top:5px; }
-.check-item { flex:1; background:#0a1520; border:1px solid #1e3a5e; border-radius:2px; padding:2px; text-align:center; font-size:7px; color:#3a6a9a; }
+.check-item { flex:1; background:#0a1520; border:1px solid #1e3a5e; border-radius:2px; padding:3px; text-align:center; font-size:10px; color:#3a6a9a; }
 .check-item.done { background:#0a2a40; border-color:#3a7aaa; color:#7ab0e0; }
-.schedule-list { display:flex; flex-direction:column; gap:3px; max-height:150px; overflow-y:auto; }
-.sched-item { display:flex; justify-content:space-between; align-items:center; font-size:8px; padding:3px 5px; background:#0d170d; border-radius:3px; border-left:2px solid #2a6a2a; }
-.sched-name { color:#7aba7a; flex:1; font-size:7px; }
-.sched-next { color:#4a8a4a; font-size:7px; margin:0 4px; white-space:nowrap; }
-.btn-trigger { background:#1a4a3a; color:#40b080; border:1px solid #2a7a5a; border-radius:2px; cursor:pointer; font-size:7px; padding:2px 4px; }
+.schedule-list { display:flex; flex-direction:column; gap:3px; max-height:180px; overflow-y:auto; }
+.sched-item { display:flex; justify-content:space-between; align-items:center; padding:4px 6px; background:#0d170d; border-radius:3px; border-left:2px solid #2a6a2a; gap:4px; }
+.sched-name { color:#8aca8a; flex:1; font-size:11px; }
+.sched-next { color:#5a9a5a; font-size:10px; margin:0 4px; white-space:nowrap; }
+.btn-trigger { background:#1a4a3a; color:#40b080; border:1px solid #2a7a5a; border-radius:2px; cursor:pointer; font-size:10px; padding:3px 6px; flex-shrink:0; }
 .btn-trigger:hover { background:#2a6a5a; }
-.log-list { max-height:100px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
-.log-item { font-size:8px; padding:2px 3px; background:#0d170d; border-radius:2px; }
-.log-time { color:#4a7a4a; margin-right:4px; }
+.log-list { max-height:130px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
+.log-item { font-size:11px; padding:3px 5px; background:#0d170d; border-radius:2px; line-height:1.4; }
+.log-time { color:#5a8a5a; margin-right:5px; font-size:10px; }
 .log-msg { color:#90c090; }
-.result-box { background:#0a150a; border:1px solid #1e4a1e; border-radius:3px; padding:7px; font-size:8px; color:#80bb80; max-height:110px; overflow-y:auto; white-space:pre-wrap; line-height:1.5; }
-.status-bar { font-size:9px; color:#4a8a4a; text-align:center; padding:3px; }
+.status-bar { font-size:11px; color:#4a8a4a; text-align:center; padding:3px; }
+/* ── Modal ── */
 .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; }
 .modal-overlay.open { display:flex; }
-.modal { background:#111a11; border:2px solid #2a6a2a; border-radius:6px; padding:16px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; }
-.modal-title { font-size:11px; color:#90ee90; margin-bottom:8px; }
-.modal-body { font-size:10px; color:#80bb80; white-space:pre-wrap; line-height:1.6; margin-bottom:12px; }
+.modal { background:#111a11; border:2px solid #2a6a2a; border-radius:6px; padding:16px; max-width:680px; width:92%; max-height:85vh; overflow-y:auto; }
+.modal-title { font-size:13px; color:#90ee90; margin-bottom:10px; font-weight:600; }
+.modal-body { font-size:12px; color:#80bb80; white-space:pre-wrap; line-height:1.7; margin-bottom:12px; }
 .modal-actions { display:flex; gap:8px; }
-.modal-close { background:#2d3a2d; color:#6a8a6a; border:1px solid #3a5a3a; border-radius:3px; cursor:pointer; font-size:9px; padding:5px 10px; }
-.chat-messages { max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; margin-bottom:6px; }
-.chat-msg-user { background:#0a1a2a; border:1px solid #1a4a6a; border-radius:3px; padding:4px 6px; font-size:9px; color:#90bbdd; word-break:break-all; }
-.chat-msg-agent { background:#0d1a0d; border:1px solid #1a4a1a; border-radius:3px; padding:4px 6px; font-size:9px; color:#8abca0; word-break:break-all; white-space:pre-wrap; line-height:1.5; }
-.chat-meta { font-size:7px; color:#4a8a5a; display:block; margin-bottom:2px; }
-.chat-meta-user { font-size:7px; color:#4a6a9a; display:block; margin-bottom:2px; }
-.chat-agent-badge { font-size:9px; color:#40cc70; background:#0a2a1a; border:1px solid #2a6a3a; border-radius:3px; padding:3px 7px; margin-bottom:6px; cursor:default; }
-.chat-input { flex:1; background:#0a1a0a; border:1px solid #2a6a2a; color:#90ee90; padding:4px 6px; font-family:'Courier New',monospace; font-size:10px; border-radius:3px; }
+.modal-close { background:#2d3a2d; color:#8a9a8a; border:1px solid #3a5a3a; border-radius:3px; cursor:pointer; font-size:11px; padding:6px 12px; }
+/* ── Chat ── */
+.chat-messages { max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:5px; margin-bottom:6px; }
+.chat-msg-user { background:#0a1a2a; border:1px solid #1a4a6a; border-radius:3px; padding:6px 8px; font-size:12px; color:#90bbdd; word-break:break-all; }
+.chat-msg-agent { background:#0d1a0d; border:1px solid #1a4a1a; border-radius:3px; padding:6px 8px; font-size:12px; color:#8abca0; word-break:break-all; white-space:pre-wrap; line-height:1.6; }
+.chat-meta { font-size:10px; color:#4a8a5a; display:block; margin-bottom:3px; }
+.chat-meta-user { font-size:10px; color:#4a6a9a; display:block; margin-bottom:3px; }
+.chat-agent-badge { font-size:11px; color:#40cc70; background:#0a2a1a; border:1px solid #2a6a3a; border-radius:3px; padding:4px 8px; margin-bottom:6px; cursor:default; }
+.chat-input { flex:1; background:#0a1a0a; border:1px solid #2a6a2a; color:#90ee90; padding:5px 7px; font-size:12px; border-radius:3px; }
 .chat-input-row { display:flex; gap:4px; align-items:center; }
 @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
-.chat-loading { animation:blink 1s infinite; color:#fbbf24; font-size:9px; }
-.pend-edit-area { width:100%; background:#0a140a; border:1px solid #3a7a3a; color:#90ee90; padding:5px; font-family:'Courier New',monospace; font-size:9px; border-radius:3px; resize:vertical; min-height:70px; margin-bottom:4px; display:none; }
-.pend-title-edit { width:100%; background:#0a140a; border:1px solid #3a7a3a; color:#90ee90; padding:4px; font-family:'Courier New',monospace; font-size:9px; border-radius:3px; margin-bottom:4px; display:none; }
-.btn-edit { flex:1; background:#1a3a4a; color:#60aacc; border:1px solid #2a6a8a; border-radius:2px; cursor:pointer; font-size:8px; padding:3px; font-family:'Courier New',monospace; }
+.chat-loading { animation:blink 1s infinite; color:#fbbf24; font-size:11px; }
+.pend-edit-area { width:100%; background:#0a140a; border:1px solid #3a7a3a; color:#90ee90; padding:6px; font-family:'Courier New',monospace; font-size:11px; border-radius:3px; resize:vertical; min-height:80px; margin-bottom:5px; display:none; }
+.pend-title-edit { width:100%; background:#0a140a; border:1px solid #3a7a3a; color:#90ee90; padding:5px; font-family:'Courier New',monospace; font-size:11px; border-radius:3px; margin-bottom:5px; display:none; }
+.btn-edit { flex:1; background:#1a3a4a; color:#60aacc; border:1px solid #2a6a8a; border-radius:2px; cursor:pointer; font-size:11px; padding:4px; }
 .btn-edit:hover { background:#2a5a7a; }
-.btn-save { flex:1; background:#3a2a0a; color:#ccaa30; border:1px solid #8a7a1a; border-radius:2px; cursor:pointer; font-size:8px; padding:3px; font-family:'Courier New',monospace; }
+.btn-save { flex:1; background:#3a2a0a; color:#ccaa30; border:1px solid #8a7a1a; border-radius:2px; cursor:pointer; font-size:11px; padding:4px; }
 .btn-save:hover { background:#5a4a1a; }
+/* ── 成果物ビューア（下部全幅）── */
+.results-section { width:100%; max-width:1720px; margin-top:10px; background:#0d150d; border:1px solid #1e4a1e; border-radius:6px; overflow:hidden; }
+.results-header { display:flex; align-items:center; gap:0; border-bottom:1px solid #1e4a1e; background:#0a110a; flex-wrap:wrap; }
+.rtab { padding:9px 14px; font-size:12px; font-weight:500; color:#6a9a6a; background:transparent; border:none; border-right:1px solid #1e4a1e; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.rtab:hover { background:#111f11; color:#90c090; }
+.rtab.active { background:#142014; color:#7ae07a; border-bottom:2px solid #3a9a3a; font-weight:700; }
+.results-refresh { margin-left:auto; padding:6px 12px; background:#142814; color:#5ab05a; border:1px solid #2a6a2a; border-radius:3px; cursor:pointer; font-size:11px; margin-right:8px; }
+.results-refresh:hover { background:#1e3a1e; }
+.results-body { display:flex; height:420px; }
+.results-filelist { width:220px; flex-shrink:0; border-right:1px solid #1e4a1e; overflow-y:auto; padding:6px; display:flex; flex-direction:column; gap:4px; }
+.rfile-btn { width:100%; text-align:left; background:#111811; border:1px solid #1a3a1a; border-radius:3px; padding:7px 9px; cursor:pointer; transition:all 0.15s; }
+.rfile-btn:hover { background:#182818; border-color:#2a5a2a; }
+.rfile-btn.active { background:#1a3a1a; border-color:#3a7a3a; }
+.rfile-name { font-size:11px; color:#6aaa6a; display:block; margin-bottom:2px; word-break:break-all; }
+.rfile-size { font-size:10px; color:#3a6a3a; }
+.results-content { flex:1; overflow-y:auto; padding:16px 20px; }
+.results-content pre { font-size:13px; color:#b8d8b8; white-space:pre-wrap; line-height:1.75; font-family:'Courier New',monospace; }
+.results-empty { color:#3a6a3a; font-size:13px; padding:40px; text-align:center; line-height:2; }
+.results-loading { color:#5a8a5a; font-size:13px; padding:40px; text-align:center; }
 </style>
 </head>
 <body>
@@ -95,9 +117,10 @@ body { background:#070c07; color:#c9d1d9; font-family:'Courier New',monospace; d
   <div id="game-container"></div>
   <div class="sidebar">
     <div class="panel">
-      <div class="panel-title">🎬 手動実行（台本骨子）</div>
+      <div class="panel-title">🎬 台本骨子を今すぐ生成</div>
       <input id="theme-input" class="theme-input" placeholder="テーマ（例：年金だけでは足りない）" value="年金だけでは足りないと気づいた日">
-      <button id="run-btn" class="btn btn-green" onclick="runManual()">▶ 脚本エージェント起動</button>
+      <button id="run-btn" class="btn btn-green" onclick="runManual()">▶ 今すぐ台本骨子を生成</button>
+      <div class="script-desc">① リサーチャーがテーマを分析 → ② 脚本家が6フェーズ台本骨子を出力。成果物は下の「幸子チャンネル」タブに表示されます。（毎日9:00に自動生成もあり）</div>
     </div>
     <div class="kikuchi-panel">
       <div class="kikuchi-title">👤 菊地（外注）進捗</div>
@@ -134,10 +157,6 @@ body { background:#070c07; color:#c9d1d9; font-family:'Courier New',monospace; d
       <div class="panel-title">📋 ログ</div>
       <div class="log-list" id="log-list"></div>
     </div>
-    <div class="panel">
-      <div class="panel-title">💡 最新の成果物</div>
-      <div class="result-box" id="result-box">成果物はここに表示されます</div>
-    </div>
     <div class="panel" id="chat-panel">
       <div class="panel-title">💬 エージェントに話しかける</div>
       <div id="chat-agent-badge" class="chat-agent-badge">← キャラクターをクリックして選択</div>
@@ -148,6 +167,27 @@ body { background:#070c07; color:#c9d1d9; font-family:'Courier New',monospace; d
       </div>
     </div>
     <div class="status-bar" id="status-bar">●  IDLE</div>
+  </div>
+</div>
+
+<!-- ── 成果物ビューア ── -->
+<div class="results-section">
+  <div class="results-header">
+    <button class="rtab active" onclick="showResultTab('sachiko')" id="rtab-sachiko">🎬 幸子チャンネル</button>
+    <button class="rtab" onclick="showResultTab('content')" id="rtab-content">𝕏 X・note戦略</button>
+    <button class="rtab" onclick="showResultTab('sales')" id="rtab-sales">📊 営業</button>
+    <button class="rtab" onclick="showResultTab('tenshi')" id="rtab-tenshi">🏢 転職アニメ</button>
+    <button class="rtab" onclick="showResultTab('newbiz')" id="rtab-newbiz">💡 新規事業</button>
+    <button class="rtab" onclick="showResultTab('weekly')" id="rtab-weekly">📋 週次まとめ</button>
+    <button class="results-refresh" onclick="fetchResults(true)">⟳ 更新</button>
+  </div>
+  <div class="results-body">
+    <div class="results-filelist" id="results-filelist">
+      <div class="results-loading">読み込み中...</div>
+    </div>
+    <div class="results-content" id="results-content">
+      <div class="results-empty">左のファイル一覧からファイルを選択してください<br><br>成果物は各エージェントが自動生成し、毎日蓄積されます。<br>「⟳ 更新」で最新ファイルを取得できます。</div>
+    </div>
   </div>
 </div>
 
@@ -615,6 +655,67 @@ function renderChatMessages(){
   el.scrollTop=el.scrollHeight;
 }
 document.getElementById('chat-input').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
+
+// ── 成果物ビューア ─────────────────────────────────────────────────────────
+let _currentResultTab = 'sachiko';
+let _resultsCache = {};
+let _selectedFile = null;
+
+function showResultTab(tab) {
+  _currentResultTab = tab;
+  document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
+  document.getElementById('rtab-' + tab)?.classList.add('active');
+  renderFileList();
+}
+
+function fetchResults(force) {
+  const fl = document.getElementById('results-filelist');
+  fl.innerHTML = '<div class="results-loading">取得中...</div>';
+  fetch('/api/results')
+    .then(r => r.json())
+    .then(data => {
+      _resultsCache = data;
+      _selectedFile = null;
+      renderFileList();
+      document.getElementById('results-content').innerHTML =
+        '<div class="results-empty">左のファイルを選択してください</div>';
+    })
+    .catch(() => {
+      fl.innerHTML = '<div class="results-empty">取得失敗。Railwayログを確認してください。</div>';
+    });
+}
+
+function renderFileList() {
+  const files = _resultsCache[_currentResultTab] || [];
+  const fl = document.getElementById('results-filelist');
+  if (!files.length) {
+    fl.innerHTML = '<div class="results-empty" style="padding:16px;font-size:11px">このタブの成果物はまだありません。<br>エージェントが生成すると表示されます。</div>';
+    return;
+  }
+  fl.innerHTML = files.map((f, i) => {
+    const kb = Math.round((f.content || '').length / 1024 * 10) / 10;
+    const active = _selectedFile === i ? ' active' : '';
+    return `<button class="rfile-btn${active}" onclick="showFile(${i})">
+      <span class="rfile-name">${escHtml(f.name)}</span>
+      <span class="rfile-size">${kb} KB</span>
+    </button>`;
+  }).join('');
+}
+
+function showFile(idx) {
+  _selectedFile = idx;
+  renderFileList();
+  const files = _resultsCache[_currentResultTab] || [];
+  const f = files[idx];
+  if (!f) return;
+  const content = document.getElementById('results-content');
+  content.innerHTML = `<pre>${escHtml(f.content)}</pre>`;
+  content.scrollTop = 0;
+}
+
+// 初回ロード + 5分ごと自動更新
+fetchResults();
+setInterval(fetchResults, 300000);
 </script>
 </body>
 </html>

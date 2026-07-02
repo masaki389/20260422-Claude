@@ -46,8 +46,12 @@ RESEARCH_DIR = BASE_DIR / "research"
 RESEARCH_DIR.mkdir(exist_ok=True)
 AUTOMATION_DIR = BASE_DIR / "automation"
 
-PENDING_PATH  = RESEARCH_DIR / "pending_queue.json"
-APPROVED_PATH = RESEARCH_DIR / "approved_queue.json"
+# キューはDATA_DIR（Railway Volume）に永続化。未設定時はresearch/にフォールバック
+_DATA_DIR = Path(os.getenv("DATA_DIR", str(RESEARCH_DIR)))
+_DATA_DIR.mkdir(exist_ok=True, parents=True)
+PENDING_PATH  = _DATA_DIR / "pending_queue.json"
+APPROVED_PATH = _DATA_DIR / "approved_queue.json"
+
 AGENTS_DIR    = BASE_DIR / "agents"
 CONTEXT_DIR   = BASE_DIR / "shared-context"
 
@@ -1110,6 +1114,38 @@ def api_chat():
         set_status(agent_id, "error", "チャットエラー")
         log(f"❌ チャットエラー [{agent_id}]: {str(e)[:100]}")
         return jsonify({"error": str(e)[:200]}), 500
+
+
+@app.route("/api/results")
+def api_results():
+    """各部門の最新成果物ファイルを返す。"""
+    def latest(pattern, n=2):
+        files = sorted(RESEARCH_DIR.glob(pattern), reverse=True)[:n]
+        out = []
+        for f in files:
+            try:
+                out.append({"name": f.name, "content": f.read_text(encoding="utf-8")[:6000]})
+            except Exception:
+                pass
+        return out
+
+    def read_md(name):
+        p = RESEARCH_DIR / name
+        if p.exists():
+            try:
+                return [{"name": name, "content": p.read_text(encoding="utf-8")[:6000]}]
+            except Exception:
+                pass
+        return []
+
+    return jsonify({
+        "sachiko":  latest("sachiko_auto_*.txt") + latest("script_draft_*.txt"),
+        "content":  read_md("x_strategy.md") + read_md("note_strategy.md"),
+        "sales":    latest("sales_prospects_*.txt") + latest("proposals_*.txt"),
+        "tenshi":   latest("tenshi_analysis_*.txt") + latest("tenshi_script_draft_*.txt"),
+        "newbiz":   read_md("ip_strategy.md") + read_md("bizdev.md") + latest("tieup_auto_*.txt"),
+        "weekly":   latest("weekly_summary_*.md"),
+    })
 
 
 @app.route("/api/note_body/<item_id>")
