@@ -1079,6 +1079,11 @@ def get_schedule_info():
 
 
 # ─── Flask Routes ────────────────────────────────────────────────────────────
+@app.route("/ping")
+def ping():
+    return jsonify({"ok": True})
+
+
 @app.route("/")
 def index():
     return render_template("autonomous.html")
