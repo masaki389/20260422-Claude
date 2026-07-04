@@ -370,64 +370,56 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
 // ── Layout constants ─────────────────────────────────────────────────────────
-// 7 rooms: sachiko | content | sales | tenshi | bizdev | sns | external
-const CW = 1570, CH = 530;
+// 5 rooms matching KPI departments
+const CW = 1560, CH = 510;
+const GAP = 13;
 const ROOMS = {
-  sachiko:  {x:8,    y:38, w:220, h:454},
-  content:  {x:242,  y:38, w:300, h:454},
-  sales:    {x:556,  y:38, w:195, h:454},
-  tenshi:   {x:765,  y:38, w:220, h:454},
-  bizdev:   {x:999,  y:38, w:170, h:454},
-  sns:      {x:1183, y:38, w:185, h:454},
-  external: {x:1382, y:38, w:175, h:454},
+  sachiko: {x:0,    y:0, w:296, h:510},
+  content: {x:309,  y:0, w:462, h:510},
+  sales:   {x:784,  y:0, w:226, h:510},
+  tenshi:  {x:1023, y:0, w:226, h:510},
+  newbiz:  {x:1262, y:0, w:298, h:510},
 };
 const WALK_BOUNDS = {
-  sachiko:  {x1:25,  y1:95, x2:220, y2:478},
-  content:  {x1:260, y1:95, x2:534, y2:478},
-  sales:    {x1:573, y1:95, x2:743, y2:478},
-  tenshi:   {x1:782, y1:95, x2:977, y2:478},
-  bizdev:   {x1:1016,y1:95, x2:1161,y2:478},
-  sns:      {x1:1200,y1:95, x2:1360,y2:478},
-  external: {x1:1400,y1:95, x2:1550,y2:478},
+  sachiko: {x1:14,  y1:90, x2:282, y2:482},
+  content: {x1:318, y1:90, x2:762, y2:482},
+  sales:   {x1:793, y1:90, x2:1001,y2:482},
+  tenshi:  {x1:1032,y1:90, x2:1240,y2:482},
+  newbiz:  {x1:1271,y1:90, x2:1551,y2:482},
 };
 const DEPT = {
-  sachiko:  {wall:0x2d8a4a, floor1:0xc4985a, floor2:0xb8894e, label:'幸子チャンネル部'},
-  content:  {wall:0x5a3a9a, floor1:0xb08868, floor2:0xa07858, label:'コンテンツ部（note/X）'},
-  sales:    {wall:0xaa4422, floor1:0xc49060, floor2:0xb48050, label:'営業部門'},
-  tenshi:   {wall:0x1a8a7a, floor1:0xb0a068, floor2:0xa09058, label:'転職アニメ部'},
-  bizdev:   {wall:0x9a6a1a, floor1:0xc0a060, floor2:0xb09050, label:'事業開発部'},
-  sns:      {wall:0x9a2a7a, floor1:0xb07090, floor2:0xa06080, label:'SNSマネタイズチーム'},
-  external: {wall:0x4a5a8a, floor1:0xa09080, floor2:0x908070, label:'外注管理'},
+  sachiko: {accent:0x4ade80, wall:0x0f2a1a, floor1:0x151e15, floor2:0x111811, label:'🎬 幸子チャンネル部'},
+  content: {accent:0xa78bfa, wall:0x160a2e, floor1:0x16131e, floor2:0x110e18, label:'📱 コンテンツ・販売部'},
+  sales:   {accent:0xf87171, wall:0x2a0808, floor1:0x1c1010, floor2:0x160c0c, label:'💼 toB受託営業部'},
+  tenshi:  {accent:0x38bdf8, wall:0x061828, floor1:0x101620, floor2:0x0c1018, label:'✈ 転職アニメ部'},
+  newbiz:  {accent:0xfbbf24, wall:0x221500, floor1:0x1a1608, floor2:0x141204, label:'💡 事業開発部'},
 };
 const AGENTS_CFG = {
-  // 幸子チャンネル部
-  researcher:          {x:65,   y:205, name:'幸子リサーチャー', dept:'sachiko'},
-  scriptwriter:        {x:180,  y:335, name:'脚本家',           dept:'sachiko'},
-  sachiko_analyst:     {x:185,  y:180, name:'幸子分析',         dept:'sachiko'},
-  // コンテンツ部
-  x_strategist:        {x:315,  y:175, name:'X戦略家',          dept:'content'},
-  x_writer:            {x:415,  y:175, name:'Xライター',         dept:'content'},
-  x_poster:            {x:510,  y:175, name:'X投稿管理',         dept:'content'},
-  note_researcher:     {x:330,  y:345, name:'noteリサーチャー',  dept:'content'},
-  note_writer:         {x:460,  y:345, name:'noteライター',      dept:'content'},
-  // 営業部門
-  sales_researcher:    {x:620,  y:200, name:'営業リサーチャー',  dept:'sales'},
-  proposal_writer:     {x:700,  y:355, name:'提案書ライター',    dept:'sales'},
-  // 転職アニメ部
-  tenshi_analyst:      {x:845,  y:200, name:'転職アニメ分析',    dept:'tenshi'},
-  tenshi_scriptwriter: {x:940,  y:360, name:'転職脚本家',        dept:'tenshi'},
-  // 事業開発
-  tieup_researcher:    {x:1085, y:265, name:'タイアップ探索',    dept:'bizdev'},
-  // SNSマネタイズチーム
-  sns_planner:         {x:1240, y:180, name:'SNS企画担当',       dept:'sns'},
-  sns_educator:        {x:1280, y:340, name:'SNS教育担当',       dept:'sns'},
-  sns_marketer:        {x:1340, y:240, name:'SNSマーケ担当',     dept:'sns'},
-  // 外注・秘書
-  secretary:           {x:1440, y:180, name:'秘書',              dept:'external'},
-  kikuchi:             {x:1480, y:340, name:'菊地（外注）',       dept:'external'},
+  // 幸子チャンネル部 (4 agents)
+  researcher:          {x:65,   y:205, name:'幸子リサーチャー', dept:'sachiko', skin:0xf5c5a0, hair:0x2a1a0a},
+  scriptwriter:        {x:200,  y:340, name:'脚本家',           dept:'sachiko', skin:0xd4a87c, hair:0x1a1008},
+  sachiko_analyst:     {x:240,  y:185, name:'幸子分析',         dept:'sachiko', skin:0xf0b890, hair:0x3a2a10},
+  tieup_researcher:    {x:110,  y:370, name:'タイアップ探索',   dept:'sachiko', skin:0xe8c4a0, hair:0x181008},
+  // コンテンツ・販売部 (8 agents)
+  x_strategist:        {x:370,  y:165, name:'X戦略家',          dept:'content', skin:0xf5c5a0, hair:0x1a1a1a},
+  x_writer:            {x:460,  y:165, name:'Xライター',         dept:'content', skin:0xd4a87c, hair:0x2a1a0a},
+  x_poster:            {x:555,  y:165, name:'X投稿管理',         dept:'content', skin:0xf0d0b0, hair:0x0a1a2a},
+  note_researcher:     {x:395,  y:345, name:'noteリサーチャー',  dept:'content', skin:0xe8c4a0, hair:0x2a2a1a},
+  note_writer:         {x:510,  y:345, name:'noteライター',      dept:'content', skin:0xd4b090, hair:0x1a0a00},
+  sns_planner:         {x:635,  y:165, name:'SNS企画',           dept:'content', skin:0xf5c5a0, hair:0x2a1020},
+  sns_educator:        {x:665,  y:345, name:'SNS教育',           dept:'content', skin:0xf0b890, hair:0x300a10},
+  sns_marketer:        {x:752,  y:250, name:'SNSマーケ',         dept:'content', skin:0xe0c0a0, hair:0x1a0a18},
+  // toB受託営業部 (2 agents)
+  sales_researcher:    {x:878,  y:190, name:'営業リサーチャー',  dept:'sales',   skin:0xf5c5a0, hair:0x1a1a1a},
+  proposal_writer:     {x:960,  y:365, name:'提案書ライター',    dept:'sales',   skin:0xd4a87c, hair:0x2a1a0a},
+  // 転職アニメ部 (2 agents)
+  tenshi_analyst:      {x:1103, y:190, name:'転職アニメ分析',    dept:'tenshi',  skin:0xf0b890, hair:0x0a1820},
+  tenshi_scriptwriter: {x:1205, y:365, name:'転職脚本家',        dept:'tenshi',  skin:0xf5c5a0, hair:0x1a1a28},
+  // 事業開発部 (2 agents)
+  secretary:           {x:1358, y:195, name:'秘書',              dept:'newbiz',  skin:0xf5c5a0, hair:0x200818},
+  kikuchi:             {x:1475, y:370, name:'菊地（外注）',       dept:'newbiz',  skin:0xd4a87c, hair:0x2a1a0a},
 };
 const SC = {idle:0x6b7280, working:0xfbbf24, done:0x34d399, error:0xef4444};
-const S = 3;
 
 window._agentStates = {};
 
@@ -449,127 +441,129 @@ class OfficeScene extends Phaser.Scene {
 
   drawOffice() {
     const g=this._bgG, fr=this._furG, ds=this._dskG, dc=this._decG;
-    g.fillStyle(0x040707); g.fillRect(0,0,CW,CH);
+    g.fillStyle(0x080b12); g.fillRect(0,0,CW,CH);
 
     Object.entries(ROOMS).forEach(([dept,r]) => {
       const d=DEPT[dept];
-      // Floor tiles
-      const tH=20, tW=28;
-      for (let ty=r.y+50;ty<r.y+r.h;ty+=tH)
-        for (let tx=r.x;tx<r.x+r.w;tx+=tW) {
-          g.fillStyle(((Math.floor(ty/tH)+Math.floor(tx/tW))%2===0)?d.floor1:d.floor2, 0.85);
+      // Floor tiles (larger, modern)
+      const tW=36, tH=36;
+      for (let ty=r.y+52; ty<r.y+r.h; ty+=tH)
+        for (let tx=r.x; tx<r.x+r.w; tx+=tW) {
+          const even=((Math.floor(ty/tH)+Math.floor(tx/tW))%2===0);
+          g.fillStyle(even?d.floor1:d.floor2, 1);
           g.fillRect(tx, ty, tW-1, tH-1);
         }
-      g.lineStyle(1,d.floor2,0.2);
-      for (let ty=r.y+50;ty<r.y+r.h;ty+=tH) { g.moveTo(r.x,ty+tH/2); g.lineTo(r.x+r.w,ty+tH/2); g.strokePath(); }
-      // Ceiling
-      g.fillStyle(0x0a0e0a); g.fillRect(r.x,r.y,r.w,50);
-      g.fillStyle(0x000000,0.4); g.fillRect(r.x,r.y+48,r.w,6);
+      // Subtle floor grid
+      g.lineStyle(1, d.accent, 0.04);
+      for (let ty=r.y+52; ty<r.y+r.h; ty+=tH) { g.moveTo(r.x,ty); g.lineTo(r.x+r.w,ty); g.strokePath(); }
+      for (let tx=r.x; tx<r.x+r.w; tx+=tW)    { g.moveTo(tx,r.y+52); g.lineTo(tx,r.y+r.h); g.strokePath(); }
+      // Header / ceiling
+      g.fillStyle(d.wall, 1); g.fillRect(r.x, r.y, r.w, 50);
+      // Accent stripe
+      g.fillStyle(d.accent, 1); g.fillRect(r.x, r.y, r.w, 3);
+      // Room border glow
+      g.lineStyle(1, d.accent, 0.3); g.strokeRect(r.x, r.y, r.w, r.h);
       // Fluorescent lights
-      const nL=Math.max(1,Math.floor(r.w/75)), lSp=r.w/(nL+1);
+      const nL=Math.max(2,Math.floor(r.w/100)), lSp=r.w/(nL+1);
       for (let i=1;i<=nL;i++) {
         const lx=r.x+lSp*i;
-        g.fillStyle(0x1a1a1a); g.fillRect(lx-22,r.y+8,44,8);
-        g.fillStyle(0xffffc8,0.06); g.fillCircle(lx,r.y+14,55);
-        g.fillStyle(0xffffee,0.95); g.fillRect(lx-20,r.y+10,40,5);
-        g.fillStyle(0xffffff,0.7);  g.fillRect(lx-18,r.y+10,36,2);
+        g.fillStyle(0x0a0f18); g.fillRect(lx-28,r.y+8,56,8);
+        g.fillStyle(0xfff8e0,0.92); g.fillRect(lx-26,r.y+10,52,5);
+        g.fillStyle(0xfff8e0,0.07); g.fillCircle(lx,r.y+14,90);
+        g.fillStyle(d.accent,0.025); g.fillCircle(lx,r.y+14,70);
       }
-      // Room border
-      g.lineStyle(2,d.wall,0.65); g.strokeRect(r.x,r.y,r.w,r.h);
-      g.lineStyle(1,d.wall,0.15); g.strokeRect(r.x+2,r.y+2,r.w-4,50);
     });
 
-    // Wall dividers
-    const wallXs = [228, 542, 751, 985, 1169, 1368];
-    const wallW  = [14,  14,  14,  14,  14,   14];
-    wallXs.forEach((wx,i) => {
-      g.fillStyle(0x050808); g.fillRect(wx,38,wallW[i],454);
-      g.fillStyle(0x111111,0.8); g.fillRect(wx+1,38,2,454);
-      g.fillStyle(0x111111,0.8); g.fillRect(wx+wallW[i]-3,38,2,454);
-      g.fillStyle(0x3a3020,0.7);
-      g.fillRect(wx+2,225,wallW[i]-4,3);
-      g.fillRect(wx+2,315,wallW[i]-4,3);
+    // Wall dividers (glass-panel style)
+    [296, 771, 1010, 1249].forEach(wx => {
+      g.fillStyle(0x050810); g.fillRect(wx, 0, GAP, CH);
+      g.lineStyle(1, 0x2a2d45, 0.9);
+      g.moveTo(wx+2, 0); g.lineTo(wx+2, CH); g.strokePath();
+      g.moveTo(wx+GAP-3, 0); g.lineTo(wx+GAP-3, CH); g.strokePath();
+      // Horizontal rails
+      [140, 280, 420].forEach(ry => {
+        g.fillStyle(0x2a2d45, 0.6); g.fillRect(wx, ry, GAP, 2);
+      });
     });
 
-    // Windows
-    this.drawWindow(g, ROOMS.sachiko.x+3, 115);
-    this.drawWindow(g, ROOMS.external.x+ROOMS.external.w-35, 115);
+    // Large windows on left and right walls
+    this.drawWindow(g, ROOMS.sachiko.x+4, 80);
+    this.drawWindow(g, ROOMS.sachiko.x+4, 145);
+    this.drawWindow(g, ROOMS.newbiz.x+ROOMS.newbiz.w-40, 80);
+    this.drawWindow(g, ROOMS.newbiz.x+ROOMS.newbiz.w-40, 145);
 
-    // Whiteboards
+    // Whiteboards/monitors on walls
     Object.entries(ROOMS).forEach(([dept,r]) => {
-      this.drawWhiteboard(g, r.x+r.w/2-28, r.y+58, DEPT[dept].wall);
+      this.drawWallScreen(g, r.x+r.w/2-35, r.y+55, DEPT[dept].accent);
     });
 
     // Baseboard
     Object.entries(ROOMS).forEach(([_,r]) => {
-      g.fillStyle(0x0a0e0a,0.9); g.fillRect(r.x,r.y+r.h-10,r.w,10);
-      g.lineStyle(1,0x1a2a1a,0.4); g.moveTo(r.x,r.y+r.h-10); g.lineTo(r.x+r.w,r.y+r.h-10); g.strokePath();
+      g.fillStyle(0x0a0e18,0.9); g.fillRect(r.x,r.y+r.h-8,r.w,8);
     });
 
     // Dept labels
     Object.entries(ROOMS).forEach(([dept,r]) => {
-      this.add.text(r.x+r.w/2, r.y+26, DEPT[dept].label,
-        {fontSize:'7px', color:'#d0ffd0', fontFamily:'Courier New'}).setOrigin(0.5).setDepth(6);
+      const d=DEPT[dept];
+      const hex='#'+d.accent.toString(16).padStart(6,'0');
+      this.add.text(r.x+r.w/2, r.y+28, d.label,
+        {fontSize:'9px', color:hex, fontFamily:'Courier New', fontStyle:'bold'}).setOrigin(0.5).setDepth(6);
     });
 
-    // Static desk furniture
+    // Desks
     Object.entries(AGENTS_CFG).forEach(([_,cfg]) => {
       const d=DEPT[cfg.dept];
-      drawChairBack(fr, cfg.x, cfg.y, d.wall);
-      drawDeskBase(fr, cfg.x, cfg.y);
-      drawDeskSurface(ds, cfg.x, cfg.y, d.wall);
+      drawModernDesk(fr, ds, cfg.x, cfg.y, d.accent);
     });
 
     // Decorations
-    Object.entries(ROOMS).forEach(([_,r]) => {
-      drawPlant(dc, r.x+14,     r.y+r.h-28);
-      drawPlant(dc, r.x+r.w-14, r.y+r.h-28);
+    Object.entries(ROOMS).forEach(([dept,r]) => {
+      drawPotPlant(dc, r.x+16,     r.y+r.h-32);
+      drawPotPlant(dc, r.x+r.w-16, r.y+r.h-32);
     });
-    drawCooler(dc, ROOMS.sachiko.x+ROOMS.sachiko.w-15, 370);
-    drawCooler(dc, ROOMS.content.x+ROOMS.content.w-15, 270);
-    drawCooler(dc, ROOMS.tenshi.x+ROOMS.tenshi.w-15, 370);
-    drawBookshelf(dc, ROOMS.sales.x+8,    ROOMS.sales.y+58);
-    drawBookshelf(dc, ROOMS.bizdev.x+8,   ROOMS.bizdev.y+58);
-    drawBookshelf(dc, ROOMS.external.x+8, ROOMS.external.y+58);
+    // Water coolers
+    drawCooler(dc, ROOMS.sachiko.x+ROOMS.sachiko.w-18, 350);
+    drawCooler(dc, ROOMS.content.x+ROOMS.content.w-18, 260);
+    drawCooler(dc, ROOMS.tenshi.x+ROOMS.tenshi.w-18,   350);
+    // Bookshelves
+    drawBookshelf(dc, ROOMS.sales.x+8, ROOMS.sales.y+58);
+    drawBookshelf(dc, ROOMS.newbiz.x+8, ROOMS.newbiz.y+58);
   }
 
   drawWindow(g, x, y) {
-    const w=30, h=45;
-    g.fillStyle(0x2a3030); g.fillRect(x,y,w,h);
-    g.fillStyle(0x5a8acc,0.8); g.fillRect(x+2,y+2,w-4,h-4);
-    g.fillStyle(0x7aaade,0.5); g.fillRect(x+2,y+2,(w-5)/2,(h-5)/2);
-    g.fillStyle(0x4a72b0,0.4); g.fillRect(x+2+(w-5)/2+1,y+2,(w-5)/2,(h-5)/2);
-    g.fillStyle(0x2a3030,0.9);
-    g.fillRect(x,y+h/2-1,w,2); g.fillRect(x+w/2-1,y,2,h);
-    g.fillStyle(0x3a4040); g.fillRect(x-2,y+h,w+4,4);
-    g.fillStyle(0xaaccff,0.04); g.fillCircle(x+w/2,y+h/2,30);
+    const w=32, h=52;
+    g.fillStyle(0x1a2030); g.fillRect(x,y,w,h);
+    g.fillStyle(0x5a8acc,0.75); g.fillRect(x+2,y+2,w-4,h-4);
+    g.fillStyle(0x8ab8e8,0.45); g.fillRect(x+2,y+2,(w-6)/2,h-4);
+    g.fillStyle(0x4a80c0,0.35); g.fillRect(x+3+(w-6)/2,y+2,(w-6)/2,h-4);
+    g.fillStyle(0x1a2030,0.95); g.fillRect(x,y+h/2-1,w,2); g.fillRect(x+w/2-1,y,2,h);
+    g.fillStyle(0xaaccff,0.05); g.fillCircle(x+w/2,y+h/2,36);
   }
 
-  drawWhiteboard(g, x, y, wallColor) {
-    const w=56, h=30;
-    g.fillStyle(0x1a1a1a); g.fillRect(x,y,w,h);
-    g.fillStyle(0xeaeaea,0.92); g.fillRect(x+2,y+2,w-4,h-4);
-    const r=(wallColor>>16)&0xff, gr=(wallColor>>8)&0xff, b=wallColor&0xff;
-    g.lineStyle(1,(r<<16)|(gr<<8)|b,0.5);
-    [8,16,22].forEach(ly=>{
-      const lw=12+Math.sin(y+ly)*10+12;
-      g.moveTo(x+5,y+ly); g.lineTo(x+5+lw,y+ly); g.strokePath();
-    });
-    g.lineStyle(1,0x6666aa,0.4); g.strokeRect(x+38,y+8,12,10);
-    g.fillStyle(0x2a2a2a); g.fillRect(x,y+h,w,4);
-    g.fillStyle(0xcc3030); g.fillRect(x+8,y+h+1,6,2);
-    g.fillStyle(0x3030cc); g.fillRect(x+18,y+h+1,6,2);
+  drawWallScreen(g, x, y, accent) {
+    const w=70, h=38;
+    g.fillStyle(0x0a0a14); g.fillRect(x,y,w,h);
+    g.fillStyle(0x0d0d1e,0.95); g.fillRect(x+2,y+2,w-4,h-4);
+    const r=(accent>>16)&0xff, gv=(accent>>8)&0xff, b=accent&0xff;
+    g.fillStyle(((r>>2)<<16)|((gv>>2)<<8)|(b>>2), 0.8); g.fillRect(x+3,y+3,w-6,h-6);
+    g.lineStyle(1,accent,0.4); g.strokeRect(x+3,y+3,w-6,h-6);
+    g.fillStyle(accent,0.5); g.fillRect(x+6,y+6,20,3); g.fillRect(x+6,y+12,35,2); g.fillRect(x+6,y+17,28,2);
+    g.fillStyle(0x0a0a14); g.fillRect(x+w/2-3,y+h,6,5);
+    g.fillStyle(0x1a1a2a); g.fillRect(x+w/2-12,y+h+4,24,3);
   }
 
   buildAgent(id, cfg) {
     const d=DEPT[cfg.dept];
+    const skin=cfg.skin||0xf5c5a0, hair=cfg.hair||0x2a1a0a;
     const c=this.add.container(cfg.x,cfg.y).setDepth(2);
-    const glow=this.add.graphics(); glow.fillStyle(SC.idle,0.1); glow.fillCircle(0,0,14); c.add(glow);
-    const body=this.add.graphics(); drawCharIdle(body,0,0,d.wall); c.add(body);
-    const nameT=this.add.text(cfg.x,cfg.y+34,cfg.name,{fontSize:'7px',color:'#b0ddb0',fontFamily:'Courier New'}).setOrigin(0.5).setDepth(8);
-    const badge=this.add.text(cfg.x,cfg.y-33,'idle',{fontSize:'6px',color:'#6b7280',fontFamily:'Courier New',backgroundColor:'#050808',padding:{x:2,y:1}}).setOrigin(0.5).setDepth(9);
-    this.agentObjs[id]={c,glow,body,nameT,badge,homeX:cfg.x,homeY:cfg.y,dept:cfg.dept,walkTarget:null,walkPause:Math.random()*2000,facing:true,walkFrame:Math.floor(Math.random()*4),lastFrameT:-999,lastStatus:''};
-    c.setInteractive(new Phaser.Geom.Rectangle(-20,-48,40,90),Phaser.Geom.Rectangle.Contains);
+    const glow=this.add.graphics(); glow.fillStyle(SC.idle,0.06); glow.fillCircle(0,0,20); c.add(glow);
+    const body=this.add.graphics(); drawHumanIdle(body,0,0,d.accent,skin,hair); c.add(body);
+    const nameT=this.add.text(cfg.x,cfg.y+42,cfg.name,
+      {fontSize:'7px',color:'#c0c8d8',fontFamily:'Courier New',backgroundColor:'#00000066',padding:{x:3,y:1}}).setOrigin(0.5).setDepth(8);
+    const badge=this.add.text(cfg.x,cfg.y-44,'idle',
+      {fontSize:'6px',color:'#6b7280',fontFamily:'Courier New',backgroundColor:'#05081066',padding:{x:3,y:1}}).setOrigin(0.5).setDepth(9);
+    this.agentObjs[id]={c,glow,body,nameT,badge,homeX:cfg.x,homeY:cfg.y,dept:cfg.dept,skin,hair,walkTarget:null,walkPause:Math.random()*2000,facing:true,walkFrame:Math.floor(Math.random()*4),lastFrameT:-999,lastStatus:''};
+    c.setInteractive(new Phaser.Geom.Rectangle(-22,-56,44,100),Phaser.Geom.Rectangle.Contains);
     c.on('pointerdown',()=>window._selectChatAgent(id,cfg.name));
     c.on('pointerover',()=>this.input.setDefaultCursor('pointer'));
     c.on('pointerout', ()=>this.input.setDefaultCursor('default'));
@@ -589,12 +583,11 @@ class OfficeScene extends Phaser.Scene {
 
   update(time, delta) {
     if(!delta||delta>250) return;
-    const WALK=38, RETURN=75, FMS=200;
+    const WALK=36, RETURN=72, FMS=190;
     Object.entries(this.agentObjs).forEach(([id,obj])=>{
       const st=(window._agentStates[id]||{}).status||'idle';
       const goHome=(st==='working'||st==='done');
       const d=DEPT[AGENTS_CFG[id].dept];
-      // 仕事開始の瞬間は即座に机にテレポート
       if(obj.lastStatus!=='working'&&st==='working'){obj.c.x=obj.homeX;obj.c.y=obj.homeY;obj.walkTarget=null;}
       let tX=obj.c.x, tY=obj.c.y;
       if (goHome) { tX=obj.homeX; tY=obj.homeY; }
@@ -605,7 +598,7 @@ class OfficeScene extends Phaser.Scene {
           if(obj.walkPause<=0){
             const b=WALK_BOUNDS[AGENTS_CFG[id].dept];
             obj.walkTarget={x:b.x1+Math.random()*(b.x2-b.x1),y:b.y1+Math.random()*(b.y2-b.y1)};
-            obj.walkPause=500+Math.random()*2800;
+            obj.walkPause=600+Math.random()*2600;
           }
         }
         if(obj.walkTarget){tX=obj.walkTarget.x;tY=obj.walkTarget.y;}
@@ -613,123 +606,162 @@ class OfficeScene extends Phaser.Scene {
       const dx=tX-obj.c.x, dy=tY-obj.c.y, dist=Math.sqrt(dx*dx+dy*dy);
       const moving=dist>2.5;
       if(moving){const step=Math.min((goHome?RETURN:WALK)*delta/1000,dist);obj.c.x+=(dx/dist)*step;obj.c.y+=(dy/dist)*step;if(Math.abs(dx)>1)obj.facing=dx>0;}
-      obj.nameT.setPosition(obj.c.x,obj.c.y+34);
-      obj.badge.setPosition(obj.c.x,obj.c.y-33);
+      obj.nameT.setPosition(obj.c.x,obj.c.y+42);
+      obj.badge.setPosition(obj.c.x,obj.c.y-44);
       const isAtDesk=Math.abs(obj.c.x-obj.homeX)<5&&Math.abs(obj.c.y-obj.homeY)<5;
       const seated=isAtDesk&&goHome;
       if((time-obj.lastFrameT)>FMS){
         obj.lastFrameT=time;
         if(moving)obj.walkFrame=(obj.walkFrame+1)%4;
         obj.body.clear();
-        if(seated) drawCharSeated(obj.body,0,0,d.wall);
-        else if(moving) drawCharWalk(obj.body,0,0,d.wall,obj.walkFrame,obj.facing);
-        else drawCharIdle(obj.body,0,0,d.wall);
+        if(seated) drawHumanSeated(obj.body,0,0,d.accent,obj.skin,obj.hair);
+        else if(moving) drawHumanWalk(obj.body,0,0,d.accent,obj.skin,obj.hair,obj.walkFrame,obj.facing);
+        else drawHumanIdle(obj.body,0,0,d.accent,obj.skin,obj.hair);
       }
       const sc=SC[st]||SC.idle;
       if(st==='working'){
-        const pulse=0.28+0.12*Math.sin(time*0.0028), pr=18+4*Math.sin(time*0.0028);
+        const pulse=0.22+0.14*Math.sin(time*0.0030), pr=22+5*Math.sin(time*0.0030);
         obj.glow.clear(); obj.glow.fillStyle(sc,pulse); obj.glow.fillCircle(0,0,pr);
-        obj.glow.fillStyle(sc,0.05); obj.glow.fillCircle(0,0,34);
+        obj.glow.fillStyle(sc,0.04); obj.glow.fillCircle(0,0,42);
       } else if(st!==obj.lastStatus){
         obj.glow.clear();
-        obj.glow.fillStyle(sc, st==='done'?0.28:st==='error'?0.32:0.08);
-        obj.glow.fillCircle(0,0, st==='done'?16:st==='error'?16:12);
+        obj.glow.fillStyle(sc, st==='done'?0.26:st==='error'?0.30:0.05);
+        obj.glow.fillCircle(0,0, st==='done'?19:st==='error'?19:15);
       }
       obj.lastStatus=st;
     });
   }
 }
 
-// ── Character draw ────────────────────────────────────────────────────────────
-function drawCharIdle(g,x,y,shirt){
-  g.fillStyle(0x2a1a08);g.fillRect(x-2*S,y-10*S,4*S,S);
-  g.fillStyle(0xf5cba7);g.fillRect(x-2*S,y-9*S,4*S,4*S);
-  g.fillStyle(0x1a1a1a);g.fillRect(x-S,y-8*S,S,S);g.fillRect(x+S,y-8*S,S,S);
-  g.fillStyle(shirt);g.fillRect(x-2*S,y-5*S,4*S,5*S);
-  g.fillRect(x-3*S,y-5*S,S,3*S);g.fillRect(x+2*S,y-5*S,S,3*S);
-  g.fillStyle(0xf5cba7);g.fillRect(x-3*S,y-2*S,S,S);g.fillRect(x+2*S,y-2*S,S,S);
-  g.fillStyle(0x2c3e50);g.fillRect(x-2*S,y,2*S,3*S);g.fillRect(x,y,2*S,3*S);
-  g.fillStyle(0x1a1a1a);g.fillRect(x-2*S,y+3*S,2*S,S);g.fillRect(x,y+3*S,2*S,S);
+// ── Human character draw (circle-head, realistic proportions) ─────────────────
+function drawHumanIdle(g,x,y,shirt,skin,hair){
+  g.fillStyle(0x000000,0.15); g.fillEllipse(x,y+32,24,7);
+  // Shoes
+  g.fillStyle(0x1a1824); g.fillEllipse(x-5,y+30,11,5); g.fillEllipse(x+5,y+30,11,5);
+  // Trousers
+  g.fillStyle(0x252d3a); g.fillRect(x-9,y+12,8,20); g.fillRect(x+1,y+12,8,20);
+  // Body / shirt
+  g.fillStyle(shirt,0.85); g.fillRect(x-11,y-10,22,24);
+  // Collar
+  g.fillStyle(0xffffff,0.12); g.fillTriangle(x,y-9,x-5,y-11,x+5,y-11);
+  // Arms
+  g.fillStyle(shirt,0.80); g.fillRect(x-15,y-10,5,18); g.fillRect(x+10,y-10,5,18);
+  // Hands
+  g.fillStyle(skin); g.fillCircle(x-13,y+9,5); g.fillCircle(x+13,y+9,5);
+  // Neck
+  g.fillStyle(skin); g.fillRect(x-4,y-18,8,10);
+  // Head
+  g.fillStyle(skin); g.fillCircle(x,y-26,13);
+  // Hair
+  g.fillStyle(hair); g.fillEllipse(x,y-35,20,9); g.fillRect(x-10,y-36,20,9);
+  // Eyes
+  g.fillStyle(0x141420); g.fillCircle(x-4,y-27,2.5); g.fillCircle(x+4,y-27,2.5);
+  g.fillStyle(0xffffff,0.9); g.fillCircle(x-3,y-28,1.2); g.fillCircle(x+5,y-28,1.2);
 }
-function drawCharWalk(g,x,y,shirt,frame,fR){
-  const bob=(frame%2)?-1:0;
-  g.fillStyle(0x2a1a08);g.fillRect(x-2*S,y-10*S+bob,4*S,S);
-  g.fillStyle(0xf5cba7);g.fillRect(x-2*S,y-9*S+bob,4*S,4*S);
-  g.fillStyle(0x1a1a1a);
-  const eO=fR?S:-2*S; g.fillRect(x+eO,y-8*S+bob,S,S);g.fillRect(x+eO+S,y-8*S+bob,S,S);
-  g.fillStyle(shirt);g.fillRect(x-2*S,y-5*S+bob,4*S,5*S);
-  const aF=(frame<2)?-S:0;
-  g.fillStyle(shirt);g.fillRect(x-3*S,y-5*S+bob+aF,S,3*S);g.fillRect(x+2*S,y-5*S+bob+(S-aF),S,3*S);
-  g.fillStyle(0xf5cba7);g.fillRect(x-3*S,y-2*S+bob+aF,S,S);g.fillRect(x+2*S,y-2*S+bob+(S-aF),S,S);
-  g.fillStyle(0x2c3e50);
-  if(frame===0||frame===2){g.fillRect(x-2*S,y+bob,2*S,2*S);g.fillRect(x-2*S,y+2*S+bob,2*S,S);g.fillRect(x,y-S+bob,2*S,3*S);}
-  else{g.fillRect(x-2*S,y-S+bob,2*S,3*S);g.fillRect(x,y+bob,2*S,2*S);g.fillRect(x,y+2*S+bob,2*S,S);}
-  g.fillStyle(0x1a1a1a);
-  if(frame===0||frame===2){g.fillRect(x-2*S,y+2*S+bob,2*S,S);g.fillRect(x,y+2*S+bob,3*S,S);}
-  else{g.fillRect(x-2*S,y+2*S+bob,3*S,S);g.fillRect(x,y+2*S+bob,2*S,S);}
+function drawHumanWalk(g,x,y,shirt,skin,hair,frame,fR){
+  const bob=(frame%2)?-2:0;
+  const [lOff1,lOff2]=(frame===0||frame===2)?[3,-3]:[-3,3];
+  g.fillStyle(0x000000,0.12); g.fillEllipse(x,y+30+bob,22,6);
+  // Trousers (alternating legs)
+  g.fillStyle(0x252d3a);
+  g.fillRect(x-9+lOff1,y+12+bob,8,18);
+  g.fillRect(x+1+lOff2,y+12+bob,8,18);
+  // Shoes
+  g.fillStyle(0x1a1824);
+  g.fillEllipse(x-5+(lOff1>0?3:-3),y+28+bob,10,5);
+  g.fillEllipse(x+5+(lOff2>0?3:-3),y+28+bob,10,5);
+  // Body
+  g.fillStyle(shirt,0.85); g.fillRect(x-11,y-10+bob,22,24);
+  // Arms swing
+  const aO=(frame<2)?-5:5;
+  g.fillStyle(shirt,0.80);
+  g.fillRect(x-15,y-10+bob+aO,5,16); g.fillRect(x+10,y-10+bob-aO,5,16);
+  g.fillStyle(skin);
+  g.fillCircle(x-13,y+7+bob+aO,5); g.fillCircle(x+13,y+7+bob-aO,5);
+  // Neck + Head
+  g.fillStyle(skin); g.fillRect(x-4,y-18+bob,8,10); g.fillCircle(x+(fR?1:-1),y-26+bob,13);
+  // Hair
+  g.fillStyle(hair); g.fillEllipse(x,y-35+bob,20,9); g.fillRect(x-10,y-36+bob,20,9);
+  // Eyes
+  const eX=fR?4:-4;
+  g.fillStyle(0x141420);
+  g.fillCircle(x+eX-3,y-27+bob,2.5); g.fillCircle(x+eX+2,y-27+bob,2.5);
 }
-function drawCharSeated(g,x,y,shirt){
-  g.fillStyle(0x2a1a08);g.fillRect(x-2*S,y-10*S,4*S,S);
-  g.fillStyle(0xf5cba7);g.fillRect(x-2*S,y-9*S,4*S,4*S);
-  g.fillStyle(0x1a1a1a);g.fillRect(x-S,y-8*S,S,S);g.fillRect(x+S,y-8*S,S,S);
-  g.fillStyle(shirt);g.fillRect(x-2*S,y-5*S,4*S,4*S);
-  g.fillRect(x-5*S,y-2*S,3*S,2*S);g.fillRect(x+2*S,y-2*S,3*S,2*S);
-  g.fillStyle(0xf5cba7);g.fillRect(x-6*S,y-2*S,S,2*S);g.fillRect(x+5*S,y-2*S,S,2*S);
+function drawHumanSeated(g,x,y,shirt,skin,hair){
+  g.fillStyle(0x000000,0.15); g.fillEllipse(x,y+34,26,7);
+  // Chair
+  g.fillStyle(0x14141e,0.95); g.fillRect(x-15,y-8,30,28);
+  g.fillStyle(0x101018); g.fillRect(x-14,y-8,28,3);
+  g.fillStyle(0x0c0c14); g.fillRect(x-14,y+20,5,14); g.fillRect(x+9,y+20,5,14);
+  // Legs bent
+  g.fillStyle(0x252d3a); g.fillRect(x-10,y+8,9,17); g.fillRect(x+1,y+8,9,17);
+  g.fillStyle(0x1a1824); g.fillRect(x-11,y+22,11,6); g.fillRect(x,y+22,11,6);
+  // Body (leaning forward)
+  g.fillStyle(shirt,0.85); g.fillRect(x-11,y-12,22,22);
+  // Arms outstretched to desk
+  g.fillStyle(shirt,0.80); g.fillRect(x-17,y-6,6,10); g.fillRect(x+11,y-6,6,10);
+  g.fillStyle(skin); g.fillCircle(x-14,y+2,5); g.fillCircle(x+14,y+2,5);
+  // Neck + Head
+  g.fillStyle(skin); g.fillRect(x-4,y-20,8,10); g.fillCircle(x,y-28,13);
+  // Hair
+  g.fillStyle(hair); g.fillEllipse(x,y-37,20,9); g.fillRect(x-10,y-38,20,9);
+  // Eyes (looking at screen)
+  g.fillStyle(0x141420); g.fillCircle(x-4,y-29,2.5); g.fillCircle(x+4,y-29,2.5);
+  g.fillStyle(0xffffff,0.9); g.fillCircle(x-3,y-30,1.2); g.fillCircle(x+5,y-30,1.2);
 }
 
-// ── Furniture draw ───────────────────────────────────────────────────────────
-function drawChairBack(g,x,y,wall){
-  const c=darken(wall,0.55);
-  g.fillStyle(c,0.92);g.fillRect(x-12,y-35,24,20);
-  g.fillStyle(c,0.5);g.fillRect(x-12,y-35,24,3);
-  g.fillStyle(0x1a1a22);g.fillRect(x-15,y-24,4,12);g.fillRect(x+11,y-24,4,12);
-  g.fillStyle(0x222222);g.fillRect(x-10,y+16,3,10);g.fillRect(x+7,y+16,3,10);
-  g.fillStyle(c,0.7);g.fillRect(x-13,y+14,26,6);
+// ── Modern furniture ──────────────────────────────────────────────────────────
+function drawModernDesk(fr, ds, x, y, accent){
+  // Chair
+  fr.fillStyle(0x14141e,0.95); fr.fillRoundedRect(x-16,y-44,32,26,4);
+  fr.fillStyle(0x1e1e30,0.5);  fr.fillRoundedRect(x-14,y-42,28,22,3);
+  fr.fillStyle(0x0c0c14);
+  fr.fillRect(x-16,y-20,5,16); fr.fillRect(x+11,y-20,5,16);
+  fr.fillStyle(0x1a1a28); fr.fillRect(x-17,y-7,34,6);
+  // Desk legs
+  fr.fillStyle(0x1e1824);
+  fr.fillRect(x-32,y+15,4,14); fr.fillRect(x+28,y+15,4,14);
+  fr.fillStyle(0x181420,0.9); fr.fillRect(x-34,y+13,68,5);
+  // Desk surface (light wood)
+  ds.fillStyle(0x3c2818); ds.fillRoundedRect(x-34,y-6,68,18,2);
+  ds.fillStyle(0x6a4428,0.5); ds.fillRect(x-34,y-6,68,3);
+  ds.fillStyle(0x28180c,0.7); ds.fillRect(x-34,y+9,68,3);
+  // Laptop
+  ds.fillStyle(0x1a1a28); ds.fillRect(x-7,y-22,14,5);
+  ds.fillStyle(0x101018); ds.fillRoundedRect(x-15,y-52,30,32,3);
+  const rv=(accent>>16)&0xff, gv=(accent>>8)&0xff, bv=accent&0xff;
+  ds.fillStyle(((rv>>2)<<16)|((gv>>2)<<8)|(bv>>2),0.9); ds.fillRoundedRect(x-14,y-51,28,30,2);
+  ds.fillStyle(accent,0.12); ds.fillRect(x-12,y-49,24,6);
+  // Coffee cup & notepad
+  ds.fillStyle(0xc0a080,0.8); ds.fillRect(x+14,y-4,9,9);
+  ds.fillStyle(0x3a2010,0.9); ds.fillRect(x+15,y-3,7,3);
+  ds.fillStyle(0xeeeedd,0.7); ds.fillRect(x-28,y-4,12,10);
+  ds.fillStyle(0xaaaacc,0.4); ds.fillRect(x-27,y-3,8,2); ds.fillRect(x-27,y,8,2);
 }
-function drawDeskBase(g,x,y){
-  g.fillStyle(0x4a2808);g.fillRect(x-26,y+12,4,10);g.fillRect(x+22,y+12,4,10);
-  g.fillStyle(0x3a1a06,0.8);g.fillRect(x-28,y+10,56,4);
-}
-function drawDeskSurface(g,x,y,wall){
-  g.fillStyle(0x7a4820);g.fillRect(x-28,y-7,56,15);
-  g.fillStyle(0x9a6030,0.6);g.fillRect(x-28,y-7,56,3);
-  g.fillStyle(0x2a0e00,0.5);g.fillRect(x-28,y+6,56,2);
-  g.fillStyle(0xeeeedd,0.8);g.fillRect(x+6,y-5,15,10);
-  g.fillStyle(0xddddcc,0.5);g.fillRect(x+7,y-4,11,2);
-  g.fillStyle(0x101010);g.fillRect(x-1,y-20,2,14);
-  g.fillStyle(0x181820);g.fillRect(x-7,y-20,14,4);
-  g.fillStyle(0x0d0d1a);g.fillRect(x-13,y-44,26,25);
-  g.lineStyle(1,0x2a2a40,0.9);g.strokeRect(x-13,y-44,26,25);
-  const r=(wall>>16)&0xff,gr=(wall>>8)&0xff,b=wall&0xff;
-  const sc=(Math.max(0,r-80)<<16)|(Math.max(0,gr-60)<<8)|Math.max(50,b+20);
-  g.fillStyle(sc,0.95);g.fillRect(x-12,y-43,24,23);
-  g.fillStyle(0xffffff,0.1);g.fillRect(x-12,y-43,24,6);
-}
-function drawPlant(g,x,y){
-  g.fillStyle(0x7a4010);g.fillRect(x-5,y+6,10,10);
-  g.fillStyle(0x2a1005);g.fillRect(x-4,y+7,8,4);
-  g.fillStyle(0x2a8030);g.fillCircle(x,y,10);
-  g.fillStyle(0x1aaa28);g.fillCircle(x-6,y+3,6);g.fillCircle(x+6,y+3,6);
-  g.fillStyle(0x35cc40,0.4);g.fillCircle(x,y-4,6);
+function drawPotPlant(g,x,y){
+  g.fillStyle(0x8a4820,0.9); g.fillRoundedRect(x-8,y+2,16,14,2);
+  g.fillStyle(0xa05828,0.6); g.fillRect(x-8,y+2,16,4);
+  g.fillStyle(0x2a1808); g.fillRect(x-7,y+2,14,4);
+  g.fillStyle(0x9a4820,0.9); g.fillRect(x-10,y-1,20,5);
+  g.fillStyle(0x1a7a30,0.9); g.fillEllipse(x,y-9,16,14);
+  g.fillStyle(0x22a038,0.8); g.fillEllipse(x-9,y-4,12,10); g.fillEllipse(x+9,y-4,12,10);
+  g.fillStyle(0x30cc48,0.5); g.fillEllipse(x,y-14,9,9);
 }
 function drawCooler(g,x,y){
-  g.fillStyle(0x1a3a5a);g.fillRect(x-7,y-22,14,26);
-  g.fillStyle(0x70b8e0,0.7);g.fillRect(x-5,y-20,10,11);
-  g.fillStyle(0x99d4f8,0.4);g.fillRect(x-4,y-19,4,5);
-  g.fillStyle(0x0a2a4a);g.fillRect(x-8,y+4,16,3);
-  g.fillStyle(0xcc3030);g.fillRect(x-4,y-4,3,3);
-  g.fillStyle(0x3030cc);g.fillRect(x+1,y-4,3,3);
+  g.fillStyle(0x1a2a40); g.fillRoundedRect(x-8,y-26,16,30,2);
+  g.fillStyle(0x5a90c0,0.7); g.fillRoundedRect(x-6,y-24,12,13,2);
+  g.fillStyle(0x80b8e8,0.4); g.fillRect(x-5,y-23,5,6);
+  g.fillStyle(0x0a1828); g.fillRect(x-9,y+4,18,4);
+  g.fillStyle(0xcc3030); g.fillCircle(x-3,y-4,3); g.fillStyle(0x3080cc); g.fillCircle(x+3,y-4,3);
 }
 function drawBookshelf(g,x,y){
-  g.fillStyle(0x3a2010);g.fillRect(x,y,30,44);
-  g.fillStyle(0x2a1808);g.fillRect(x,y+21,30,2);
-  [0x8a2020,0x205a8a,0x208a40,0x8a7820,0x6a2080,0x8a4020].forEach((c,i)=>{g.fillStyle(c);g.fillRect(x+2+i*4,y+24,3,17);});
-  [0x5a2870,0x70501a,0x1a5040,0x5a1818].forEach((c,i)=>{g.fillStyle(c);g.fillRect(x+2+i*6,y+3,5,15);});
+  g.fillStyle(0x2e180c); g.fillRect(x,y,34,50);
+  g.fillStyle(0x201008); g.fillRect(x,y+24,34,2);
+  [0x8a2020,0x205a8a,0x208a40,0x8a7820,0x6a2080,0x8a4020,0x2a6a7a].forEach((c,i)=>{g.fillStyle(c);g.fillRect(x+2+i*4,y+27,3,20);});
+  [0x5a2870,0x70501a,0x1a5040,0x5a1818,0x204060].forEach((c,i)=>{g.fillStyle(c);g.fillRect(x+2+i*6,y+3,5,18);});
 }
-function darken(color,f){return(Math.floor(((color>>16)&0xff)*f)<<16)|(Math.floor(((color>>8)&0xff)*f)<<8)|Math.floor((color&0xff)*f);}
 
-new Phaser.Game({type:Phaser.AUTO,width:CW,height:CH,backgroundColor:'#040707',parent:'game-container',pixelArt:true,roundPixels:true,antialias:false,scene:[OfficeScene]});
-// canvas幅を変数に合わせる（CSSで制御）
+new Phaser.Game({type:Phaser.AUTO,width:CW,height:CH,backgroundColor:'#080b12',parent:'game-container',pixelArt:false,roundPixels:false,antialias:true,scene:[OfficeScene]});
 document.getElementById('game-container').style.maxWidth = CW+'px';
 
 // ── Sidebar UI ───────────────────────────────────────────────────────────────
