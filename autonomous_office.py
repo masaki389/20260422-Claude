@@ -1249,6 +1249,39 @@ def api_results():
     })
 
 
+@app.route("/api/ai_rewrite_x", methods=["POST"])
+def api_ai_rewrite_x():
+    """X投稿をAIで指示通りに書き直してキューを更新する。"""
+    data = request.get_json() or {}
+    item_id = data.get("id", "").strip()
+    instruction = data.get("instruction", "").strip()
+    if not item_id or not instruction:
+        return jsonify({"error": "id と instruction が必要"}), 400
+    q = _load_queue(PENDING_PATH)
+    item = next((p for p in q["x_posts"] if p["id"] == item_id), None)
+    if not item:
+        return jsonify({"error": "item not found"}), 404
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=os.getenv("GOOGLE_API_KEY", ""))
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        prompt = (
+            f"以下のX投稿を指示通りに修正してください。\n\n"
+            f"元の投稿:\n{item['text']}\n\n"
+            f"修正指示:\n{instruction}\n\n"
+            "修正後の投稿テキストのみを出力。説明・前置き不要。140文字以内。"
+        )
+        resp = model.generate_content(prompt)
+        new_text = resp.text.strip()[:280]
+        item["text"] = new_text
+        item["edited_at"] = datetime.now(JST).strftime("%Y-%m-%d %H:%M")
+        _save_queue(PENDING_PATH, q)
+        log(f"🤖 AI修正完了: [{item_id}] {instruction[:20]}...")
+        return jsonify({"ok": True, "text": new_text})
+    except Exception as e:
+        return jsonify({"error": str(e)[:200]}), 500
+
+
 @app.route("/api/note_body/<item_id>")
 def api_note_body(item_id):
     for path in [PENDING_PATH, APPROVED_PATH]:

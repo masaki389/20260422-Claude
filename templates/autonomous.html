@@ -31,7 +31,7 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 .approval-list { max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:5px; }
 .approval-list.hidden { display:none; }
 .pend-item { background:#0d1a0d; border:1px solid #1a4a1a; border-radius:3px; padding:7px; }
-.pend-text,.pend-title { font-size:12px; color:#a0cca8; line-height:1.5; margin-bottom:5px; word-break:break-all; }
+.pend-text,.pend-title { font-size:12px; color:#a0cca8; line-height:1.5; margin-bottom:5px; word-break:break-all; user-select:text; }
 .pend-title { font-weight:bold; }
 .pend-meta { font-size:10px; color:#5a8a6a; margin-bottom:5px; }
 .pend-actions { display:flex; gap:4px; }
@@ -63,7 +63,7 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 .log-list { max-height:130px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
 .log-item { font-size:11px; padding:3px 5px; background:#0d170d; border-radius:2px; line-height:1.4; }
 .log-time { color:#5a8a5a; margin-right:5px; font-size:10px; }
-.log-msg { color:#90c090; }
+.log-msg { color:#90c090; user-select:text; }
 .status-bar { font-size:11px; color:#4a8a4a; text-align:center; padding:3px; }
 /* ── Modal ── */
 .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; }
@@ -90,6 +90,14 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 .btn-edit:hover { background:#2a5a7a; }
 .btn-save { flex:1; background:#3a2a0a; color:#ccaa30; border:1px solid #8a7a1a; border-radius:2px; cursor:pointer; font-size:11px; padding:4px; }
 .btn-save:hover { background:#5a4a1a; }
+.btn-copy { background:#1a2a3a; color:#60aadd; border:1px solid #2a5a8a; border-radius:2px; cursor:pointer; font-size:11px; padding:4px 7px; }
+.btn-copy:hover { background:#2a4a6a; }
+.btn-ai { flex:1; background:#2a1a3a; color:#aa70dd; border:1px solid #6a3a9a; border-radius:2px; cursor:pointer; font-size:11px; padding:4px; }
+.btn-ai:hover { background:#4a2a6a; }
+.ai-edit-row { display:none; gap:4px; margin-top:5px; align-items:center; }
+.ai-instruction { flex:1; background:#0a0a1a; border:1px solid #4a2a7a; color:#cc99ff; padding:5px 7px; font-size:11px; border-radius:3px; }
+.btn-ai-send { background:#3a1a5a; color:#cc99ff; border:1px solid #7a3aaa; border-radius:2px; cursor:pointer; font-size:11px; padding:4px 8px; white-space:nowrap; }
+.btn-ai-send:hover { background:#5a2a8a; }
 /* ── 成果物ビューア（下部全幅）── */
 .results-section { width:100%; max-width:1720px; margin-top:10px; background:#0d150d; border:1px solid #1e4a1e; border-radius:6px; overflow:hidden; }
 .results-header { display:flex; align-items:center; gap:0; border-bottom:1px solid #1e4a1e; background:#0a110a; flex-wrap:wrap; }
@@ -106,7 +114,8 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 .rfile-name { font-size:11px; color:#6aaa6a; display:block; margin-bottom:2px; word-break:break-all; }
 .rfile-size { font-size:10px; color:#3a6a3a; }
 .results-content { flex:1; overflow-y:auto; padding:16px 20px; }
-.results-content pre { font-size:13px; color:#b8d8b8; white-space:pre-wrap; line-height:1.75; font-family:'Courier New',monospace; }
+.results-content pre { font-size:13px; color:#b8d8b8; white-space:pre-wrap; line-height:1.75; font-family:'Courier New',monospace; user-select:text; }
+.chat-msg-agent,.chat-msg-user { user-select:text; }
 .results-empty { color:#3a6a3a; font-size:13px; padding:40px; text-align:center; line-height:2; }
 .results-loading { color:#5a8a5a; font-size:13px; padding:40px; text-align:center; }
 </style>
@@ -570,7 +579,21 @@ new Phaser.Game({type:Phaser.AUTO,width:CW,height:CH,backgroundColor:'#040707',p
 // ── Sidebar UI ───────────────────────────────────────────────────────────────
 let _currentTab='x';
 function showTab(t){_currentTab=t;document.getElementById('tab-x').classList.toggle('active',t==='x');document.getElementById('tab-note').classList.toggle('active',t==='note');document.getElementById('x-pending-list').classList.toggle('hidden',t!=='x');document.getElementById('note-pending-list').classList.toggle('hidden',t!=='note');}
-function renderPendingX(posts){const el=document.getElementById('x-pending-list');if(!posts||!posts.length){el.innerHTML='<div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成（AI副業/YouTube収益化）</div>';return;}el.innerHTML=posts.map(p=>`<div class="pend-item" id="px-${p.id}"><div class="pend-text" id="pt-${p.id}">${escHtml(p.text)}</div><textarea class="pend-edit-area" id="pe-${p.id}" rows="4">${escHtml(p.text)}</textarea><div class="pend-meta">${p.created_at}</div><div class="pend-actions"><button class="btn-edit" id="eb-${p.id}" onclick="toggleEditX('${p.id}')">✏ 編集</button><button class="btn-approve" onclick="approveItem('x_posts','${p.id}')">✓ 承認</button><button class="btn-reject" onclick="rejectItem('x_posts','${p.id}')">✗ 却下</button></div></div>`).join('');}
+function _makeXItem(p){return`<div class="pend-item" id="px-${p.id}"><div class="pend-text" id="pt-${p.id}">${escHtml(p.text)}</div><textarea class="pend-edit-area" id="pe-${p.id}" rows="4">${escHtml(p.text)}</textarea><div class="pend-meta">${p.created_at}</div><div class="pend-actions"><button class="btn-copy" onclick="copyText('${p.id}')">📋</button><button class="btn-edit" id="eb-${p.id}" onclick="toggleEditX('${p.id}')">✏ 編集</button><button class="btn-ai" onclick="showAiEdit('${p.id}')">🤖 AI修正</button><button class="btn-approve" onclick="approveItem('x_posts','${p.id}')">✓ 承認</button><button class="btn-reject" onclick="rejectItem('x_posts','${p.id}')">✗ 却下</button></div><div class="ai-edit-row" id="ae-${p.id}"><input class="ai-instruction" id="ai-${p.id}" placeholder="修正指示（例：ハッシュタグをなくして）"><button class="btn-ai-send" onclick="aiRewriteX('${p.id}')">実行</button></div></div>`;}
+function renderPendingX(posts){
+  const el=document.getElementById('x-pending-list');
+  if(!posts||!posts.length){el.innerHTML='<div class="empty-msg">承認待ちのX投稿はありません<br>毎朝9:00に自動生成（AI副業/YouTube収益化）</div>';_editingX={};return;}
+  // 不要な既存アイテムを削除
+  const ids=new Set(posts.map(p=>p.id));
+  el.querySelectorAll('.pend-item').forEach(item=>{if(!ids.has(item.id.replace('px-','')))item.remove();});
+  // 各アイテムを追加・更新（編集中はスキップして状態を保持）
+  posts.forEach(p=>{
+    if(_editingX[p.id])return;
+    let item=document.getElementById('px-'+p.id);
+    if(!item){item=document.createElement('div');el.appendChild(item);}
+    item.outerHTML=_makeXItem(p);
+  });
+}
 function renderPendingNote(drafts){const el=document.getElementById('note-pending-list');if(!drafts||!drafts.length){el.innerHTML='<div class="empty-msg">承認待ちのnote記事はありません<br>毎日10:30に自動生成</div>';return;}el.innerHTML=drafts.map(d=>`<div class="pend-item" id="nd-${d.id}"><div class="pend-title" id="nt-${d.id}">${escHtml(d.title)}</div><div class="pend-meta">${d.created_at}</div><div class="pend-actions"><button class="btn-edit" onclick="previewNote('${d.id}')">✏ 確認・編集</button><button class="btn-approve" onclick="approveItem('note_drafts','${d.id}')">✓ 承認</button><button class="btn-reject" onclick="rejectItem('note_drafts','${d.id}')">✗ 却下</button></div></div>`).join('');}
 let _editingX={};
 function toggleEditX(id){
@@ -578,6 +601,9 @@ function toggleEditX(id){
   if(!_editingX[id]){_editingX[id]=true;txt.style.display='none';ta.style.display='block';ta.value=ta.value;btn.textContent='💾 保存';btn.className='btn-save';}
   else{const newText=ta.value.trim();if(!newText)return;fetch('/api/edit_pending',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'x_posts',id,text:newText})}).then(()=>{txt.textContent=newText;txt.style.display='';ta.style.display='none';btn.textContent='✏ 編集';btn.className='btn-edit';_editingX[id]=false;}).catch(()=>{});}
 }
+function copyText(id){const txt=document.getElementById('pt-'+id);if(!txt)return;navigator.clipboard.writeText(txt.textContent).then(()=>{const btn=txt.parentElement.querySelector('.btn-copy');if(btn){const orig=btn.textContent;btn.textContent='✓';setTimeout(()=>btn.textContent=orig,1200);}}).catch(()=>{});}
+function showAiEdit(id){const row=document.getElementById('ae-'+id);if(!row)return;row.style.display=row.style.display==='flex'?'none':'flex';if(row.style.display==='flex')document.getElementById('ai-'+id)?.focus();}
+function aiRewriteX(id){const inp=document.getElementById('ai-'+id);const instruction=inp?.value.trim();if(!instruction)return;const btn=inp.nextElementSibling;btn.textContent='⏳';btn.disabled=true;fetch('/api/ai_rewrite_x',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,instruction})}).then(r=>r.json()).then(data=>{if(data.ok){const txt=document.getElementById('pt-'+id);const ta=document.getElementById('pe-'+id);if(txt)txt.textContent=data.text;if(ta)ta.value=data.text;document.getElementById('ae-'+id).style.display='none';inp.value='';btn.textContent='実行';btn.disabled=false;}else{btn.textContent='実行';btn.disabled=false;alert('エラー: '+data.error);}}).catch(()=>{btn.textContent='実行';btn.disabled=false;});}
 function approveItem(type,id){fetch('/api/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,id})}).then(()=>document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove()).catch(()=>{});}
 function rejectItem(type,id){fetch('/api/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,id})}).then(()=>document.getElementById(type==='x_posts'?`px-${id}`:`nd-${id}`)?.remove()).catch(()=>{});}
 let _noteModalId='';
