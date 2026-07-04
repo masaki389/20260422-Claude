@@ -694,23 +694,36 @@ def job_kikuchi_progress_update():
                "/export?format=csv&gid=595521756")
         with urllib.request.urlopen(url, timeout=15) as resp:
             content = resp.read().decode("utf-8")
-        lines = content.split("\n")
+        import csv as _csv
+        reader = _csv.reader(content.splitlines())
+        rows = list(reader)
+        # 菊地が担当する全エピソードを収集
+        kikuchi_rows = []
+        for row in rows[2:]:
+            if len(row) >= 6 and "菊地" in row[1]:
+                kikuchi_rows.append(row)
+        if not kikuchi_rows:
+            return
+        # 優先度: 制作中 > 未着手 > 完了（直近）
         current_ep = None
-        for line in lines[2:]:
-            parts = line.split(",")
-            if len(parts) >= 6 and "菊地" in parts[1]:
-                status = parts[4].strip()
-                if status in ("制作中", "未着手"):
-                    current_ep = parts
+        for row in kikuchi_rows:
+            if row[4].strip() == "制作中":
+                current_ep = row
+                break
+        if not current_ep:
+            for row in kikuchi_rows:
+                if row[4].strip() == "未着手":
+                    current_ep = row
                     break
         if not current_ep:
-            return
+            # 全部完了なら最後の完了エピソードを表示
+            current_ep = kikuchi_rows[-1]
         ep_name  = current_ep[0].strip()
         status   = current_ep[4].strip()
         due_date = current_ep[2].strip()
         checks   = [current_ep[i].strip() for i in range(5, 10) if i < len(current_ep)]
         done     = sum(1 for c in checks if c.upper() == "TRUE")
-        total    = len(checks)
+        total    = len(checks) if checks else 5
         pct      = int(done / total * 100) if total > 0 else 0
         # 菊地は担当エピソードがある間は常に working（着座）
         agent_status = "done" if pct >= 100 else "working"
