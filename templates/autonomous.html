@@ -154,7 +154,8 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
       <div class="note-roadmap-title">📝 note 30日ロードマップ <button class="btn-kk-refresh" onclick="pollNoteRoadmap()" title="進捗を再取得">🔄</button></div>
       <div class="progress-bar-bg"><div class="progress-bar-fill note" id="nr-bar" style="width:0%"></div></div>
       <div class="progress-text note" id="nr-pct">0/0本 (0%)</div>
-      <div class="note-roadmap-next" id="nr-next">読み込み中...</div>
+      <div class="note-roadmap-next" id="nr-today" style="color:#fbbf24;margin-top:3px">読み込み中...</div>
+      <div class="note-roadmap-next" id="nr-next" style="margin-top:2px">-</div>
     </div>
     <div class="panel">
       <div class="panel-title">📥 承認待ちキュー</div>
@@ -639,6 +640,16 @@ function updateNoteRoadmap(data){
   const pct=data.progress||0;
   document.getElementById('nr-bar').style.width=pct+'%';
   document.getElementById('nr-pct').textContent=`${data.done||0}/${data.total||0}本 (${pct}%)`;
+  // 今日10:30に生成される記事
+  const todayEl=document.getElementById('nr-today');
+  if(data.today_title&&data.today_title!=='-'){
+    todayEl.textContent=`▶ 今日(10:30): ${data.today_date} 「${data.today_title}」`;
+    todayEl.style.color='#fbbf24';
+  } else {
+    todayEl.textContent='今日の予定: なし（全完了 or 未来日付）';
+    todayEl.style.color='#5a8a5a';
+  }
+  // 次の未完了記事
   const next=data.next_date&&data.next_date!=='-'?`次: ${data.next_date} 「${data.next_title||''}」`:'全記事完了 🎉';
   document.getElementById('nr-next').textContent=next;
 }
@@ -668,7 +679,7 @@ window._updateUI=function(data){
   const na=(data.approved?.note_drafts||[]).filter(d=>!d.published).length;
   document.getElementById('x-approved-count').textContent=xa;
   document.getElementById('note-approved-count').textContent=na;
-  if(data.schedule?.length)document.getElementById('schedule-list').innerHTML=data.schedule.map(s=>`<div class="sched-item"><span class="sched-name">${s.name}</span><span class="sched-next">${s.next_run}</span><button class="btn-trigger" onclick="triggerJob('${s.id}')">▶</button></div>`).join('');
+  if(data.schedule?.length)document.getElementById('schedule-list').innerHTML=data.schedule.map(s=>`<div class="sched-item" style="flex-direction:column;align-items:flex-start;gap:2px"><div style="display:flex;width:100%;align-items:center;gap:4px"><span class="sched-name">${escHtml(s.name)}</span><span class="sched-next">${escHtml(s.next_run)}</span><button class="btn-trigger" onclick="triggerJob('${s.id}')">▶</button></div>${s.subtitle?`<div style="font-size:10px;color:#fbbf24;padding-left:2px">${escHtml(s.subtitle)}</div>`:''}</div>`).join('');
   if(data.logs?.length)document.getElementById('log-list').innerHTML=data.logs.slice(0,15).map(l=>`<div class="log-item"><span class="log-time">${l.time}</span><span class="log-msg">${escHtml(l.msg)}</span></div>`).join('');
   if(data.result)document.getElementById('result-box').textContent=data.result;
   if(data.kikuchi_progress)updateKikuchi(data.kikuchi_progress);

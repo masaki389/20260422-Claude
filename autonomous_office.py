@@ -106,6 +106,9 @@ _DATA_DIR.mkdir(exist_ok=True, parents=True)
 PENDING_PATH  = _DATA_DIR / "pending_queue.json"
 APPROVED_PATH = _DATA_DIR / "approved_queue.json"
 
+# 研究成果物もDATA_DIRに統一（Railway Volumeがあれば再起動後も永続化される）
+RESEARCH_DIR = _DATA_DIR
+
 AGENTS_DIR    = BASE_DIR / "agents"
 CONTEXT_DIR   = BASE_DIR / "shared-context"
 
@@ -159,6 +162,43 @@ def note_roadmap_mark_done(roadmap_date: str) -> bool:
     except Exception as e:
         print(f"[Sheets] 更新失敗: {e}", flush=True)
         return False
+
+def _backup_to_sheets(category: str, filename: str, content: str):
+    """成果物をGoogleSheetsの「成果物アーカイブ」シートにバックアップする（非同期呼び出し推奨）。"""
+    gc = _get_sheets_client()
+    if not gc:
+        return
+    try:
+        sh = gc.open_by_key(NOTE_ROADMAP_SPREADSHEET_ID)
+        try:
+            ws = sh.worksheet("成果物アーカイブ")
+        except Exception:
+            ws = sh.add_worksheet("成果物アーカイブ", rows=2000, cols=5)
+            ws.update("A1:E1", [["日時", "カテゴリ", "ファイル名", "内容（先頭3000文字）", "文字数"]])
+        now_str = datetime.now(JST).strftime("%Y-%m-%d %H:%M")
+        ws.append_row(
+            [now_str, category, filename, content[:3000], len(content)],
+            value_input_option="RAW"
+        )
+    except Exception as e:
+        print(f"[Sheets backup] 失敗: {e}", flush=True)
+
+
+def _save_research(filename: str, content: str, category: str):
+    """研究成果物をファイル保存 + Sheetsにバックアップ（非同期）。"""
+    path = RESEARCH_DIR / filename
+    path.write_text(content, encoding="utf-8")
+    threading.Thread(target=_backup_to_sheets, args=(category, filename, content), daemon=True).start()
+    return path
+
+
+def _append_research(filename: str, new_content: str, existing: str, category: str):
+    """先頭追記型成果物（x_strategy.md等）の保存 + Sheetsバックアップ（新規分のみ）。"""
+    path = RESEARCH_DIR / filename
+    path.write_text(new_content + "\n\n---\n\n" + existing, encoding="utf-8")
+    threading.Thread(target=_backup_to_sheets, args=(category, filename, new_content), daemon=True).start()
+    return path
+
 
 _restore_session("SESSION_X_B64",    BASE_DIR / "automation" / "sessions" / "session_x.json")
 _restore_session("SESSION_NOTE_B64", BASE_DIR / "automation" / "sessions" / "session_note.json")
@@ -396,8 +436,8 @@ def run_crew(theme: str):
                     verbose=False, task_callback=cb)
         result = str(crew.kickoff())
         today = datetime.now(JST).strftime("%Y%m%d")
-        (RESEARCH_DIR / f"script_draft_{today}.txt").write_text(
-            f"=== 台本骨子ドラフト {today} ===\nテーマ：{theme}\n\n{result}", encoding="utf-8")
+        _save_research(f"script_draft_{today}.txt",
+                       f"=== 台本骨子ドラフト {today} ===\nテーマ：{theme}\n\n{result}", "sachiko")
         with lock:
             state["result"] = result
         log("✅ 台本骨子完了！")
@@ -504,8 +544,8 @@ def job_sachiko_research():
             agent,
         )
         set_status("researcher", "done", "リサーチ完了 ✓")
-        (RESEARCH_DIR / f"sachiko_auto_{today}.txt").write_text(
-            f"=== 幸子デイリーリサーチ {today} ===\n\n{result}", encoding="utf-8")
+        _save_research(f"sachiko_auto_{today}.txt",
+                       f"=== 幸子デイリーリサーチ {today} ===\n\n{result}", "sachiko")
         log(f"💾 保存: sachiko_auto_{today}.txt")
         with lock:
             state["result"] = result
@@ -534,10 +574,8 @@ def job_x_strategy_learn():
             "【明日の投稿戦略】",
             "Xデイリー戦略レポート（マークダウン形式）", agent)
         set_status("x_strategist", "done", "デイリーレポート完成 ✓")
-        # 既存ファイルの先頭に追記（最新が上）
-        strategy_path = RESEARCH_DIR / "x_strategy.md"
-        existing = strategy_path.read_text(encoding="utf-8") if strategy_path.exists() else ""
-        strategy_path.write_text(result + "\n\n---\n\n" + existing, encoding="utf-8")
+        existing = (RESEARCH_DIR / "x_strategy.md").read_text(encoding="utf-8") if (RESEARCH_DIR / "x_strategy.md").exists() else ""
+        _append_research("x_strategy.md", result, existing, "content")
         log("💾 X戦略デイリーレポート追記: research/x_strategy.md")
         with lock:
             state["result"] = result
@@ -636,8 +674,8 @@ def job_note_research():
             "⑤AIアニメ制作ノウハウが売れる理由と適正価格帯",
             "noteコンテンツ戦略レポート（マークダウン形式）", agent)
         set_status("note_researcher", "done", "戦略ガイド更新 ✓")
-        (RESEARCH_DIR / "note_strategy.md").write_text(
-            f"# noteコンテンツ戦略\n更新: {datetime.now(JST).strftime('%Y-%m-%d')}\n\n{result}", encoding="utf-8")
+        _save_research("note_strategy.md",
+                       f"# noteコンテンツ戦略\n更新: {datetime.now(JST).strftime('%Y-%m-%d')}\n\n{result}", "content")
         log("💾 note戦略更新: research/note_strategy.md")
         with lock:
             state["result"] = result
@@ -654,12 +692,15 @@ NOTE_ROADMAP_URL = ("https://docs.google.com/spreadsheets/d/"
 def job_note_roadmap_progress_update():
     """note 30日ロードマップスプシの完了列（col6: TRUE/FALSE）を読んで進捗を更新。"""
     import urllib.request, csv as _csv
+    from datetime import date as _date
     try:
         with urllib.request.urlopen(NOTE_ROADMAP_URL, timeout=15) as resp:
             content = resp.read().decode("utf-8")
         rows = list(_csv.reader(content.splitlines()))
         done = total = 0
         next_title = next_date = None
+        today_title = today_date_str = None
+        today_dt = datetime.now(JST).date()
         for row in rows:
             if len(row) >= 7 and row[6].strip().upper() in ("TRUE", "FALSE"):
                 col0 = row[0].strip()
@@ -667,15 +708,28 @@ def job_note_roadmap_progress_update():
                     total += 1
                     if row[6].strip().upper() == "TRUE":
                         done += 1
-                    elif next_title is None:
-                        next_title = row[2].strip()
-                        next_date  = col0
+                    else:
+                        if next_title is None:
+                            next_title = row[2].strip()
+                            next_date  = col0
+                        # 今日10:30に生成される記事（日付≤今日の最初の未完了）
+                        if today_title is None:
+                            try:
+                                m, d = int(col0.split("/")[0]), int(col0.split("/")[1])
+                                if _date(today_dt.year, m, d) <= today_dt:
+                                    today_title    = row[2].strip()
+                                    today_date_str = col0
+                            except Exception:
+                                pass
         pct = int(done / total * 100) if total > 0 else 0
         with lock:
             prev = state["note_roadmap_progress"].get("progress", -1)
             state["note_roadmap_progress"] = {
                 "done": done, "total": total, "progress": pct,
-                "next_title": next_title or "-", "next_date": next_date or "-"
+                "next_title":  next_title      or "-",
+                "next_date":   next_date       or "-",
+                "today_title": today_title     or "-",
+                "today_date":  today_date_str  or "-",
             }
         if pct != prev:
             log(f"📝 note進捗: {pct}% ({done}/{total}本)", "note_writer")
@@ -809,8 +863,7 @@ def job_marketing_research():
         set_status("note_researcher", "done", "マーケインサイト更新 ✓")
         log(f"💡 マーケリサーチ完了: {topic[:30]}")
         fname = f"marketing_{datetime.now(JST).strftime('%Y%m%d_%H%M')}.md"
-        (RESEARCH_DIR / fname).write_text(
-            f"# マーケインサイト\nトピック: {topic}\n\n{result}", encoding="utf-8")
+        _save_research(fname, f"# マーケインサイト\nトピック: {topic}\n\n{result}", "content")
         with lock:
             state["result"] = result
     except Exception as e:
@@ -836,8 +889,8 @@ def job_tieup_research():
             "④タイアップ受注しやすくなる目標登録者数の目安",
             "タイアップ候補リスト＋アプローチ戦略レポート", agent)
         set_status("tieup_researcher", "done", "候補リスト完成 ✓")
-        (RESEARCH_DIR / f"tieup_auto_{today}.txt").write_text(
-            f"=== タイアップリサーチ {today} ===\n\n{result}", encoding="utf-8")
+        _save_research(f"tieup_auto_{today}.txt",
+                       f"=== タイアップリサーチ {today} ===\n\n{result}", "newbiz")
         log(f"💾 タイアップレポート: tieup_auto_{today}.txt")
         with lock:
             state["result"] = result
@@ -861,8 +914,8 @@ def job_scriptwriter_daily():
             "SOUL.mdの指定フォーマット通りに出力すること（タイトル案2つ・6フェーズ・メタファー・田中の一言・中島のフォロー）",
             "台本骨子（6フェーズ・800〜1200文字）", agent)
         set_status("scriptwriter", "done", "台本骨子完了 ✓")
-        (RESEARCH_DIR / f"script_draft_{today}.txt").write_text(
-            f"=== 台本骨子ドラフト {today} ===\n\n{result}", encoding="utf-8")
+        _save_research(f"script_draft_{today}.txt",
+                       f"=== 台本骨子ドラフト {today} ===\n\n{result}", "sachiko")
         log(f"💾 台本骨子保存: script_draft_{today}.txt")
         with lock:
             state["result"] = f"🎬 台本骨子ドラフト\n\n{result}"
@@ -977,8 +1030,8 @@ def job_sachiko_analytics():
             "⑤次の1本で変えるべき点3つ（具体的に）",
             "幸子チャンネル週次分析レポート", agent)
         set_status("sachiko_analyst", "done", "週次レポート完成 ✓")
-        (RESEARCH_DIR / f"sachiko_analysis_{today}.txt").write_text(
-            f"=== 幸子チャンネル分析 {today} ===\n\n{result}", encoding="utf-8")
+        _save_research(f"sachiko_analysis_{today}.txt",
+                       f"=== 幸子チャンネル分析 {today} ===\n\n{result}", "sachiko")
         log(f"💾 幸子分析レポート: sachiko_analysis_{today}.txt", "sachiko_analyst")
         with lock:
             state["result"] = result
@@ -1003,8 +1056,8 @@ def job_sales_research():
             "実在する日本企業・実名で記載すること。",
             "BtoB見込み客リスト10社（Markdown表形式）", agent)
         set_status("sales_researcher", "done", "リスト10社完成 ✓")
-        (RESEARCH_DIR / f"sales_prospects_{today}.txt").write_text(
-            f"=== BtoB見込み客リスト {today} ===\n\n{result}", encoding="utf-8")
+        _save_research(f"sales_prospects_{today}.txt",
+                       f"=== BtoB見込み客リスト {today} ===\n\n{result}", "sales")
         log(f"💾 営業リスト: sales_prospects_{today}.txt", "sales_researcher")
         with lock:
             state["result"] = result
@@ -1034,8 +1087,8 @@ def job_proposal_generate():
             "StudioOgawa実績：95万再生・登録者2,900人・制作コスト1本¥1,000〜1,500・期間2〜3日",
             "3社分のDM文＋提案書テキスト", agent)
         set_status("proposal_writer", "done", "提案書3社分完成 ✓")
-        (RESEARCH_DIR / f"proposals_{today}.txt").write_text(
-            f"=== BtoB提案書 {today} ===\n\n{result}", encoding="utf-8")
+        _save_research(f"proposals_{today}.txt",
+                       f"=== BtoB提案書 {today} ===\n\n{result}", "sales")
         log(f"💾 提案書: proposals_{today}.txt", "proposal_writer")
         with lock:
             state["result"] = result
@@ -1068,8 +1121,8 @@ def job_tenshi_analyze():
             "GOの場合は成約率を上げるための変更点3つを具体的に挙げること。",
             "転職アニメ週次分析レポート（GO/WAIT/方向転換判定含む）", agent)
         set_status("tenshi_analyst", "done", "分析レポート完成 ✓")
-        (RESEARCH_DIR / f"tenshi_analysis_{today}.txt").write_text(
-            f"=== 転職アニメ分析 {today} ===\n\n{result}", encoding="utf-8")
+        _save_research(f"tenshi_analysis_{today}.txt",
+                       f"=== 転職アニメ分析 {today} ===\n\n{result}", "tenshi")
         log(f"💾 転職分析: tenshi_analysis_{today}.txt", "tenshi_analyst")
         with lock:
             state["result"] = result
@@ -1102,8 +1155,8 @@ def job_tenshi_script():
             "④CTA文言 ⑤冒頭フックカット（数字or非日常）",
             "転職アニメスクリプト骨子（カット構成付き）", agent)
         set_status("tenshi_scriptwriter", "done", "スクリプト骨子完成 ✓")
-        (RESEARCH_DIR / f"tenshi_script_draft_{today}.txt").write_text(
-            f"=== 転職アニメスクリプト骨子 {today} ===\n\n{result}", encoding="utf-8")
+        _save_research(f"tenshi_script_draft_{today}.txt",
+                       f"=== 転職アニメスクリプト骨子 {today} ===\n\n{result}", "tenshi")
         log(f"💾 転職脚本: tenshi_script_draft_{today}.txt", "tenshi_scriptwriter")
         with lock:
             state["result"] = result
@@ -1131,9 +1184,8 @@ def job_ip_strategy():
             + (f"\n直近のIPリサーチ（参考）:\n{existing}" if existing else ""),
             "IP戦略デイリーレポート", agent)
         set_status("ip_strategist", "done", "IPレポート完成 ✓")
-        ip_path = RESEARCH_DIR / "ip_strategy.md"
-        existing_full = ip_path.read_text(encoding="utf-8") if ip_path.exists() else ""
-        ip_path.write_text(result + "\n\n---\n\n" + existing_full, encoding="utf-8")
+        existing_full = (RESEARCH_DIR / "ip_strategy.md").read_text(encoding="utf-8") if (RESEARCH_DIR / "ip_strategy.md").exists() else ""
+        _append_research("ip_strategy.md", result, existing_full, "newbiz")
         log("💾 IPレポート追記: research/ip_strategy.md", "ip_strategist")
         with lock:
             state["result"] = result
@@ -1160,9 +1212,8 @@ def job_bizdev_research():
             + (f"\n直近の探索結果（重複提案を避けるため）:\n{existing}" if existing else ""),
             "外部マネタイズ探索レポート", agent)
         set_status("bizdev_researcher", "done", "マネタイズ案完成 ✓")
-        bd_path = RESEARCH_DIR / "bizdev.md"
-        existing_full = bd_path.read_text(encoding="utf-8") if bd_path.exists() else ""
-        bd_path.write_text(result + "\n\n---\n\n" + existing_full, encoding="utf-8")
+        existing_full = (RESEARCH_DIR / "bizdev.md").read_text(encoding="utf-8") if (RESEARCH_DIR / "bizdev.md").exists() else ""
+        _append_research("bizdev.md", result, existing_full, "newbiz")
         log("💾 外部マネタイズレポート追記: research/bizdev.md", "bizdev_researcher")
         with lock:
             state["result"] = result
@@ -1226,8 +1277,7 @@ def job_weekly_summary():
             "## 今週の総評と来週のFOCUS\n- 最も重要な動き1つ\n- 来週最優先でやること1つ\n\n"
             "簡潔に。各項目2〜3行まで。",
             "週次サマリーレポート（Markdown）", agent)
-        out_path = RESEARCH_DIR / f"weekly_summary_{date_label}.md"
-        out_path.write_text(result, encoding="utf-8")
+        _save_research(f"weekly_summary_{date_label}.md", result, "weekly")
         log(f"💾 週次サマリー保存: weekly_summary_{date_label}.md")
         with lock:
             state["result"] = f"📋 週次サマリー {week_label}\n\n{result}"
@@ -1299,11 +1349,20 @@ JOB_FUNCS = {
 
 
 def get_schedule_info():
-    return [
-        {"id": j.id, "name": j.name,
-         "next_run": j.next_run_time.strftime("%m/%d %H:%M JST") if j.next_run_time else "未定"}
-        for j in scheduler.get_jobs()
-    ]
+    nr = state.get("note_roadmap_progress", {})
+    note_subtitle = ""
+    if nr.get("today_title") and nr["today_title"] != "-":
+        note_subtitle = f"今日: {nr['today_date']} 「{nr['today_title'][:18]}…」"
+    result = []
+    for j in scheduler.get_jobs():
+        entry = {
+            "id": j.id, "name": j.name,
+            "next_run": j.next_run_time.strftime("%m/%d %H:%M JST") if j.next_run_time else "未定",
+        }
+        if j.id == "note_draft_daily" and note_subtitle:
+            entry["subtitle"] = note_subtitle
+        result.append(entry)
+    return result
 
 
 # ─── Flask Routes ────────────────────────────────────────────────────────────
@@ -1519,7 +1578,7 @@ def api_chat():
 @app.route("/api/results")
 def api_results():
     """各部門の最新成果物ファイルを返す。"""
-    def latest(pattern, n=2):
+    def latest(pattern, n=10):
         files = sorted(RESEARCH_DIR.glob(pattern), reverse=True)[:n]
         out = []
         for f in files:
