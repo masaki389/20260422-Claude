@@ -111,11 +111,12 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 .btn-ai-send { background:#3a1a5a; color:#cc99ff; border:1px solid #7a3aaa; border-radius:2px; cursor:pointer; font-size:11px; padding:4px 8px; white-space:nowrap; }
 .btn-ai-send:hover { background:#5a2a8a; }
 /* ── KPIダッシュボード ── */
-.kpi-section { width:100%; max-width:1720px; margin-top:10px; }
+.game-col    { flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
+.kpi-section { width:100%; }
 .kpi-header  { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
 .kpi-title   { font-size:12px; font-weight:700; color:#a0d0a0; letter-spacing:1px; text-transform:uppercase; }
 .kpi-updated { font-size:10px; color:#4a7a4a; }
-.kpi-grid    { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.kpi-grid    { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 .kpi-card    { background:#0d150d; border:1px solid #1e4a1e; border-radius:5px; padding:10px; }
 .kpi-card-title { font-size:11px; font-weight:700; color:#7aca6a; margin-bottom:8px; border-bottom:1px solid #1e3a1e; padding-bottom:5px; }
 .kpi-monthly { margin-bottom:8px; }
@@ -153,7 +154,116 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 <body>
 <div class="title">StudioOgawa AI Office<span class="auto-badge">● AUTO 24/7</span></div>
 <div class="wrapper">
+  <div class="game-col">
   <div id="game-container"></div>
+  <!-- ── KPIダッシュボード ── -->
+  <div class="kpi-section">
+    <div class="kpi-header">
+      <span class="kpi-title">📊 部門KPI（月100万円逆算）</span>
+      <span class="kpi-updated" id="kpi-updated">読み込み中...</span>
+      <button class="results-refresh" style="margin-left:auto" onclick="fetchKpi()">⟳ 更新</button>
+    </div>
+    <div class="kpi-grid">
+      <!-- 幸子チャンネル部 -->
+      <div class="kpi-card">
+        <div class="kpi-card-title">🎬 幸子チャンネル部</div>
+        <div class="kpi-monthly">
+          <div class="kpi-m-label">月間 台本骨子</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sachiko-bar" style="width:0%"></div></div>
+          <div class="kpi-m-nums" id="kpi-sachiko-nums">-/6本</div>
+        </div>
+        <div class="kpi-daily">
+          <div class="kpi-d-label">デイリー</div>
+          <div class="kpi-d-item"><span id="kpi-sd-draft" class="kpi-chk-ng">◯</span> 台本骨子生成</div>
+        </div>
+      </div>
+      <!-- コンテンツ部 -->
+      <div class="kpi-card">
+        <div class="kpi-card-title">📝 コンテンツ部</div>
+        <div class="kpi-monthly">
+          <div class="kpi-m-label">月間 note記事</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-note-bar" style="width:0%"></div></div>
+          <div class="kpi-m-nums" id="kpi-note-nums">-/30本</div>
+        </div>
+        <div class="kpi-monthly" style="margin-top:6px">
+          <div class="kpi-m-label">月間 X投稿承認</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-x-bar" style="width:0%;background:linear-gradient(90deg,#4a1a9a,#9a50e0)"></div></div>
+          <div class="kpi-m-nums" id="kpi-x-nums" style="color:#aa80ff">-/150件</div>
+        </div>
+        <div class="kpi-daily">
+          <div class="kpi-d-label">デイリー</div>
+          <div class="kpi-d-item"><span id="kpi-cd-note" class="kpi-chk-ng">◯</span> note記事ドラフト</div>
+          <div class="kpi-d-item"><span id="kpi-cd-x" class="kpi-chk-ng">◯</span> X投稿5件生成</div>
+        </div>
+      </div>
+      <!-- 営業部 -->
+      <div class="kpi-card">
+        <div class="kpi-card-title">📊 営業部</div>
+        <div class="kpi-monthly">
+          <div class="kpi-m-label">月間 営業リスト</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sales-bar" style="width:0%;background:linear-gradient(90deg,#6a1a1a,#cc4040)"></div></div>
+          <div class="kpi-m-nums" id="kpi-sales-nums" style="color:#ff9090">-/30件</div>
+        </div>
+        <div class="kpi-daily">
+          <div class="kpi-d-label">デイリー</div>
+          <div class="kpi-d-item"><span id="kpi-sd-list" class="kpi-chk-ng">◯</span> 見込み客リスト</div>
+          <div class="kpi-d-item"><span id="kpi-sd-prop" class="kpi-chk-ng">◯</span> 提案書生成</div>
+        </div>
+      </div>
+      <!-- 転職アニメ部 -->
+      <div class="kpi-card">
+        <div class="kpi-card-title">🏢 転職アニメ部</div>
+        <div class="kpi-monthly">
+          <div class="kpi-m-label">月間 分析レポート</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-tenshi-bar" style="width:0%;background:linear-gradient(90deg,#1a4a5a,#30a0c0)"></div></div>
+          <div class="kpi-m-nums" id="kpi-tenshi-nums" style="color:#80d0e0">-/20件</div>
+        </div>
+        <div class="kpi-daily">
+          <div class="kpi-d-label">デイリー</div>
+          <div class="kpi-d-item"><span id="kpi-td-analysis" class="kpi-chk-ng">◯</span> 転職アニメ分析</div>
+        </div>
+      </div>
+      <!-- 事業開発部 -->
+      <div class="kpi-card">
+        <div class="kpi-card-title">💡 事業開発部</div>
+        <div class="kpi-monthly">
+          <div class="kpi-m-label">月間 タイアップ候補</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-newbiz-tieup-bar" style="width:0%;background:linear-gradient(90deg,#6a4a1a,#d09040)"></div></div>
+          <div class="kpi-m-nums" id="kpi-newbiz-tieup-nums" style="color:#d0a060">-/30件</div>
+        </div>
+        <div class="kpi-monthly" style="margin-top:6px">
+          <div class="kpi-m-label">月間 新規YTリサーチ</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-newbiz-yt-bar" style="width:0%;background:linear-gradient(90deg,#1a5a3a,#30c070)"></div></div>
+          <div class="kpi-m-nums" id="kpi-newbiz-yt-nums" style="color:#60d090">-/20件</div>
+        </div>
+        <div class="kpi-daily">
+          <div class="kpi-d-label">デイリー</div>
+          <div class="kpi-d-item"><span id="kpi-nd-tieup" class="kpi-chk-ng">◯</span> タイアップ探索</div>
+          <div class="kpi-d-item"><span id="kpi-nd-yt" class="kpi-chk-ng">◯</span> 新規YTリサーチ</div>
+        </div>
+      </div>
+      <!-- SNSマネタイズチーム -->
+      <div class="kpi-card">
+        <div class="kpi-card-title">📣 SNSマネタイズチーム</div>
+        <div class="kpi-monthly">
+          <div class="kpi-m-label">月間 教育コンテンツ</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sns-edu-bar" style="width:0%;background:linear-gradient(90deg,#7a1a8a,#d040e0)"></div></div>
+          <div class="kpi-m-nums" id="kpi-sns-edu-nums" style="color:#d070e0">-/20件</div>
+        </div>
+        <div class="kpi-monthly" style="margin-top:6px">
+          <div class="kpi-m-label">月間 マーケ施策</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sns-mkt-bar" style="width:0%;background:linear-gradient(90deg,#3a1a7a,#7040c0)"></div></div>
+          <div class="kpi-m-nums" id="kpi-sns-mkt-nums" style="color:#9070c0">-/20件</div>
+        </div>
+        <div class="kpi-daily">
+          <div class="kpi-d-label">デイリー</div>
+          <div class="kpi-d-item"><span id="kpi-sn-edu" class="kpi-chk-ng">◯</span> 教育コンテンツ</div>
+          <div class="kpi-d-item"><span id="kpi-sn-mkt" class="kpi-chk-ng">◯</span> マーケ施策</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /game-col -->
   <div class="sidebar">
     <div class="panel">
       <div class="panel-title">🎬 台本骨子を今すぐ生成</div>
@@ -218,77 +328,6 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 <div class="insight-panel">
   <div class="insight-title">💡 マーケインサイト（月・水・金 自動リサーチ） <button class="btn-kk-refresh" onclick="pollMarketingInsights()" title="最新を取得">🔄</button></div>
   <div id="insight-list"><div style="color:#5a5a8a;font-size:11px">読み込み中...</div></div>
-</div>
-
-<!-- ── KPIダッシュボード ── -->
-<div class="kpi-section">
-  <div class="kpi-header">
-    <span class="kpi-title">📊 部門KPI</span>
-    <span class="kpi-updated" id="kpi-updated">読み込み中...</span>
-    <button class="results-refresh" style="margin-left:auto" onclick="fetchKpi()">⟳ 更新</button>
-  </div>
-  <div class="kpi-grid">
-    <!-- 幸子チャンネル部 -->
-    <div class="kpi-card">
-      <div class="kpi-card-title">🎬 幸子チャンネル部</div>
-      <div class="kpi-monthly">
-        <div class="kpi-m-label">月間 台本骨子</div>
-        <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sachiko-bar" style="width:0%"></div></div>
-        <div class="kpi-m-nums" id="kpi-sachiko-nums">-/-本</div>
-      </div>
-      <div class="kpi-daily">
-        <div class="kpi-d-label">デイリー</div>
-        <div class="kpi-d-item"><span id="kpi-sd-draft" class="kpi-chk-ng">◯</span> 台本骨子生成</div>
-        <div class="kpi-d-item"><span id="kpi-sd-x" class="kpi-chk-ng">◯</span> Xコンテンツ</div>
-      </div>
-    </div>
-    <!-- コンテンツ部 -->
-    <div class="kpi-card">
-      <div class="kpi-card-title">📝 コンテンツ部</div>
-      <div class="kpi-monthly">
-        <div class="kpi-m-label">月間 note記事</div>
-        <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-note-bar" style="width:0%"></div></div>
-        <div class="kpi-m-nums" id="kpi-note-nums">-/-本</div>
-      </div>
-      <div class="kpi-monthly" style="margin-top:6px">
-        <div class="kpi-m-label">月間 X投稿承認</div>
-        <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-x-bar" style="width:0%;background:linear-gradient(90deg,#4a1a9a,#9a50e0)"></div></div>
-        <div class="kpi-m-nums" id="kpi-x-nums" style="color:#aa80ff">-/-件</div>
-      </div>
-      <div class="kpi-daily">
-        <div class="kpi-d-label">デイリー</div>
-        <div class="kpi-d-item"><span id="kpi-cd-note" class="kpi-chk-ng">◯</span> note記事ドラフト</div>
-        <div class="kpi-d-item"><span id="kpi-cd-x" class="kpi-chk-ng">◯</span> X投稿7件生成</div>
-      </div>
-    </div>
-    <!-- 営業部 -->
-    <div class="kpi-card">
-      <div class="kpi-card-title">📊 営業部</div>
-      <div class="kpi-monthly">
-        <div class="kpi-m-label">月間 営業リスト</div>
-        <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sales-bar" style="width:0%;background:linear-gradient(90deg,#6a1a1a,#cc4040)"></div></div>
-        <div class="kpi-m-nums" id="kpi-sales-nums" style="color:#ff9090">-/-件</div>
-      </div>
-      <div class="kpi-daily">
-        <div class="kpi-d-label">デイリー</div>
-        <div class="kpi-d-item"><span id="kpi-sd-list" class="kpi-chk-ng">◯</span> 見込み客10社</div>
-        <div class="kpi-d-item"><span id="kpi-sd-prop" class="kpi-chk-ng">◯</span> 提案書3社</div>
-      </div>
-    </div>
-    <!-- 転職アニメ部 -->
-    <div class="kpi-card">
-      <div class="kpi-card-title">🏢 転職アニメ部</div>
-      <div class="kpi-monthly">
-        <div class="kpi-m-label">月間 分析レポート</div>
-        <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-tenshi-bar" style="width:0%;background:linear-gradient(90deg,#1a4a5a,#30a0c0)"></div></div>
-        <div class="kpi-m-nums" id="kpi-tenshi-nums" style="color:#80d0e0">-/-件</div>
-      </div>
-      <div class="kpi-daily">
-        <div class="kpi-d-label">デイリー</div>
-        <div class="kpi-d-item"><span id="kpi-td-analysis" class="kpi-chk-ng">◯</span> 転職アニメ分析</div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- ── 成果物ビューア ── -->
@@ -902,49 +941,47 @@ setInterval(fetchResults, 300000);
 // ── KPI ──────────────────────────────────────────────────────────────────────
 function fetchKpi() {
   fetch('/api/kpi').then(r=>r.json()).then(data=>{
-    const lu = data.last_updated||'-';
-    document.getElementById('kpi-updated').textContent = `最終更新: ${lu}`;
-    const s = data.sachiko||{};
-    const st = s.monthly_target||4;
-    const sp = Math.min(100,Math.round((s.monthly_drafts||0)/st*100));
-    document.getElementById('kpi-sachiko-bar').style.width = sp+'%';
-    document.getElementById('kpi-sachiko-nums').textContent = `${s.monthly_drafts||0}/${st}本 (${sp}%)`;
-    document.getElementById('kpi-sd-draft').textContent = s.daily_draft ? '✓' : '◯';
-    document.getElementById('kpi-sd-draft').className = s.daily_draft ? 'kpi-chk-ok' : 'kpi-chk-ng';
-    document.getElementById('kpi-sd-x').textContent = s.daily_x ? '✓' : '◯';
-    document.getElementById('kpi-sd-x').className = s.daily_x ? 'kpi-chk-ok' : 'kpi-chk-ng';
+    document.getElementById('kpi-updated').textContent = `最終更新: ${data.last_updated||'-'}`;
+    function pct(v,t){return Math.min(100,Math.round((v||0)/(t||1)*100));}
+    function bar(id,v,t){const el=document.getElementById(id);if(el)el.style.width=pct(v,t)+'%';}
+    function num(id,v,t,unit){const el=document.getElementById(id);if(el)el.textContent=`${v||0}/${t}${unit} (${pct(v,t)}%)`;}
+    function chk(id,b){const el=document.getElementById(id);if(!el)return;el.textContent=b?'✓':'◯';el.className=b?'kpi-chk-ok':'kpi-chk-ng';}
 
-    const c = data.content||{};
-    const cnt = c.monthly_note_target||30;
-    const cnp = Math.min(100,Math.round((c.monthly_note||0)/cnt*100));
-    document.getElementById('kpi-note-bar').style.width = cnp+'%';
-    document.getElementById('kpi-note-nums').textContent = `${c.monthly_note||0}/${cnt}本 (${cnp}%)`;
-    const cxt = c.monthly_x_target||60;
-    const cxp = Math.min(100,Math.round((c.monthly_x||0)/cxt*100));
-    document.getElementById('kpi-x-bar').style.width = cxp+'%';
-    document.getElementById('kpi-x-nums').textContent = `${c.monthly_x||0}/${cxt}件 (${cxp}%)`;
-    document.getElementById('kpi-cd-note').textContent = c.daily_note ? '✓' : '◯';
-    document.getElementById('kpi-cd-note').className = c.daily_note ? 'kpi-chk-ok' : 'kpi-chk-ng';
-    document.getElementById('kpi-cd-x').textContent = c.daily_x ? '✓' : '◯';
-    document.getElementById('kpi-cd-x').className = c.daily_x ? 'kpi-chk-ok' : 'kpi-chk-ng';
+    const s=data.sachiko||{};
+    bar('kpi-sachiko-bar',s.monthly_drafts,s.monthly_target||6);
+    num('kpi-sachiko-nums',s.monthly_drafts,s.monthly_target||6,'本');
+    chk('kpi-sd-draft',s.daily_draft);
 
-    const sa = data.sales||{};
-    const sat = sa.monthly_target||20;
-    const sap = Math.min(100,Math.round((sa.monthly_lists||0)/sat*100));
-    document.getElementById('kpi-sales-bar').style.width = sap+'%';
-    document.getElementById('kpi-sales-nums').textContent = `${sa.monthly_lists||0}/${sat}件 (${sap}%)`;
-    document.getElementById('kpi-sd-list').textContent = sa.daily_list ? '✓' : '◯';
-    document.getElementById('kpi-sd-list').className = sa.daily_list ? 'kpi-chk-ok' : 'kpi-chk-ng';
-    document.getElementById('kpi-sd-prop').textContent = sa.daily_proposal ? '✓' : '◯';
-    document.getElementById('kpi-sd-prop').className = sa.daily_proposal ? 'kpi-chk-ok' : 'kpi-chk-ng';
+    const c=data.content||{};
+    bar('kpi-note-bar',c.monthly_note,c.monthly_note_target||30);
+    num('kpi-note-nums',c.monthly_note,c.monthly_note_target||30,'本');
+    bar('kpi-x-bar',c.monthly_x,c.monthly_x_target||150);
+    num('kpi-x-nums',c.monthly_x,c.monthly_x_target||150,'件');
+    chk('kpi-cd-note',c.daily_note); chk('kpi-cd-x',c.daily_x);
 
-    const t = data.tenshi||{};
-    const tt = t.monthly_target||20;
-    const tp = Math.min(100,Math.round((t.monthly_analysis||0)/tt*100));
-    document.getElementById('kpi-tenshi-bar').style.width = tp+'%';
-    document.getElementById('kpi-tenshi-nums').textContent = `${t.monthly_analysis||0}/${tt}件 (${tp}%)`;
-    document.getElementById('kpi-td-analysis').textContent = t.daily_analysis ? '✓' : '◯';
-    document.getElementById('kpi-td-analysis').className = t.daily_analysis ? 'kpi-chk-ok' : 'kpi-chk-ng';
+    const sa=data.sales||{};
+    bar('kpi-sales-bar',sa.monthly_lists,sa.monthly_target||30);
+    num('kpi-sales-nums',sa.monthly_lists,sa.monthly_target||30,'件');
+    chk('kpi-sd-list',sa.daily_list); chk('kpi-sd-prop',sa.daily_proposal);
+
+    const t=data.tenshi||{};
+    bar('kpi-tenshi-bar',t.monthly_analysis,t.monthly_target||20);
+    num('kpi-tenshi-nums',t.monthly_analysis,t.monthly_target||20,'件');
+    chk('kpi-td-analysis',t.daily_analysis);
+
+    const n=data.newbiz||{};
+    bar('kpi-newbiz-tieup-bar',n.monthly_tieup,n.monthly_tieup_target||30);
+    num('kpi-newbiz-tieup-nums',n.monthly_tieup,n.monthly_tieup_target||30,'件');
+    bar('kpi-newbiz-yt-bar',n.monthly_yt,n.monthly_yt_target||20);
+    num('kpi-newbiz-yt-nums',n.monthly_yt,n.monthly_yt_target||20,'件');
+    chk('kpi-nd-tieup',n.daily_tieup); chk('kpi-nd-yt',n.daily_yt);
+
+    const sn=data.sns||{};
+    bar('kpi-sns-edu-bar',sn.monthly_education,sn.monthly_education_target||20);
+    num('kpi-sns-edu-nums',sn.monthly_education,sn.monthly_education_target||20,'件');
+    bar('kpi-sns-mkt-bar',sn.monthly_marketing,sn.monthly_marketing_target||20);
+    num('kpi-sns-mkt-nums',sn.monthly_marketing,sn.monthly_marketing_target||20,'件');
+    chk('kpi-sn-edu',sn.daily_education); chk('kpi-sn-mkt',sn.daily_marketing);
   }).catch(()=>{});
 }
 fetchKpi();

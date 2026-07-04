@@ -320,10 +320,12 @@ state = {
     "note_roadmap_progress":  {"done": 0, "total": 0, "progress": 0, "next_title": "-", "next_date": "-"},
     "marketing_insights":     [],
     "kpi": {
-        "sachiko":  {"monthly_drafts": 0, "monthly_target": 4,  "daily_draft": False, "daily_x": False},
-        "content":  {"monthly_note": 0,   "monthly_note_target": 30, "monthly_x": 0, "monthly_x_target": 60, "daily_note": False, "daily_x": False},
-        "sales":    {"monthly_lists": 0,  "monthly_target": 20, "daily_list": False,  "daily_proposal": False},
+        "sachiko":  {"monthly_drafts": 0, "monthly_target": 6,  "daily_draft": False},
+        "content":  {"monthly_note": 0,   "monthly_note_target": 30, "monthly_x": 0, "monthly_x_target": 150, "daily_note": False, "daily_x": False},
+        "sales":    {"monthly_lists": 0,  "monthly_target": 30, "daily_list": False,  "daily_proposal": False},
         "tenshi":   {"monthly_analysis": 0, "monthly_target": 20, "daily_analysis": False},
+        "newbiz":   {"monthly_tieup": 0, "monthly_tieup_target": 30, "monthly_yt": 0, "monthly_yt_target": 20, "daily_tieup": False, "daily_yt": False},
+        "sns":      {"monthly_education": 0, "monthly_education_target": 20, "monthly_marketing": 0, "monthly_marketing_target": 20, "daily_education": False, "daily_marketing": False},
         "last_updated": "",
     },
 }
@@ -1334,6 +1336,38 @@ def job_sns_educator():
         set_status("sns_educator", "error", "エラー")
 
 
+# ─── Job: 新規事業 非属人YouTubeチャンネルリサーチ (daily 16:00) ────────────
+def job_newbiz_youtube_research():
+    today = datetime.now(JST).strftime("%Y%m%d")
+    log("📺 新規事業 非属人YTチャンネルリサーチ開始", "bizdev_researcher")
+    try:
+        set_status("bizdev_researcher", "working", "成長中のYTチャンネルを探索中...")
+        agent = make_researcher_with_tools()
+        directive_text = _get_agent_directive_text("bizdev_researcher")
+        result = run_single(
+            directive_text +
+            "StudioOgawaがアニメ化・参入できる成長中の非属人YouTubeチャンネルをリサーチしてください。\n"
+            "必ずyoutube_search_toolとweb_search_toolを使い、実際のチャンネルURLを含めること。\n\n"
+            "リサーチ軸：\n"
+            "①非属人チャンネル（顔出しなし・アニメ・解説系・ゆっくり・朗読等）で急成長中のもの3〜5本\n"
+            "  各チャンネル：URL・チャンネル名・登録者数・なぜ伸びているか・月間推定再生数\n"
+            "②これらをアニメ化するとしたらどんな形式が合うか（ジャンル・ターゲット・差別化ポイント）\n"
+            "③StudioOgawaが今すぐ始められる新規アニメチャンネル企画1件\n"
+            "  （チャンネルコンセプト・ターゲット・収益化戦略・6ヶ月後の月間収益目標）",
+            "非属人YouTube成長チャンネルリサーチ（URL付き・新規事業提案含む）",
+            agent,
+        )
+        set_status("bizdev_researcher", "done", "新規事業リサーチ完了 ✓")
+        _save_research(f"newbiz_yt_{today}.txt",
+                       f"=== 非属人YTチャンネルリサーチ {today} ===\n\n{result}", "newbiz")
+        log(f"💾 新規事業リサーチ: newbiz_yt_{today}.txt", "bizdev_researcher")
+        with lock:
+            state["result"] = result
+    except Exception as e:
+        log(f"❌ 新規事業リサーチエラー: {str(e)[:200]}")
+        set_status("bizdev_researcher", "error", "エラー")
+
+
 # ─── Job: SNSマーケ担当 (毎週金曜 11:00) ────────────────────────────────────
 def job_sns_marketer():
     today = datetime.now(JST).strftime("%Y%m%d")
@@ -1362,7 +1396,7 @@ def job_sns_marketer():
 
 # ─── Job: KPI更新 (30分ごと) ─────────────────────────────────────────────────
 def job_kpi_update():
-    """各部門のKPIをファイルカウント・キュー状態から集計してstateに反映する。"""
+    """各部門のKPIをファイルカウント・キュー状態から集計してstateに反映する（6部署対応）。"""
     now = datetime.now(JST)
     today_str = now.strftime("%Y%m%d")
     month_prefix = now.strftime("%Y%m")
@@ -1376,15 +1410,14 @@ def job_kpi_update():
         # 幸子
         monthly_drafts = count_this_month("script_draft_*.txt")
         daily_draft    = exists_today("script_draft_*.txt")
-        # 承認済みX投稿（今月）
-        approved = _load_queue(APPROVED_PATH)
-        monthly_x = len([p for p in approved["x_posts"] if p.get("approved_at", "").startswith(now.strftime("%Y-%m"))])
-        daily_x   = exists_today("sachiko_auto_*.txt")  # X生成ジョブ完了を代替指標として使用
 
         # コンテンツ
         nr = state.get("note_roadmap_progress", {})
         monthly_note = nr.get("done", 0)
         daily_note   = (nr.get("today_title", "-") != "-")
+        approved = _load_queue(APPROVED_PATH)
+        monthly_x = len([p for p in approved["x_posts"] if p.get("approved_at", "").startswith(now.strftime("%Y-%m"))])
+        daily_x   = exists_today("x_strategy*.md")
 
         # 営業
         monthly_lists    = count_this_month("sales_prospects_*.txt")
@@ -1395,12 +1428,26 @@ def job_kpi_update():
         monthly_analysis = count_this_month("tenshi_analysis_*.txt")
         daily_analysis   = exists_today("tenshi_analysis_*.txt")
 
+        # 事業開発
+        monthly_tieup = count_this_month("tieup_auto_*.txt")
+        daily_tieup   = exists_today("tieup_auto_*.txt")
+        monthly_yt    = count_this_month("newbiz_yt_*.txt")
+        daily_yt      = exists_today("newbiz_yt_*.txt")
+
+        # SNSチーム
+        monthly_education = count_this_month("sns_education_*.md")
+        daily_education   = exists_today("sns_education_*.md")
+        monthly_marketing = count_this_month("sns_marketing_*.md")
+        daily_marketing   = exists_today("sns_marketing_*.md")
+
         with lock:
             state["kpi"] = {
-                "sachiko":  {"monthly_drafts": monthly_drafts, "monthly_target": 4,  "daily_draft": daily_draft, "daily_x": daily_x},
-                "content":  {"monthly_note": monthly_note, "monthly_note_target": 30, "monthly_x": monthly_x, "monthly_x_target": 60, "daily_note": daily_note, "daily_x": daily_x},
-                "sales":    {"monthly_lists": monthly_lists, "monthly_target": 20, "daily_list": daily_list, "daily_proposal": daily_proposal},
+                "sachiko":  {"monthly_drafts": monthly_drafts, "monthly_target": 6,  "daily_draft": daily_draft},
+                "content":  {"monthly_note": monthly_note, "monthly_note_target": 30, "monthly_x": monthly_x, "monthly_x_target": 150, "daily_note": daily_note, "daily_x": daily_x},
+                "sales":    {"monthly_lists": monthly_lists, "monthly_target": 30, "daily_list": daily_list, "daily_proposal": daily_proposal},
                 "tenshi":   {"monthly_analysis": monthly_analysis, "monthly_target": 20, "daily_analysis": daily_analysis},
+                "newbiz":   {"monthly_tieup": monthly_tieup, "monthly_tieup_target": 30, "monthly_yt": monthly_yt, "monthly_yt_target": 20, "daily_tieup": daily_tieup, "daily_yt": daily_yt},
+                "sns":      {"monthly_education": monthly_education, "monthly_education_target": 20, "monthly_marketing": monthly_marketing, "monthly_marketing_target": 20, "daily_education": daily_education, "daily_marketing": daily_marketing},
                 "last_updated": now.strftime("%H:%M"),
             }
     except Exception as e:
@@ -1501,7 +1548,8 @@ scheduler.add_job(job_sns_educator,     CronTrigger(hour=13, minute=0,  timezone
 scheduler.add_job(job_ip_strategy,      CronTrigger(hour=13, minute=30, timezone=JST), id="ip_strategy_daily",     name="IP戦略デイリーリサーチ（毎日）")
 scheduler.add_job(job_bizdev_research,  CronTrigger(hour=14, minute=0,  timezone=JST), id="bizdev_daily",          name="外部マネタイズ探索（毎日）")
 scheduler.add_job(job_marketing_research, CronTrigger(hour=14, minute=30, timezone=JST), id="marketing_research_daily", name="X/noteマーケリサーチ（毎日）")
-scheduler.add_job(job_sns_marketer,     CronTrigger(hour=15, minute=0,  timezone=JST), id="sns_marketer_daily",    name="SNSマーケ施策（毎日）")
+scheduler.add_job(job_sns_marketer,            CronTrigger(hour=15, minute=0,  timezone=JST), id="sns_marketer_daily",       name="SNSマーケ施策（毎日）")
+scheduler.add_job(job_newbiz_youtube_research, CronTrigger(hour=16, minute=0,  timezone=JST), id="newbiz_yt_daily",          name="新規事業YTリサーチ（毎日）")
 
 # ── ⑤ 夜ブロック：翌日の下地作り ───────────────────────────────────────────
 scheduler.add_job(job_note_research,    CronTrigger(hour=22, minute=0,  timezone=JST), id="note_research_daily",   name="noteリサーチ（毎日22時）")
@@ -1542,6 +1590,7 @@ JOB_FUNCS = {
     "bizdev_daily":            job_bizdev_research,
     "marketing_research_daily":job_marketing_research,
     "sns_marketer_daily":      job_sns_marketer,
+    "newbiz_yt_daily":         job_newbiz_youtube_research,
     # 夜ブロック
     "note_research_daily":     job_note_research,
     # 週3
