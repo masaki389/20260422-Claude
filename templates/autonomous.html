@@ -50,9 +50,20 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 .kikuchi-due { font-size:11px; color:#5a8aaa; margin-bottom:6px; }
 .progress-bar-bg { background:#0a1520; border:1px solid #1e3a5e; border-radius:3px; height:14px; overflow:hidden; margin-bottom:4px; }
 .progress-bar-fill { height:100%; background:linear-gradient(90deg,#1a5a9a,#3a9adf); transition:width 0.5s; border-radius:2px; }
+.progress-bar-fill.note { background:linear-gradient(90deg,#3a5a1a,#7aaa30); }
 .progress-text { font-size:11px; color:#7ab0e0; text-align:right; }
+.progress-text.note { color:#8aca50; }
 .btn-kk-refresh { background:none; border:none; cursor:pointer; font-size:11px; padding:0 2px; opacity:.7; }
 .btn-kk-refresh:hover { opacity:1; }
+.note-roadmap-panel { background:#0d1508; border:1px solid #2a4a1a; border-radius:4px; padding:8px 10px; }
+.note-roadmap-title { font-size:11px; font-weight:600; color:#6a9a4a; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; border-bottom:1px solid #2a4a1a; padding-bottom:4px; }
+.note-roadmap-next { font-size:11px; color:#8aca50; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.insight-panel { background:#0d0d1a; border:1px solid #2a1a5a; border-radius:4px; padding:8px 10px; margin-top:6px; }
+.insight-title { font-size:11px; font-weight:600; color:#8a6add; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; border-bottom:1px solid #2a1a5a; padding-bottom:4px; }
+.insight-item { background:#0a0a18; border:1px solid #1a0a3a; border-radius:3px; padding:6px; margin-bottom:5px; }
+.insight-date { font-size:10px; color:#6a5aaa; margin-bottom:3px; }
+.insight-topic { font-size:11px; color:#aa88ff; font-weight:600; margin-bottom:4px; }
+.insight-content { font-size:10px; color:#8a8aaa; white-space:pre-wrap; max-height:120px; overflow-y:auto; user-select:text; }
 .check-item { flex:1; background:#0a1520; border:1px solid #1e3a5e; border-radius:2px; padding:3px; text-align:center; font-size:10px; color:#3a6a9a; }
 .check-item.done { background:#0a2a40; border-color:#3a7aaa; color:#7ab0e0; }
 .schedule-list { display:flex; flex-direction:column; gap:3px; max-height:180px; overflow-y:auto; }
@@ -139,6 +150,12 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
       <div class="progress-bar-bg"><div class="progress-bar-fill" id="kk-bar" style="width:0%"></div></div>
       <div class="progress-text" id="kk-pct">0%</div>
     </div>
+    <div class="note-roadmap-panel">
+      <div class="note-roadmap-title">📝 note 30日ロードマップ <button class="btn-kk-refresh" onclick="pollNoteRoadmap()" title="進捗を再取得">🔄</button></div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill note" id="nr-bar" style="width:0%"></div></div>
+      <div class="progress-text note" id="nr-pct">0/0本 (0%)</div>
+      <div class="note-roadmap-next" id="nr-next">読み込み中...</div>
+    </div>
     <div class="panel">
       <div class="panel-title">📥 承認待ちキュー</div>
       <div class="tab-bar">
@@ -174,6 +191,12 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
     </div>
     <div class="status-bar" id="status-bar">●  IDLE</div>
   </div>
+</div>
+
+<!-- ── マーケインサイト ── -->
+<div class="insight-panel">
+  <div class="insight-title">💡 マーケインサイト（月・水・金 自動リサーチ） <button class="btn-kk-refresh" onclick="pollMarketingInsights()" title="最新を取得">🔄</button></div>
+  <div id="insight-list"><div style="color:#5a5a8a;font-size:11px">読み込み中...</div></div>
 </div>
 
 <!-- ── 成果物ビューア ── -->
@@ -610,6 +633,29 @@ function closeModal(){document.getElementById('note-modal').classList.remove('op
 function updateKikuchi(data){if(!data||data.error)return;document.getElementById('kk-episode').textContent=data.episode||'-';document.getElementById('kk-due').textContent=data.due?`納期: ${data.due}  ${data.status||''}`:'';const pct=data.progress||0;document.getElementById('kk-bar').style.width=pct+'%';document.getElementById('kk-pct').textContent=`${pct}% (${data.done||0}/${data.total||0}タスク)`;}
 function pollKikuchi(){fetch('/api/kikuchi_progress').then(r=>r.json()).then(updateKikuchi).catch(()=>{});}
 pollKikuchi(); setInterval(pollKikuchi,300000);
+
+function updateNoteRoadmap(data){
+  if(!data||data.error)return;
+  const pct=data.progress||0;
+  document.getElementById('nr-bar').style.width=pct+'%';
+  document.getElementById('nr-pct').textContent=`${data.done||0}/${data.total||0}本 (${pct}%)`;
+  const next=data.next_date&&data.next_date!=='-'?`次: ${data.next_date} 「${data.next_title||''}」`:'全記事完了 🎉';
+  document.getElementById('nr-next').textContent=next;
+}
+function pollNoteRoadmap(){fetch('/api/note_roadmap_progress').then(r=>r.json()).then(updateNoteRoadmap).catch(()=>{});}
+pollNoteRoadmap(); setInterval(pollNoteRoadmap,300000);
+
+function updateMarketingInsights(insights){
+  const el=document.getElementById('insight-list');
+  if(!insights||!insights.length){el.innerHTML='<div style="color:#5a5a8a;font-size:11px">まだインサイトなし。月・水・金14時に自動リサーチします。</div>';return;}
+  el.innerHTML=insights.slice(0,3).map(item=>`<div class="insight-item">
+    <div class="insight-date">${escHtml(item.date)}</div>
+    <div class="insight-topic">📌 ${escHtml(item.topic)}</div>
+    <div class="insight-content">${escHtml(item.content)}</div>
+  </div>`).join('');
+}
+function pollMarketingInsights(){fetch('/api/marketing_insights').then(r=>r.json()).then(updateMarketingInsights).catch(()=>{});}
+pollMarketingInsights(); setInterval(pollMarketingInsights,600000);
 window._updateUI=function(data){
   const sb=document.getElementById('status-bar');
   if(data.running){sb.textContent='⚡ RUNNING';sb.style.color='#fbbf24';}else{sb.textContent='●  IDLE';sb.style.color='#4a8a4a';}
@@ -626,6 +672,8 @@ window._updateUI=function(data){
   if(data.logs?.length)document.getElementById('log-list').innerHTML=data.logs.slice(0,15).map(l=>`<div class="log-item"><span class="log-time">${l.time}</span><span class="log-msg">${escHtml(l.msg)}</span></div>`).join('');
   if(data.result)document.getElementById('result-box').textContent=data.result;
   if(data.kikuchi_progress)updateKikuchi(data.kikuchi_progress);
+  if(data.note_roadmap_progress)updateNoteRoadmap(data.note_roadmap_progress);
+  if(data.marketing_insights)updateMarketingInsights(data.marketing_insights);
 };
 function runManual(){const theme=document.getElementById('theme-input').value.trim();if(!theme)return;fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({theme})}).catch(()=>{});}
 function triggerJob(id){fetch('/api/trigger/'+id,{method:'POST'}).catch(()=>{});}

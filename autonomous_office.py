@@ -187,7 +187,9 @@ state = {
         "kikuchi":             {"name": "菊地（外注）",        "dept": "external", "status": "idle", "task": ""},
     },
     "logs": [],
-    "kikuchi_progress": {"episode": "-", "progress": 0, "status": "-", "due": "-"},
+    "kikuchi_progress":       {"episode": "-", "progress": 0, "status": "-", "due": "-"},
+    "note_roadmap_progress":  {"done": 0, "total": 0, "progress": 0, "next_title": "-", "next_date": "-"},
+    "marketing_insights":     [],
 }
 
 
@@ -593,29 +595,112 @@ def job_note_research():
         set_status("note_researcher", "error", "エラー")
 
 
-# ─── Job: note記事ドラフト生成 (weekly Mon 10:00) ────────────────────────
+# ─── Job: noteロードマップ進捗チェック ─────────────────────────────────────
+NOTE_ROADMAP_URL = ("https://docs.google.com/spreadsheets/d/"
+                    "1xHIRrC4e4eJGuvnE84n7xERZYEzu4SApTroB4xYknM0"
+                    "/export?format=csv&gid=1883610657")
+
+def job_note_roadmap_progress_update():
+    """note 30日ロードマップスプシの完了列（col6: TRUE/FALSE）を読んで進捗を更新。"""
+    import urllib.request, csv as _csv
+    try:
+        with urllib.request.urlopen(NOTE_ROADMAP_URL, timeout=15) as resp:
+            content = resp.read().decode("utf-8")
+        rows = list(_csv.reader(content.splitlines()))
+        done = total = 0
+        next_title = next_date = None
+        for row in rows:
+            if len(row) >= 7 and row[6].strip().upper() in ("TRUE", "FALSE"):
+                col0 = row[0].strip()
+                if "/" in col0 and col0.split("/")[0].isdigit():
+                    total += 1
+                    if row[6].strip().upper() == "TRUE":
+                        done += 1
+                    elif next_title is None:
+                        next_title = row[2].strip()
+                        next_date  = col0
+        pct = int(done / total * 100) if total > 0 else 0
+        with lock:
+            prev = state["note_roadmap_progress"].get("progress", -1)
+            state["note_roadmap_progress"] = {
+                "done": done, "total": total, "progress": pct,
+                "next_title": next_title or "-", "next_date": next_date or "-"
+            }
+        if pct != prev:
+            log(f"📝 note進捗: {pct}% ({done}/{total}本)", "note_writer")
+    except Exception as e:
+        log(f"⚠ note進捗取得失敗: {str(e)[:80]}")
+
+
+# ─── Job: note記事ドラフト生成（ロードマップ対応）──────────────────────────
 def job_generate_note_draft():
+    """ロードマップから今日の記事を特定→リサーチ→執筆→承認キューへ。"""
+    import urllib.request, csv as _csv
+    from datetime import date as _date
     log("📝 note記事ドラフト生成開始")
     try:
-        set_status("note_writer", "working", "記事執筆中...")
+        # ── 1. ロードマップから執筆対象を特定 ──
+        with urllib.request.urlopen(NOTE_ROADMAP_URL, timeout=15) as resp:
+            content = resp.read().decode("utf-8")
+        rows = list(_csv.reader(content.splitlines()))
+        today = datetime.now(JST)
+        target = None
+        for row in rows:
+            if len(row) >= 7 and row[6].strip().upper() == "FALSE":
+                col0 = row[0].strip()
+                if "/" in col0 and col0.split("/")[0].isdigit():
+                    m, d = int(col0.split("/")[0]), int(col0.split("/")[1])
+                    if _date(today.year, m, d) <= today.date():
+                        target = row; break
+        if not target:
+            # 今日以前に未完了がない → 次回予定の最初の記事
+            for row in rows:
+                if len(row) >= 7 and row[6].strip().upper() == "FALSE":
+                    col0 = row[0].strip()
+                    if "/" in col0 and col0.split("/")[0].isdigit():
+                        target = row; break
+        if not target:
+            log("📝 note: ロードマップ上の未完了記事なし（全完了）")
+            return
+
+        art_date  = target[0].strip()
+        art_title = target[2].strip()
+        art_cat   = target[3].strip()   # 無料 / 有料
+
+        set_status("note_writer", "working", f"{art_title[:20]}... 執筆中")
+
+        # ── 2. リサーチフェーズ（URL付き） ──
+        researcher = make_researcher_with_tools()
+        research = run_single(
+            f"次のnote記事を書くためにリサーチしてください。\n"
+            f"記事タイトル：「{art_title}」\n"
+            f"YouTubeで再生数の多い関連動画を3本（タイトル・URL・なぜ伸びたか）と"
+            f"Web参考記事を3本（タイトル・URL・核心の学び）を調べてください。",
+            "リサーチ結果（YouTube URL・Web URL・要点を含むレポート）",
+            researcher
+        )
+
+        # ── 3. 執筆フェーズ ──
         strategy = _read_strategy("note_strategy.md")
-        agent = make_agent(
+        writer = make_agent(
             "noteコンテンツライター",
             "AIアニメ制作・YouTube収益化ノウハウをnote向けに2000〜3000文字の記事にまとめる",
-            "StudioOgawaのAIアニメ制作専門家。95万再生の実績。" +
-            ("\nnote戦略:\n" + strategy if strategy else ""))
+            "StudioOgawaのAIアニメ制作専門家。幸子チャンネル95万再生・転職アフィリ月20万の実績。"
+            + ("\nnote戦略:\n" + strategy if strategy else "")
+            + f"\nリサーチ結果:\n{research}"
+        )
         result = run_single(
-            "AIアニメ動画制作に関するnote記事を1本作成。最も伸びそうなテーマを選ぶ:\n"
-            "①Gemini AIで月1000枚の画像を生成した話\n"
-            "②65歳主婦アニメで95万再生した制作方法\n"
-            "③CrewAI自律エージェントで動画制作を自動化した話\n"
-            "④AIアニメで月10万円稼ぐ方法（実数字公開）\n"
-            "形式：タイトル・冒頭共感フック・本文H2×3章（各500文字）・まとめ・ハッシュタグ5個",
-            "完成したnote記事（タイトル＋本文2000〜3000文字）", agent)
+            f"タイトル：「{art_title}」の記事を書いてください。\n"
+            f"カテゴリ：{art_cat}記事（{'無料公開' if art_cat == '無料' else '有料500〜800円'}）\n"
+            f"形式：タイトル・冒頭共感フック（150文字）・H2×3〜4章（各400〜600文字）・まとめ・ハッシュタグ5個\n"
+            f"具体的な数字・体験・ノウハウを盛り込み、参照URL一覧を末尾に記載してください。",
+            "完成したnote記事（タイトル＋本文2000〜3000文字、参考URL付き）",
+            writer
+        )
 
-        lines = result.strip().split("\n")
-        title = lines[0].lstrip("# ").strip() if lines else "AI動画制作ノウハウ"
-        body  = "\n".join(lines[1:]).strip() if len(lines) > 1 else result
+        lines  = result.strip().split("\n")
+        title  = lines[0].lstrip("# ").strip() if lines else art_title
+        body   = "\n".join(lines[1:]).strip() if len(lines) > 1 else result
 
         add_to_pending("note_drafts", {
             "id":         str(uuid.uuid4())[:8],
@@ -623,13 +708,62 @@ def job_generate_note_draft():
             "body":       body,
             "created_at": datetime.now(JST).strftime("%Y-%m-%d %H:%M"),
         })
-        set_status("note_writer", "done", "記事ドラフト → 承認待ち ✓")
-        log(f"📥 note記事ドラフトを承認待ちキューに追加: {title[:30]}...")
+        set_status("note_writer", "done", f"{title[:20]}... → 承認待ち ✓")
+        log(f"📥 note記事ドラフト追加: {title[:30]}...")
         with lock:
             state["result"] = result
+        job_note_roadmap_progress_update()
     except Exception as e:
         log(f"❌ note記事生成エラー: {str(e)[:200]}")
         set_status("note_writer", "error", "エラー")
+
+
+# ─── Job: X/noteマーケリサーチ（毎週月・水・金）────────────────────────────
+MARKETING_TOPICS = [
+    "note 2026年 人気記事 フォロワー増 稼ぎ方 コツ",
+    "X Twitter フォロワー増やし方 2026 バズ投稿 戦略",
+    "AIアニメ YouTube 副業 月10万 稼ぐ方法",
+    "note 有料記事 売れる書き方 タイトル 冒頭フック",
+    "シニア向け YouTube チャンネル 収益化 RPM",
+    "note AIコンテンツ 副業 売上 実績公開",
+]
+
+def job_marketing_research():
+    """X/noteマーケノウハウをYouTube・Webで定期リサーチ。URL付きで報告。"""
+    log("🔬 マーケリサーチ開始")
+    try:
+        set_status("note_researcher", "working", "マーケノウハウ吸収中...")
+        topic_idx = datetime.now(JST).weekday() % len(MARKETING_TOPICS)
+        topic = MARKETING_TOPICS[topic_idx]
+
+        researcher = make_researcher_with_tools()
+        result = run_single(
+            f"テーマ：「{topic}」でYouTubeとWebをリサーチしてください。\n"
+            f"① YouTube人気動画3本（タイトル・URL・再生数・なぜ伸びたか分析）\n"
+            f"② Web参考記事3本（タイトル・URL・核心の学び1行）\n"
+            f"③ これらから得るX/note実践インサイト3〜5箇条（具体的なアクション付き）\n"
+            f"URLは必ず実際のものを記載してください。",
+            "マーケリサーチレポート（YouTube URL・Web URL・実践インサイト付き）",
+            researcher
+        )
+        with lock:
+            insights = state.setdefault("marketing_insights", [])
+            insights.insert(0, {
+                "date":    datetime.now(JST).strftime("%m/%d %H:%M"),
+                "topic":   topic,
+                "content": result,
+            })
+            state["marketing_insights"] = insights[:10]
+        set_status("note_researcher", "done", "マーケインサイト更新 ✓")
+        log(f"💡 マーケリサーチ完了: {topic[:30]}")
+        fname = f"marketing_{datetime.now(JST).strftime('%Y%m%d_%H%M')}.md"
+        (RESEARCH_DIR / fname).write_text(
+            f"# マーケインサイト\nトピック: {topic}\n\n{result}", encoding="utf-8")
+        with lock:
+            state["result"] = result
+    except Exception as e:
+        log(f"❌ マーケリサーチエラー: {str(e)[:200]}")
+        set_status("note_researcher", "error", "エラー")
 
 
 # ─── Job: タイアップリサーチ (weekly Mon 11:00) ──────────────────────────
@@ -1062,15 +1196,17 @@ scheduler.add_job(job_x_random_post,        CronTrigger(hour=8,  minute=0,  time
 scheduler.add_job(job_x_random_post,        CronTrigger(hour=12, minute=0,  timezone=JST), id="x_post_noon",       name="X投稿（昼12時）")
 scheduler.add_job(job_x_random_post,        CronTrigger(hour=18, minute=0,  timezone=JST), id="x_post_afternoon",  name="X投稿（夕方18時）")
 scheduler.add_job(job_x_random_post,        CronTrigger(hour=20, minute=0,  timezone=JST), id="x_post_evening",    name="X投稿（夜20時）")
-# 30分ごと — 菊地進捗（毎時0分・30分）
-scheduler.add_job(job_kikuchi_progress_update, CronTrigger(minute="0,30", timezone=JST), id="kikuchi_check", name="菊地進捗チェック（30分ごと）")
+# 30分ごと — 菊地進捗 / note進捗（毎時0分・30分）
+scheduler.add_job(job_kikuchi_progress_update,       CronTrigger(minute="0,30", timezone=JST), id="kikuchi_check",        name="菊地進捗チェック（30分ごと）")
+scheduler.add_job(job_note_roadmap_progress_update,  CronTrigger(minute="15,45", timezone=JST), id="note_roadmap_check", name="noteロードマップ進捗（30分ごと）")
 # Daily 08:30 — X戦略デイリーリサーチ
 scheduler.add_job(job_x_strategy_learn,    CronTrigger(hour=8,  minute=30, timezone=JST), id="x_strategy_daily",    name="X戦略デイリーリサーチ（毎日）")
 # Weekly Mon 08:00 — 週次サマリーレポート
 scheduler.add_job(job_weekly_summary,      CronTrigger(day_of_week="mon", hour=8, minute=0, timezone=JST), id="weekly_summary",         name="週次サマリーレポート（月曜8時）")
 # Weekly — noteリサーチ
 scheduler.add_job(job_note_research,        CronTrigger(day_of_week="sun", hour=23, minute=30, timezone=JST), id="note_research_weekly",  name="noteリサーチ（週1）")
-scheduler.add_job(job_generate_note_draft,  CronTrigger(hour=10, minute=30, timezone=JST), id="note_draft_daily",      name="note記事ドラフト生成（毎日）")
+scheduler.add_job(job_generate_note_draft,  CronTrigger(hour=10, minute=30, timezone=JST), id="note_draft_daily",      name="note記事ドラフト生成（毎日・ロードマップ対応）")
+scheduler.add_job(job_marketing_research,   CronTrigger(day_of_week="mon,wed,fri", hour=14, minute=0, timezone=JST), id="marketing_research_mwf", name="X/noteマーケリサーチ（月・水・金）")
 scheduler.add_job(job_tieup_research,       CronTrigger(hour=11, minute=0,  timezone=JST), id="tieup_daily",           name="タイアップリサーチ（毎日）")
 # Weekly — 幸子分析 (火曜9時)
 scheduler.add_job(job_sachiko_analytics,    CronTrigger(day_of_week="tue", hour=9,  minute=0,  timezone=JST), id="sachiko_analytics",     name="幸子チャンネル週次分析")
@@ -1095,8 +1231,10 @@ JOB_FUNCS = {
     "kikuchi_check":          job_kikuchi_progress_update,
     "x_strategy_daily":       job_x_strategy_learn,
     "weekly_summary":         job_weekly_summary,
-    "note_research_weekly":   job_note_research,
-    "note_draft_daily":       job_generate_note_draft,
+    "note_research_weekly":     job_note_research,
+    "note_draft_daily":         job_generate_note_draft,
+    "note_roadmap_check":       job_note_roadmap_progress_update,
+    "marketing_research_mwf":   job_marketing_research,
     "tieup_daily":            job_tieup_research,
     "sachiko_analytics":      job_sachiko_analytics,
     "sales_research_daily":   job_sales_research,
@@ -1196,6 +1334,19 @@ def api_kikuchi_progress():
     threading.Thread(target=job_kikuchi_progress_update, daemon=True).start()
     with lock:
         return jsonify(state.get("kikuchi_progress", {}))
+
+
+@app.route("/api/note_roadmap_progress")
+def api_note_roadmap_progress():
+    threading.Thread(target=job_note_roadmap_progress_update, daemon=True).start()
+    with lock:
+        return jsonify(state.get("note_roadmap_progress", {}))
+
+
+@app.route("/api/marketing_insights")
+def api_marketing_insights():
+    with lock:
+        return jsonify(state.get("marketing_insights", []))
 
 
 @app.route("/api/debug_kikuchi")
