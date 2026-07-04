@@ -303,13 +303,13 @@ state = {
         "tenshi_analyst":      {"name": "転職アニメ分析",      "dept": "tenshi",   "status": "idle", "task": ""},
         "tenshi_scriptwriter": {"name": "転職脚本家",          "dept": "tenshi",   "status": "idle", "task": ""},
         # 新規事業部
-        "tieup_researcher":    {"name": "タイアップ探索",      "dept": "newbiz",   "status": "idle", "task": ""},
+        "tieup_researcher":    {"name": "タイアップ探索",      "dept": "sachiko",  "status": "idle", "task": ""},
         "ip_strategist":       {"name": "IP戦略家",            "dept": "newbiz",   "status": "idle", "task": ""},
         "bizdev_researcher":   {"name": "外部マネタイズ探索",   "dept": "newbiz",   "status": "idle", "task": ""},
         # SNSマネタイズチーム
-        "sns_planner":         {"name": "SNS企画担当",          "dept": "sns",      "status": "idle", "task": ""},
-        "sns_educator":        {"name": "SNS教育担当",          "dept": "sns",      "status": "idle", "task": ""},
-        "sns_marketer":        {"name": "SNSマーケ担当",        "dept": "sns",      "status": "idle", "task": ""},
+        "sns_planner":         {"name": "SNS企画担当",          "dept": "content",  "status": "idle", "task": ""},
+        "sns_educator":        {"name": "SNS教育担当",          "dept": "content",  "status": "idle", "task": ""},
+        "sns_marketer":        {"name": "SNSマーケ担当",        "dept": "content",  "status": "idle", "task": ""},
         # 秘書
         "secretary":           {"name": "秘書",                 "dept": "external", "status": "idle", "task": ""},
         # 外注
@@ -320,12 +320,11 @@ state = {
     "note_roadmap_progress":  {"done": 0, "total": 0, "progress": 0, "next_title": "-", "next_date": "-"},
     "marketing_insights":     [],
     "kpi": {
-        "sachiko":  {"monthly_drafts": 0, "monthly_target": 6,  "daily_draft": False},
-        "content":  {"monthly_note": 0,   "monthly_note_target": 30, "monthly_x": 0, "monthly_x_target": 150, "daily_note": False, "daily_x": False},
-        "sales":    {"monthly_lists": 0,  "monthly_target": 30, "daily_list": False,  "daily_proposal": False},
+        "sachiko":  {"monthly_drafts": 0, "monthly_target": 6, "monthly_tieup": 0, "monthly_tieup_target": 30, "monthly_sponsor": 0, "monthly_sponsor_target": 20, "daily_draft": False, "daily_tieup": False, "daily_sponsor": False},
+        "content":  {"monthly_note": 0, "monthly_note_target": 30, "monthly_x": 0, "monthly_x_target": 150, "monthly_education": 0, "monthly_education_target": 20, "monthly_marketing": 0, "monthly_marketing_target": 20, "daily_note": False, "daily_x": False, "daily_education": False, "daily_marketing": False},
+        "sales":    {"monthly_lists": 0, "monthly_target": 30, "daily_list": False, "daily_proposal": False},
         "tenshi":   {"monthly_analysis": 0, "monthly_target": 20, "daily_analysis": False},
-        "newbiz":   {"monthly_tieup": 0, "monthly_tieup_target": 30, "monthly_yt": 0, "monthly_yt_target": 20, "daily_tieup": False, "daily_yt": False},
-        "sns":      {"monthly_education": 0, "monthly_education_target": 20, "monthly_marketing": 0, "monthly_marketing_target": 20, "daily_education": False, "daily_marketing": False},
+        "newbiz":   {"monthly_yt": 0, "monthly_yt_target": 20, "daily_yt": False},
         "last_updated": "",
     },
 }
@@ -1407,47 +1406,46 @@ def job_kpi_update():
         def exists_today(pattern):
             return any(True for f in RESEARCH_DIR.glob(pattern) if today_str in f.name)
 
-        # 幸子
-        monthly_drafts = count_this_month("script_draft_*.txt")
-        daily_draft    = exists_today("script_draft_*.txt")
+        # 幸子チャンネル部
+        monthly_drafts  = count_this_month("script_draft_*.txt")
+        daily_draft     = exists_today("script_draft_*.txt")
+        monthly_tieup   = count_this_month("tieup_auto_*.txt")
+        daily_tieup     = exists_today("tieup_auto_*.txt")
+        monthly_sponsor = count_this_month("sponsor_auto_*.txt")
+        daily_sponsor   = exists_today("sponsor_auto_*.txt")
 
-        # コンテンツ
+        # コンテンツ・販売部
         nr = state.get("note_roadmap_progress", {})
         monthly_note = nr.get("done", 0)
         daily_note   = (nr.get("today_title", "-") != "-")
         approved = _load_queue(APPROVED_PATH)
         monthly_x = len([p for p in approved["x_posts"] if p.get("approved_at", "").startswith(now.strftime("%Y-%m"))])
-        daily_x   = exists_today("x_strategy*.md")
-
-        # 営業
-        monthly_lists    = count_this_month("sales_prospects_*.txt")
-        daily_list       = exists_today("sales_prospects_*.txt")
-        daily_proposal   = exists_today("proposals_*.txt")
-
-        # 転職
-        monthly_analysis = count_this_month("tenshi_analysis_*.txt")
-        daily_analysis   = exists_today("tenshi_analysis_*.txt")
-
-        # 事業開発
-        monthly_tieup = count_this_month("tieup_auto_*.txt")
-        daily_tieup   = exists_today("tieup_auto_*.txt")
-        monthly_yt    = count_this_month("newbiz_yt_*.txt")
-        daily_yt      = exists_today("newbiz_yt_*.txt")
-
-        # SNSチーム
+        daily_x          = exists_today("x_strategy*.md")
         monthly_education = count_this_month("sns_education_*.md")
         daily_education   = exists_today("sns_education_*.md")
         monthly_marketing = count_this_month("sns_marketing_*.md")
         daily_marketing   = exists_today("sns_marketing_*.md")
 
+        # toB受託営業部
+        monthly_lists  = count_this_month("sales_prospects_*.txt")
+        daily_list     = exists_today("sales_prospects_*.txt")
+        daily_proposal = exists_today("proposals_*.txt")
+
+        # 転職アニメ部
+        monthly_analysis = count_this_month("tenshi_analysis_*.txt")
+        daily_analysis   = exists_today("tenshi_analysis_*.txt")
+
+        # 事業開発部
+        monthly_yt = count_this_month("newbiz_yt_*.txt")
+        daily_yt   = exists_today("newbiz_yt_*.txt")
+
         with lock:
             state["kpi"] = {
-                "sachiko":  {"monthly_drafts": monthly_drafts, "monthly_target": 6,  "daily_draft": daily_draft},
-                "content":  {"monthly_note": monthly_note, "monthly_note_target": 30, "monthly_x": monthly_x, "monthly_x_target": 150, "daily_note": daily_note, "daily_x": daily_x},
+                "sachiko":  {"monthly_drafts": monthly_drafts, "monthly_target": 6, "monthly_tieup": monthly_tieup, "monthly_tieup_target": 30, "monthly_sponsor": monthly_sponsor, "monthly_sponsor_target": 20, "daily_draft": daily_draft, "daily_tieup": daily_tieup, "daily_sponsor": daily_sponsor},
+                "content":  {"monthly_note": monthly_note, "monthly_note_target": 30, "monthly_x": monthly_x, "monthly_x_target": 150, "monthly_education": monthly_education, "monthly_education_target": 20, "monthly_marketing": monthly_marketing, "monthly_marketing_target": 20, "daily_note": daily_note, "daily_x": daily_x, "daily_education": daily_education, "daily_marketing": daily_marketing},
                 "sales":    {"monthly_lists": monthly_lists, "monthly_target": 30, "daily_list": daily_list, "daily_proposal": daily_proposal},
                 "tenshi":   {"monthly_analysis": monthly_analysis, "monthly_target": 20, "daily_analysis": daily_analysis},
-                "newbiz":   {"monthly_tieup": monthly_tieup, "monthly_tieup_target": 30, "monthly_yt": monthly_yt, "monthly_yt_target": 20, "daily_tieup": daily_tieup, "daily_yt": daily_yt},
-                "sns":      {"monthly_education": monthly_education, "monthly_education_target": 20, "monthly_marketing": monthly_marketing, "monthly_marketing_target": 20, "daily_education": daily_education, "daily_marketing": daily_marketing},
+                "newbiz":   {"monthly_yt": monthly_yt, "monthly_yt_target": 20, "daily_yt": daily_yt},
                 "last_updated": now.strftime("%H:%M"),
             }
     except Exception as e:
@@ -1605,6 +1603,23 @@ JOB_FUNCS = {
 }
 
 
+_JOB_DEPT = {
+    "x_post_morning": "content", "x_post_noon": "content",
+    "x_post_afternoon": "content", "x_post_evening": "content",
+    "secretary_daily": "sachiko", "x_strategy_daily": "content",
+    "sachiko_daily": "sachiko", "scriptwriter_daily": "sachiko",
+    "x_draft_daily": "content", "note_draft_daily": "content",
+    "sales_research_daily": "sales", "tenshi_analysis_daily": "tenshi",
+    "tieup_daily": "sachiko", "tenshi_script_daily": "tenshi",
+    "sns_educator_daily": "content", "ip_strategy_daily": "newbiz",
+    "bizdev_daily": "newbiz", "marketing_research_daily": "content",
+    "sns_marketer_daily": "content", "newbiz_yt_daily": "newbiz",
+    "note_research_daily": "content", "sachiko_analytics": "sachiko",
+    "weekly_summary": "sachiko", "sns_planner_weekly": "content",
+    "kikuchi_check": "sachiko", "note_roadmap_check": "content",
+    "kpi_update": "",
+}
+
 def get_schedule_info():
     nr = state.get("note_roadmap_progress", {})
     note_subtitle = ""
@@ -1615,6 +1630,7 @@ def get_schedule_info():
         entry = {
             "id": j.id, "name": j.name,
             "next_run": j.next_run_time.strftime("%m/%d %H:%M JST") if j.next_run_time else "未定",
+            "dept": _JOB_DEPT.get(j.id, ""),
         }
         if j.id == "note_draft_daily" and note_subtitle:
             entry["subtitle"] = note_subtitle

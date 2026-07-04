@@ -129,6 +129,10 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 .kpi-d-item  { display:flex; align-items:center; gap:5px; font-size:11px; }
 .kpi-chk-ok  { color:#34d399; }
 .kpi-chk-ng  { color:#4a6a4a; }
+.kpi-sched   { margin-top:6px; padding-top:5px; border-top:1px solid #1a3a1a; }
+.kpi-kikuchi { margin-top:6px; padding-top:5px; border-top:1px solid #1e3a5e; }
+#game-container { overflow:hidden; max-width:100%; }
+#game-container canvas { max-width:100% !important; height:auto !important; display:block; }
 /* ── 成果物ビューア（下部全幅）── */
 .results-section { width:100%; max-width:1720px; margin-top:10px; background:#0d150d; border:1px solid #1e4a1e; border-radius:6px; overflow:hidden; }
 .results-header { display:flex; align-items:center; gap:0; border-bottom:1px solid #1e4a1e; background:#0a110a; flex-wrap:wrap; }
@@ -170,121 +174,113 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
         <div class="kpi-monthly">
           <div class="kpi-m-label">月間 台本骨子</div>
           <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sachiko-bar" style="width:0%"></div></div>
-          <div class="kpi-m-nums" id="kpi-sachiko-nums">-/6本</div>
+          <div class="kpi-m-nums" id="kpi-sachiko-nums">0/6本 (0%)</div>
         </div>
-        <div class="kpi-daily">
+        <div class="kpi-monthly" style="margin-top:5px">
+          <div class="kpi-m-label">月間 タイアップ営業</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-tieup-bar" style="width:0%;background:linear-gradient(90deg,#6a4a1a,#d09040)"></div></div>
+          <div class="kpi-m-nums" id="kpi-tieup-nums" style="color:#d0a060">0/30件 (0%)</div>
+        </div>
+        <div class="kpi-monthly" style="margin-top:5px">
+          <div class="kpi-m-label">月間 スポンサー営業</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sponsor-bar" style="width:0%;background:linear-gradient(90deg,#4a1a6a,#a040c0)"></div></div>
+          <div class="kpi-m-nums" id="kpi-sponsor-nums" style="color:#c070e0">0/20件 (0%)</div>
+        </div>
+        <div class="kpi-kikuchi">
+          <div class="kpi-d-label">菊地（外注）<span id="kpi-kk-ep" style="color:#7ab0e0;margin-left:4px">-</span></div>
+          <div class="kpi-m-bar" style="border-color:#1e3a5e;margin:3px 0"><div id="kpi-kk-bar" class="kpi-m-fill" style="width:0%;background:linear-gradient(90deg,#1a5a9a,#3a9adf)"></div></div>
+          <div style="font-size:10px;color:#7ab0e0;text-align:right" id="kpi-kk-pct">0% (0/0タスク)</div>
+        </div>
+        <div class="kpi-daily" style="margin-top:6px">
           <div class="kpi-d-label">デイリー</div>
-          <div class="kpi-d-item"><span id="kpi-sd-draft" class="kpi-chk-ng">◯</span> 台本骨子生成</div>
+          <div class="kpi-d-item"><span id="kpi-sd-draft" class="kpi-chk-ng">◯</span> 台本骨子生成（1件/日）</div>
+          <div class="kpi-d-item"><span id="kpi-sd-tieup" class="kpi-chk-ng">◯</span> タイアップ探索（1件/日）</div>
+          <div class="kpi-d-item"><span id="kpi-sd-sponsor" class="kpi-chk-ng">◯</span> スポンサー探索（1件/日）</div>
         </div>
+        <div class="kpi-sched" id="kpi-sched-sachiko"></div>
       </div>
-      <!-- コンテンツ部 -->
+      <!-- コンテンツ・販売部 -->
       <div class="kpi-card">
-        <div class="kpi-card-title">📝 コンテンツ部</div>
+        <div class="kpi-card-title">📝 コンテンツ・販売部</div>
         <div class="kpi-monthly">
           <div class="kpi-m-label">月間 note記事</div>
           <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-note-bar" style="width:0%"></div></div>
-          <div class="kpi-m-nums" id="kpi-note-nums">-/30本</div>
+          <div class="kpi-m-nums" id="kpi-note-nums">0/30本 (0%)</div>
         </div>
-        <div class="kpi-monthly" style="margin-top:6px">
+        <div class="kpi-monthly" style="margin-top:5px">
           <div class="kpi-m-label">月間 X投稿承認</div>
           <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-x-bar" style="width:0%;background:linear-gradient(90deg,#4a1a9a,#9a50e0)"></div></div>
-          <div class="kpi-m-nums" id="kpi-x-nums" style="color:#aa80ff">-/150件</div>
+          <div class="kpi-m-nums" id="kpi-x-nums" style="color:#aa80ff">0/150件 (0%)</div>
         </div>
-        <div class="kpi-daily">
+        <div class="kpi-monthly" style="margin-top:5px">
+          <div class="kpi-m-label">月間 教育コンテンツ</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-edu-bar" style="width:0%;background:linear-gradient(90deg,#7a1a8a,#d040e0)"></div></div>
+          <div class="kpi-m-nums" id="kpi-edu-nums" style="color:#d070e0">0/20件 (0%)</div>
+        </div>
+        <div class="kpi-monthly" style="margin-top:5px">
+          <div class="kpi-m-label">月間 マーケ施策</div>
+          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-mkt-bar" style="width:0%;background:linear-gradient(90deg,#3a1a7a,#7040c0)"></div></div>
+          <div class="kpi-m-nums" id="kpi-mkt-nums" style="color:#9070c0">0/20件 (0%)</div>
+        </div>
+        <div class="kpi-daily" style="margin-top:6px">
           <div class="kpi-d-label">デイリー</div>
-          <div class="kpi-d-item"><span id="kpi-cd-note" class="kpi-chk-ng">◯</span> note記事ドラフト</div>
+          <div class="kpi-d-item"><span id="kpi-cd-note" class="kpi-chk-ng">◯</span> note記事ドラフト（1件/日）</div>
           <div class="kpi-d-item"><span id="kpi-cd-x" class="kpi-chk-ng">◯</span> X投稿5件生成</div>
+          <div class="kpi-d-item"><span id="kpi-cd-edu" class="kpi-chk-ng">◯</span> 教育コンテンツ（1件/日）</div>
+          <div class="kpi-d-item"><span id="kpi-cd-mkt" class="kpi-chk-ng">◯</span> マーケ施策（1件/日）</div>
         </div>
+        <div class="kpi-sched" id="kpi-sched-content"></div>
       </div>
-      <!-- 営業部 -->
+      <!-- toB受託営業部 -->
       <div class="kpi-card">
-        <div class="kpi-card-title">📊 営業部</div>
+        <div class="kpi-card-title">🏢 toB受託営業部</div>
         <div class="kpi-monthly">
           <div class="kpi-m-label">月間 営業リスト</div>
           <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sales-bar" style="width:0%;background:linear-gradient(90deg,#6a1a1a,#cc4040)"></div></div>
-          <div class="kpi-m-nums" id="kpi-sales-nums" style="color:#ff9090">-/30件</div>
+          <div class="kpi-m-nums" id="kpi-sales-nums" style="color:#ff9090">0/30件 (0%)</div>
         </div>
-        <div class="kpi-daily">
+        <div class="kpi-daily" style="margin-top:6px">
           <div class="kpi-d-label">デイリー</div>
-          <div class="kpi-d-item"><span id="kpi-sd-list" class="kpi-chk-ng">◯</span> 見込み客リスト</div>
-          <div class="kpi-d-item"><span id="kpi-sd-prop" class="kpi-chk-ng">◯</span> 提案書生成</div>
+          <div class="kpi-d-item"><span id="kpi-sd-list" class="kpi-chk-ng">◯</span> 見込み客リスト（1件/日）</div>
+          <div class="kpi-d-item"><span id="kpi-sd-prop" class="kpi-chk-ng">◯</span> 提案書生成（1件/日）</div>
         </div>
+        <div class="kpi-sched" id="kpi-sched-sales"></div>
       </div>
       <!-- 転職アニメ部 -->
       <div class="kpi-card">
-        <div class="kpi-card-title">🏢 転職アニメ部</div>
+        <div class="kpi-card-title">🎞 転職アニメ部</div>
         <div class="kpi-monthly">
           <div class="kpi-m-label">月間 分析レポート</div>
           <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-tenshi-bar" style="width:0%;background:linear-gradient(90deg,#1a4a5a,#30a0c0)"></div></div>
-          <div class="kpi-m-nums" id="kpi-tenshi-nums" style="color:#80d0e0">-/20件</div>
+          <div class="kpi-m-nums" id="kpi-tenshi-nums" style="color:#80d0e0">0/20件 (0%)</div>
         </div>
-        <div class="kpi-daily">
+        <div class="kpi-daily" style="margin-top:6px">
           <div class="kpi-d-label">デイリー</div>
-          <div class="kpi-d-item"><span id="kpi-td-analysis" class="kpi-chk-ng">◯</span> 転職アニメ分析</div>
+          <div class="kpi-d-item"><span id="kpi-td-analysis" class="kpi-chk-ng">◯</span> 転職アニメ分析（1件/日）</div>
+          <div class="kpi-d-item"><span id="kpi-td-script" class="kpi-chk-ng">◯</span> 脚本生成（GO判定時）</div>
         </div>
+        <div class="kpi-sched" id="kpi-sched-tenshi"></div>
       </div>
       <!-- 事業開発部 -->
       <div class="kpi-card">
         <div class="kpi-card-title">💡 事業開発部</div>
         <div class="kpi-monthly">
-          <div class="kpi-m-label">月間 タイアップ候補</div>
-          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-newbiz-tieup-bar" style="width:0%;background:linear-gradient(90deg,#6a4a1a,#d09040)"></div></div>
-          <div class="kpi-m-nums" id="kpi-newbiz-tieup-nums" style="color:#d0a060">-/30件</div>
-        </div>
-        <div class="kpi-monthly" style="margin-top:6px">
           <div class="kpi-m-label">月間 新規YTリサーチ</div>
           <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-newbiz-yt-bar" style="width:0%;background:linear-gradient(90deg,#1a5a3a,#30c070)"></div></div>
-          <div class="kpi-m-nums" id="kpi-newbiz-yt-nums" style="color:#60d090">-/20件</div>
+          <div class="kpi-m-nums" id="kpi-newbiz-yt-nums" style="color:#60d090">0/20件 (0%)</div>
         </div>
-        <div class="kpi-daily">
+        <div class="kpi-daily" style="margin-top:6px">
           <div class="kpi-d-label">デイリー</div>
-          <div class="kpi-d-item"><span id="kpi-nd-tieup" class="kpi-chk-ng">◯</span> タイアップ探索</div>
-          <div class="kpi-d-item"><span id="kpi-nd-yt" class="kpi-chk-ng">◯</span> 新規YTリサーチ</div>
+          <div class="kpi-d-item"><span id="kpi-nd-yt" class="kpi-chk-ng">◯</span> 新規YTリサーチ（1件/日）</div>
+          <div class="kpi-d-item"><span id="kpi-nd-ip" class="kpi-chk-ng">◯</span> IP戦略リサーチ（1件/日）</div>
+          <div class="kpi-d-item"><span id="kpi-nd-biz" class="kpi-chk-ng">◯</span> 外部マネタイズ探索（1件/日）</div>
         </div>
-      </div>
-      <!-- SNSマネタイズチーム -->
-      <div class="kpi-card">
-        <div class="kpi-card-title">📣 SNSマネタイズチーム</div>
-        <div class="kpi-monthly">
-          <div class="kpi-m-label">月間 教育コンテンツ</div>
-          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sns-edu-bar" style="width:0%;background:linear-gradient(90deg,#7a1a8a,#d040e0)"></div></div>
-          <div class="kpi-m-nums" id="kpi-sns-edu-nums" style="color:#d070e0">-/20件</div>
-        </div>
-        <div class="kpi-monthly" style="margin-top:6px">
-          <div class="kpi-m-label">月間 マーケ施策</div>
-          <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sns-mkt-bar" style="width:0%;background:linear-gradient(90deg,#3a1a7a,#7040c0)"></div></div>
-          <div class="kpi-m-nums" id="kpi-sns-mkt-nums" style="color:#9070c0">-/20件</div>
-        </div>
-        <div class="kpi-daily">
-          <div class="kpi-d-label">デイリー</div>
-          <div class="kpi-d-item"><span id="kpi-sn-edu" class="kpi-chk-ng">◯</span> 教育コンテンツ</div>
-          <div class="kpi-d-item"><span id="kpi-sn-mkt" class="kpi-chk-ng">◯</span> マーケ施策</div>
-        </div>
+        <div class="kpi-sched" id="kpi-sched-newbiz"></div>
       </div>
     </div>
   </div>
   </div><!-- /game-col -->
   <div class="sidebar">
-    <div class="panel">
-      <div class="panel-title">🎬 台本骨子を今すぐ生成</div>
-      <input id="theme-input" class="theme-input" placeholder="テーマ（例：年金だけでは足りない）" value="年金だけでは足りないと気づいた日">
-      <button id="run-btn" class="btn btn-green" onclick="runManual()">▶ 今すぐ台本骨子を生成</button>
-      <div class="script-desc">① リサーチャーがテーマを分析 → ② 脚本家が6フェーズ台本骨子を出力。成果物は下の「幸子チャンネル」タブに表示されます。（毎日9:00に自動生成もあり）</div>
-    </div>
-    <div class="kikuchi-panel">
-      <div class="kikuchi-title">👤 菊地（外注）進捗 <button class="btn-kk-refresh" onclick="pollKikuchi()" title="進捗を再取得">🔄</button></div>
-      <div class="kikuchi-ep" id="kk-episode">読み込み中...</div>
-      <div class="kikuchi-due" id="kk-due"></div>
-      <div class="progress-bar-bg"><div class="progress-bar-fill" id="kk-bar" style="width:0%"></div></div>
-      <div class="progress-text" id="kk-pct">0%</div>
-    </div>
-    <div class="note-roadmap-panel">
-      <div class="note-roadmap-title">📝 note 30日ロードマップ <button class="btn-kk-refresh" onclick="pollNoteRoadmap()" title="進捗を再取得">🔄</button></div>
-      <div class="progress-bar-bg"><div class="progress-bar-fill note" id="nr-bar" style="width:0%"></div></div>
-      <div class="progress-text note" id="nr-pct">0/0本 (0%)</div>
-      <div class="note-roadmap-next" id="nr-today" style="color:#fbbf24;margin-top:3px">読み込み中...</div>
-      <div class="note-roadmap-next" id="nr-next" style="margin-top:2px">-</div>
-    </div>
     <div class="panel">
       <div class="panel-title">📥 承認待ちキュー</div>
       <div class="tab-bar">
@@ -770,30 +766,15 @@ let _noteModalId='';
 function previewNote(id){_noteModalId=id;fetch('/api/note_body/'+id).then(r=>r.json()).then(data=>{document.getElementById('modal-title').value=data.title||'';document.getElementById('modal-body').value=data.body||'';document.getElementById('modal-approve-btn').onclick=()=>{approveItem('note_drafts',id);closeModal();};document.getElementById('modal-reject-btn').onclick=()=>{rejectItem('note_drafts',id);closeModal();};document.getElementById('modal-save-btn').onclick=()=>saveNoteEdit(id);document.getElementById('note-modal').classList.add('open');}).catch(()=>{});}
 function saveNoteEdit(id){const title=document.getElementById('modal-title').value.trim();const body=document.getElementById('modal-body').value.trim();fetch('/api/edit_pending',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'note_drafts',id,title,body})}).then(()=>{const nt=document.getElementById('nt-'+id);if(nt)nt.textContent=title;}).catch(()=>{});}
 function closeModal(){document.getElementById('note-modal').classList.remove('open');}
-function updateKikuchi(data){if(!data||data.error)return;document.getElementById('kk-episode').textContent=data.episode||'-';document.getElementById('kk-due').textContent=data.due?`納期: ${data.due}  ${data.status||''}`:'';const pct=data.progress||0;document.getElementById('kk-bar').style.width=pct+'%';document.getElementById('kk-pct').textContent=`${pct}% (${data.done||0}/${data.total||0}タスク)`;}
+function updateKikuchi(data){
+  if(!data||data.error)return;
+  const ep=document.getElementById('kpi-kk-ep');if(ep)ep.textContent=data.episode||'-';
+  const pct=data.progress||0;
+  const bar=document.getElementById('kpi-kk-bar');if(bar)bar.style.width=pct+'%';
+  const txt=document.getElementById('kpi-kk-pct');if(txt)txt.textContent=`${pct}% (${data.done||0}/${data.total||0}タスク)`;
+}
 function pollKikuchi(){fetch('/api/kikuchi_progress').then(r=>r.json()).then(updateKikuchi).catch(()=>{});}
 pollKikuchi(); setInterval(pollKikuchi,300000);
-
-function updateNoteRoadmap(data){
-  if(!data||data.error)return;
-  const pct=data.progress||0;
-  document.getElementById('nr-bar').style.width=pct+'%';
-  document.getElementById('nr-pct').textContent=`${data.done||0}/${data.total||0}本 (${pct}%)`;
-  // 今日10:30に生成される記事
-  const todayEl=document.getElementById('nr-today');
-  if(data.today_title&&data.today_title!=='-'){
-    todayEl.textContent=`▶ 今日(10:30): ${data.today_date} 「${data.today_title}」`;
-    todayEl.style.color='#fbbf24';
-  } else {
-    todayEl.textContent='今日の予定: なし（全完了 or 未来日付）';
-    todayEl.style.color='#5a8a5a';
-  }
-  // 次の未完了記事
-  const next=data.next_date&&data.next_date!=='-'?`次: ${data.next_date} 「${data.next_title||''}」`:'全記事完了 🎉';
-  document.getElementById('nr-next').textContent=next;
-}
-function pollNoteRoadmap(){fetch('/api/note_roadmap_progress').then(r=>r.json()).then(updateNoteRoadmap).catch(()=>{});}
-pollNoteRoadmap(); setInterval(pollNoteRoadmap,300000);
 
 function updateMarketingInsights(insights){
   const el=document.getElementById('insight-list');
@@ -808,27 +789,37 @@ function pollMarketingInsights(){fetch('/api/marketing_insights').then(r=>r.json
 pollMarketingInsights(); setInterval(pollMarketingInsights,600000);
 window._updateUI=function(data){
   const sb=document.getElementById('status-bar');
-  if(data.running){sb.textContent='⚡ RUNNING';sb.style.color='#fbbf24';}else{sb.textContent='●  IDLE';sb.style.color='#4a8a4a';}
-  const btn=document.getElementById('run-btn');btn.disabled=data.running;btn.className=data.running?'btn btn-disabled':'btn btn-green';btn.textContent=data.running?'⏳ 実行中...':'▶ 脚本エージェント起動';
+  if(sb){if(data.running){sb.textContent='⚡ RUNNING';sb.style.color='#fbbf24';}else{sb.textContent='●  IDLE';sb.style.color='#4a8a4a';}}
   const xp=data.pending?.x_posts||[],np=data.pending?.note_drafts||[];
-  document.getElementById('x-pending-count').textContent=xp.length;
-  document.getElementById('note-pending-count').textContent=np.length;
+  const xpc=document.getElementById('x-pending-count');if(xpc)xpc.textContent=xp.length;
+  const npc=document.getElementById('note-pending-count');if(npc)npc.textContent=np.length;
   renderPendingX(xp);renderPendingNote(np);
   const xa=(data.approved?.x_posts||[]).filter(p=>!p.posted).length;
   const na=(data.approved?.note_drafts||[]).filter(d=>!d.published).length;
-  document.getElementById('x-approved-count').textContent=xa;
-  document.getElementById('note-approved-count').textContent=na;
-  if(data.schedule?.length)document.getElementById('schedule-list').innerHTML=data.schedule.map(s=>`<div class="sched-item" style="flex-direction:column;align-items:flex-start;gap:2px"><div style="display:flex;width:100%;align-items:center;gap:4px"><span class="sched-name">${escHtml(s.name)}</span><span class="sched-next">${escHtml(s.next_run)}</span><button class="btn-trigger" onclick="triggerJob('${s.id}')">▶</button></div>${s.subtitle?`<div style="font-size:10px;color:#fbbf24;padding-left:2px">${escHtml(s.subtitle)}</div>`:''}</div>`).join('');
-  if(data.logs?.length)document.getElementById('log-list').innerHTML=data.logs.slice(0,15).map(l=>`<div class="log-item"><span class="log-time">${l.time}</span><span class="log-msg">${escHtml(l.msg)}</span></div>`).join('');
-  if(data.result)document.getElementById('result-box').textContent=data.result;
+  const xac=document.getElementById('x-approved-count');if(xac)xac.textContent=xa;
+  const nac=document.getElementById('note-approved-count');if(nac)nac.textContent=na;
+  if(data.schedule?.length){
+    // サイドバー全体スケジュール
+    const sl=document.getElementById('schedule-list');
+    if(sl)sl.innerHTML=data.schedule.filter(s=>s.dept).map(s=>`<div class="sched-item" style="flex-direction:column;align-items:flex-start;gap:2px"><div style="display:flex;width:100%;align-items:center;gap:4px"><span class="sched-name">${escHtml(s.name)}</span><span class="sched-next">${escHtml(s.next_run)}</span><button class="btn-trigger" onclick="triggerJob('${s.id}')">▶</button></div>${s.subtitle?`<div style="font-size:10px;color:#fbbf24;padding-left:2px">${escHtml(s.subtitle)}</div>`:''}</div>`).join('');
+    // KPIカード別スケジュール
+    const deptJobs={sachiko:[],content:[],sales:[],tenshi:[],newbiz:[]};
+    data.schedule.forEach(s=>{if(s.dept&&deptJobs[s.dept])deptJobs[s.dept].push(s);});
+    Object.entries(deptJobs).forEach(([dept,jobs])=>{
+      const el=document.getElementById('kpi-sched-'+dept);if(!el)return;
+      if(!jobs.length){el.innerHTML='';return;}
+      el.innerHTML='<div class="kpi-d-label" style="margin-top:4px;font-size:9px;color:#3a6a3a">次回スケジュール</div>'+
+        jobs.slice(0,4).map(s=>`<div class="sched-item" style="padding:2px 4px"><span class="sched-name" style="font-size:9px">${escHtml(s.name.replace(/（毎日[^）]*）/g,'').replace(/（[^）]*）/g,'').slice(0,18))}</span><span class="sched-next" style="font-size:9px">${escHtml(s.next_run.slice(-8))}</span><button class="btn-trigger" style="font-size:8px;padding:1px 3px" onclick="triggerJob('${s.id}')">▶</button></div>`).join('');
+    });
+  }
+  if(data.logs?.length){const ll=document.getElementById('log-list');if(ll)ll.innerHTML=data.logs.slice(0,15).map(l=>`<div class="log-item"><span class="log-time">${l.time}</span><span class="log-msg">${escHtml(l.msg)}</span></div>`).join('');}
   if(data.kikuchi_progress)updateKikuchi(data.kikuchi_progress);
-  if(data.note_roadmap_progress)updateNoteRoadmap(data.note_roadmap_progress);
   if(data.marketing_insights)updateMarketingInsights(data.marketing_insights);
 };
-function runManual(){const theme=document.getElementById('theme-input').value.trim();if(!theme)return;fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({theme})}).catch(()=>{});}
+function runManual(){const el=document.getElementById('theme-input');if(!el)return;const theme=el.value.trim();if(!theme)return;fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({theme})}).catch(()=>{});}
 function triggerJob(id){fetch('/api/trigger/'+id,{method:'POST'}).catch(()=>{});}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-document.getElementById('theme-input').addEventListener('keydown',e=>{if(e.key==='Enter')runManual();});
+const _themeInput=document.getElementById('theme-input');if(_themeInput)_themeInput.addEventListener('keydown',e=>{if(e.key==='Enter')runManual();});
 document.getElementById('note-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
 // ── Chat ─────────────────────────────────────────────────────────────────────
@@ -941,7 +932,7 @@ setInterval(fetchResults, 300000);
 // ── KPI ──────────────────────────────────────────────────────────────────────
 function fetchKpi() {
   fetch('/api/kpi').then(r=>r.json()).then(data=>{
-    document.getElementById('kpi-updated').textContent = `最終更新: ${data.last_updated||'-'}`;
+    const upd=document.getElementById('kpi-updated');if(upd)upd.textContent=`最終更新: ${data.last_updated||'-'}`;
     function pct(v,t){return Math.min(100,Math.round((v||0)/(t||1)*100));}
     function bar(id,v,t){const el=document.getElementById(id);if(el)el.style.width=pct(v,t)+'%';}
     function num(id,v,t,unit){const el=document.getElementById(id);if(el)el.textContent=`${v||0}/${t}${unit} (${pct(v,t)}%)`;}
@@ -950,14 +941,25 @@ function fetchKpi() {
     const s=data.sachiko||{};
     bar('kpi-sachiko-bar',s.monthly_drafts,s.monthly_target||6);
     num('kpi-sachiko-nums',s.monthly_drafts,s.monthly_target||6,'本');
+    bar('kpi-tieup-bar',s.monthly_tieup,s.monthly_tieup_target||30);
+    num('kpi-tieup-nums',s.monthly_tieup,s.monthly_tieup_target||30,'件');
+    bar('kpi-sponsor-bar',s.monthly_sponsor,s.monthly_sponsor_target||20);
+    num('kpi-sponsor-nums',s.monthly_sponsor,s.monthly_sponsor_target||20,'件');
     chk('kpi-sd-draft',s.daily_draft);
+    chk('kpi-sd-tieup',s.daily_tieup);
+    chk('kpi-sd-sponsor',s.daily_sponsor);
 
     const c=data.content||{};
     bar('kpi-note-bar',c.monthly_note,c.monthly_note_target||30);
     num('kpi-note-nums',c.monthly_note,c.monthly_note_target||30,'本');
     bar('kpi-x-bar',c.monthly_x,c.monthly_x_target||150);
     num('kpi-x-nums',c.monthly_x,c.monthly_x_target||150,'件');
+    bar('kpi-edu-bar',c.monthly_education,c.monthly_education_target||20);
+    num('kpi-edu-nums',c.monthly_education,c.monthly_education_target||20,'件');
+    bar('kpi-mkt-bar',c.monthly_marketing,c.monthly_marketing_target||20);
+    num('kpi-mkt-nums',c.monthly_marketing,c.monthly_marketing_target||20,'件');
     chk('kpi-cd-note',c.daily_note); chk('kpi-cd-x',c.daily_x);
+    chk('kpi-cd-edu',c.daily_education); chk('kpi-cd-mkt',c.daily_marketing);
 
     const sa=data.sales||{};
     bar('kpi-sales-bar',sa.monthly_lists,sa.monthly_target||30);
@@ -970,18 +972,9 @@ function fetchKpi() {
     chk('kpi-td-analysis',t.daily_analysis);
 
     const n=data.newbiz||{};
-    bar('kpi-newbiz-tieup-bar',n.monthly_tieup,n.monthly_tieup_target||30);
-    num('kpi-newbiz-tieup-nums',n.monthly_tieup,n.monthly_tieup_target||30,'件');
     bar('kpi-newbiz-yt-bar',n.monthly_yt,n.monthly_yt_target||20);
     num('kpi-newbiz-yt-nums',n.monthly_yt,n.monthly_yt_target||20,'件');
-    chk('kpi-nd-tieup',n.daily_tieup); chk('kpi-nd-yt',n.daily_yt);
-
-    const sn=data.sns||{};
-    bar('kpi-sns-edu-bar',sn.monthly_education,sn.monthly_education_target||20);
-    num('kpi-sns-edu-nums',sn.monthly_education,sn.monthly_education_target||20,'件');
-    bar('kpi-sns-mkt-bar',sn.monthly_marketing,sn.monthly_marketing_target||20);
-    num('kpi-sns-mkt-nums',sn.monthly_marketing,sn.monthly_marketing_target||20,'件');
-    chk('kpi-sn-edu',sn.daily_education); chk('kpi-sn-mkt',sn.daily_marketing);
+    chk('kpi-nd-yt',n.daily_yt);
   }).catch(()=>{});
 }
 fetchKpi();
