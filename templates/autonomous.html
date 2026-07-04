@@ -110,6 +110,24 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 .ai-instruction { flex:1; background:#0a0a1a; border:1px solid #4a2a7a; color:#cc99ff; padding:5px 7px; font-size:11px; border-radius:3px; }
 .btn-ai-send { background:#3a1a5a; color:#cc99ff; border:1px solid #7a3aaa; border-radius:2px; cursor:pointer; font-size:11px; padding:4px 8px; white-space:nowrap; }
 .btn-ai-send:hover { background:#5a2a8a; }
+/* ── KPIダッシュボード ── */
+.kpi-section { width:100%; max-width:1720px; margin-top:10px; }
+.kpi-header  { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.kpi-title   { font-size:12px; font-weight:700; color:#a0d0a0; letter-spacing:1px; text-transform:uppercase; }
+.kpi-updated { font-size:10px; color:#4a7a4a; }
+.kpi-grid    { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.kpi-card    { background:#0d150d; border:1px solid #1e4a1e; border-radius:5px; padding:10px; }
+.kpi-card-title { font-size:11px; font-weight:700; color:#7aca6a; margin-bottom:8px; border-bottom:1px solid #1e3a1e; padding-bottom:5px; }
+.kpi-monthly { margin-bottom:8px; }
+.kpi-m-label { font-size:10px; color:#5a8a5a; margin-bottom:3px; }
+.kpi-m-bar   { background:#0a1a0a; border:1px solid #1a3a1a; border-radius:2px; height:10px; overflow:hidden; margin-bottom:2px; }
+.kpi-m-fill  { height:100%; background:linear-gradient(90deg,#1a6a2a,#40b040); transition:width 0.5s; border-radius:2px; }
+.kpi-m-nums  { font-size:11px; color:#8aca8a; text-align:right; }
+.kpi-daily   { display:flex; flex-direction:column; gap:3px; }
+.kpi-d-label { font-size:10px; color:#5a8a5a; margin-bottom:2px; }
+.kpi-d-item  { display:flex; align-items:center; gap:5px; font-size:11px; }
+.kpi-chk-ok  { color:#34d399; }
+.kpi-chk-ng  { color:#4a6a4a; }
 /* ── 成果物ビューア（下部全幅）── */
 .results-section { width:100%; max-width:1720px; margin-top:10px; background:#0d150d; border:1px solid #1e4a1e; border-radius:6px; overflow:hidden; }
 .results-header { display:flex; align-items:center; gap:0; border-bottom:1px solid #1e4a1e; background:#0a110a; flex-wrap:wrap; }
@@ -188,7 +206,9 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
       <div class="chat-input-row">
         <input id="chat-input" class="chat-input" placeholder="メッセージを入力...">
         <button onclick="sendChat()" class="btn-trigger" style="padding:5px 9px;font-size:9px;white-space:nowrap">送信</button>
+        <button onclick="saveInstruct()" class="btn-trigger" style="padding:5px 7px;font-size:9px;white-space:nowrap;background:#2a1a4a;border-color:#6a3a9a;color:#cc99ff" title="次回ジョブ実行時に反映される指示として保存">📌</button>
       </div>
+      <div id="instruct-saved" style="display:none;font-size:10px;color:#fbbf24;margin-top:3px">📌 指示を保存しました（次回ジョブ実行時に反映）</div>
     </div>
     <div class="status-bar" id="status-bar">●  IDLE</div>
   </div>
@@ -198,6 +218,77 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 <div class="insight-panel">
   <div class="insight-title">💡 マーケインサイト（月・水・金 自動リサーチ） <button class="btn-kk-refresh" onclick="pollMarketingInsights()" title="最新を取得">🔄</button></div>
   <div id="insight-list"><div style="color:#5a5a8a;font-size:11px">読み込み中...</div></div>
+</div>
+
+<!-- ── KPIダッシュボード ── -->
+<div class="kpi-section">
+  <div class="kpi-header">
+    <span class="kpi-title">📊 部門KPI</span>
+    <span class="kpi-updated" id="kpi-updated">読み込み中...</span>
+    <button class="results-refresh" style="margin-left:auto" onclick="fetchKpi()">⟳ 更新</button>
+  </div>
+  <div class="kpi-grid">
+    <!-- 幸子チャンネル部 -->
+    <div class="kpi-card">
+      <div class="kpi-card-title">🎬 幸子チャンネル部</div>
+      <div class="kpi-monthly">
+        <div class="kpi-m-label">月間 台本骨子</div>
+        <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sachiko-bar" style="width:0%"></div></div>
+        <div class="kpi-m-nums" id="kpi-sachiko-nums">-/-本</div>
+      </div>
+      <div class="kpi-daily">
+        <div class="kpi-d-label">デイリー</div>
+        <div class="kpi-d-item"><span id="kpi-sd-draft" class="kpi-chk-ng">◯</span> 台本骨子生成</div>
+        <div class="kpi-d-item"><span id="kpi-sd-x" class="kpi-chk-ng">◯</span> Xコンテンツ</div>
+      </div>
+    </div>
+    <!-- コンテンツ部 -->
+    <div class="kpi-card">
+      <div class="kpi-card-title">📝 コンテンツ部</div>
+      <div class="kpi-monthly">
+        <div class="kpi-m-label">月間 note記事</div>
+        <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-note-bar" style="width:0%"></div></div>
+        <div class="kpi-m-nums" id="kpi-note-nums">-/-本</div>
+      </div>
+      <div class="kpi-monthly" style="margin-top:6px">
+        <div class="kpi-m-label">月間 X投稿承認</div>
+        <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-x-bar" style="width:0%;background:linear-gradient(90deg,#4a1a9a,#9a50e0)"></div></div>
+        <div class="kpi-m-nums" id="kpi-x-nums" style="color:#aa80ff">-/-件</div>
+      </div>
+      <div class="kpi-daily">
+        <div class="kpi-d-label">デイリー</div>
+        <div class="kpi-d-item"><span id="kpi-cd-note" class="kpi-chk-ng">◯</span> note記事ドラフト</div>
+        <div class="kpi-d-item"><span id="kpi-cd-x" class="kpi-chk-ng">◯</span> X投稿7件生成</div>
+      </div>
+    </div>
+    <!-- 営業部 -->
+    <div class="kpi-card">
+      <div class="kpi-card-title">📊 営業部</div>
+      <div class="kpi-monthly">
+        <div class="kpi-m-label">月間 営業リスト</div>
+        <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-sales-bar" style="width:0%;background:linear-gradient(90deg,#6a1a1a,#cc4040)"></div></div>
+        <div class="kpi-m-nums" id="kpi-sales-nums" style="color:#ff9090">-/-件</div>
+      </div>
+      <div class="kpi-daily">
+        <div class="kpi-d-label">デイリー</div>
+        <div class="kpi-d-item"><span id="kpi-sd-list" class="kpi-chk-ng">◯</span> 見込み客10社</div>
+        <div class="kpi-d-item"><span id="kpi-sd-prop" class="kpi-chk-ng">◯</span> 提案書3社</div>
+      </div>
+    </div>
+    <!-- 転職アニメ部 -->
+    <div class="kpi-card">
+      <div class="kpi-card-title">🏢 転職アニメ部</div>
+      <div class="kpi-monthly">
+        <div class="kpi-m-label">月間 分析レポート</div>
+        <div class="kpi-m-bar"><div class="kpi-m-fill" id="kpi-tenshi-bar" style="width:0%;background:linear-gradient(90deg,#1a4a5a,#30a0c0)"></div></div>
+        <div class="kpi-m-nums" id="kpi-tenshi-nums" style="color:#80d0e0">-/-件</div>
+      </div>
+      <div class="kpi-daily">
+        <div class="kpi-d-label">デイリー</div>
+        <div class="kpi-d-item"><span id="kpi-td-analysis" class="kpi-chk-ng">◯</span> 転職アニメ分析</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ── 成果物ビューア ── -->
@@ -244,16 +335,16 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
 // ── Layout constants ─────────────────────────────────────────────────────────
-const CW = 1380, CH = 530;
-
-// 6 rooms: sachiko | content | sales | tenshi | bizdev | external
+// 7 rooms: sachiko | content | sales | tenshi | bizdev | sns | external
+const CW = 1570, CH = 530;
 const ROOMS = {
   sachiko:  {x:8,    y:38, w:220, h:454},
   content:  {x:242,  y:38, w:300, h:454},
   sales:    {x:556,  y:38, w:195, h:454},
   tenshi:   {x:765,  y:38, w:220, h:454},
   bizdev:   {x:999,  y:38, w:170, h:454},
-  external: {x:1183, y:38, w:185, h:454},
+  sns:      {x:1183, y:38, w:185, h:454},
+  external: {x:1382, y:38, w:175, h:454},
 };
 const WALK_BOUNDS = {
   sachiko:  {x1:25,  y1:95, x2:220, y2:478},
@@ -261,7 +352,8 @@ const WALK_BOUNDS = {
   sales:    {x1:573, y1:95, x2:743, y2:478},
   tenshi:   {x1:782, y1:95, x2:977, y2:478},
   bizdev:   {x1:1016,y1:95, x2:1161,y2:478},
-  external: {x1:1200,y1:95, x2:1360,y2:478},
+  sns:      {x1:1200,y1:95, x2:1360,y2:478},
+  external: {x1:1400,y1:95, x2:1550,y2:478},
 };
 const DEPT = {
   sachiko:  {wall:0x2d8a4a, floor1:0xc4985a, floor2:0xb8894e, label:'幸子チャンネル部'},
@@ -269,6 +361,7 @@ const DEPT = {
   sales:    {wall:0xaa4422, floor1:0xc49060, floor2:0xb48050, label:'営業部門'},
   tenshi:   {wall:0x1a8a7a, floor1:0xb0a068, floor2:0xa09058, label:'転職アニメ部'},
   bizdev:   {wall:0x9a6a1a, floor1:0xc0a060, floor2:0xb09050, label:'事業開発部'},
+  sns:      {wall:0x9a2a7a, floor1:0xb07090, floor2:0xa06080, label:'SNSマネタイズチーム'},
   external: {wall:0x4a5a8a, floor1:0xa09080, floor2:0x908070, label:'外注管理'},
 };
 const AGENTS_CFG = {
@@ -290,8 +383,13 @@ const AGENTS_CFG = {
   tenshi_scriptwriter: {x:940,  y:360, name:'転職脚本家',        dept:'tenshi'},
   // 事業開発
   tieup_researcher:    {x:1085, y:265, name:'タイアップ探索',    dept:'bizdev'},
-  // 外注
-  kikuchi:             {x:1272, y:275, name:'菊地（外注）',      dept:'external'},
+  // SNSマネタイズチーム
+  sns_planner:         {x:1240, y:180, name:'SNS企画担当',       dept:'sns'},
+  sns_educator:        {x:1280, y:340, name:'SNS教育担当',       dept:'sns'},
+  sns_marketer:        {x:1340, y:240, name:'SNSマーケ担当',     dept:'sns'},
+  // 外注・秘書
+  secretary:           {x:1440, y:180, name:'秘書',              dept:'external'},
+  kikuchi:             {x:1480, y:340, name:'菊地（外注）',       dept:'external'},
 };
 const SC = {idle:0x6b7280, working:0xfbbf24, done:0x34d399, error:0xef4444};
 const S = 3;
@@ -347,8 +445,8 @@ class OfficeScene extends Phaser.Scene {
     });
 
     // Wall dividers
-    const wallXs = [228, 542, 751, 985, 1169];
-    const wallW  = [14,  14,  14,  14,  14];
+    const wallXs = [228, 542, 751, 985, 1169, 1368];
+    const wallW  = [14,  14,  14,  14,  14,   14];
     wallXs.forEach((wx,i) => {
       g.fillStyle(0x050808); g.fillRect(wx,38,wallW[i],454);
       g.fillStyle(0x111111,0.8); g.fillRect(wx+1,38,2,454);
@@ -596,6 +694,8 @@ function drawBookshelf(g,x,y){
 function darken(color,f){return(Math.floor(((color>>16)&0xff)*f)<<16)|(Math.floor(((color>>8)&0xff)*f)<<8)|Math.floor((color&0xff)*f);}
 
 new Phaser.Game({type:Phaser.AUTO,width:CW,height:CH,backgroundColor:'#040707',parent:'game-container',pixelArt:true,roundPixels:true,antialias:false,scene:[OfficeScene]});
+// canvas幅を変数に合わせる（CSSで制御）
+document.getElementById('game-container').style.maxWidth = CW+'px';
 
 // ── Sidebar UI ───────────────────────────────────────────────────────────────
 let _currentTab='x';
@@ -798,6 +898,73 @@ function showFile(idx) {
 // 初回ロード + 5分ごと自動更新
 fetchResults();
 setInterval(fetchResults, 300000);
+
+// ── KPI ──────────────────────────────────────────────────────────────────────
+function fetchKpi() {
+  fetch('/api/kpi').then(r=>r.json()).then(data=>{
+    const lu = data.last_updated||'-';
+    document.getElementById('kpi-updated').textContent = `最終更新: ${lu}`;
+    const s = data.sachiko||{};
+    const st = s.monthly_target||4;
+    const sp = Math.min(100,Math.round((s.monthly_drafts||0)/st*100));
+    document.getElementById('kpi-sachiko-bar').style.width = sp+'%';
+    document.getElementById('kpi-sachiko-nums').textContent = `${s.monthly_drafts||0}/${st}本 (${sp}%)`;
+    document.getElementById('kpi-sd-draft').textContent = s.daily_draft ? '✓' : '◯';
+    document.getElementById('kpi-sd-draft').className = s.daily_draft ? 'kpi-chk-ok' : 'kpi-chk-ng';
+    document.getElementById('kpi-sd-x').textContent = s.daily_x ? '✓' : '◯';
+    document.getElementById('kpi-sd-x').className = s.daily_x ? 'kpi-chk-ok' : 'kpi-chk-ng';
+
+    const c = data.content||{};
+    const cnt = c.monthly_note_target||30;
+    const cnp = Math.min(100,Math.round((c.monthly_note||0)/cnt*100));
+    document.getElementById('kpi-note-bar').style.width = cnp+'%';
+    document.getElementById('kpi-note-nums').textContent = `${c.monthly_note||0}/${cnt}本 (${cnp}%)`;
+    const cxt = c.monthly_x_target||60;
+    const cxp = Math.min(100,Math.round((c.monthly_x||0)/cxt*100));
+    document.getElementById('kpi-x-bar').style.width = cxp+'%';
+    document.getElementById('kpi-x-nums').textContent = `${c.monthly_x||0}/${cxt}件 (${cxp}%)`;
+    document.getElementById('kpi-cd-note').textContent = c.daily_note ? '✓' : '◯';
+    document.getElementById('kpi-cd-note').className = c.daily_note ? 'kpi-chk-ok' : 'kpi-chk-ng';
+    document.getElementById('kpi-cd-x').textContent = c.daily_x ? '✓' : '◯';
+    document.getElementById('kpi-cd-x').className = c.daily_x ? 'kpi-chk-ok' : 'kpi-chk-ng';
+
+    const sa = data.sales||{};
+    const sat = sa.monthly_target||20;
+    const sap = Math.min(100,Math.round((sa.monthly_lists||0)/sat*100));
+    document.getElementById('kpi-sales-bar').style.width = sap+'%';
+    document.getElementById('kpi-sales-nums').textContent = `${sa.monthly_lists||0}/${sat}件 (${sap}%)`;
+    document.getElementById('kpi-sd-list').textContent = sa.daily_list ? '✓' : '◯';
+    document.getElementById('kpi-sd-list').className = sa.daily_list ? 'kpi-chk-ok' : 'kpi-chk-ng';
+    document.getElementById('kpi-sd-prop').textContent = sa.daily_proposal ? '✓' : '◯';
+    document.getElementById('kpi-sd-prop').className = sa.daily_proposal ? 'kpi-chk-ok' : 'kpi-chk-ng';
+
+    const t = data.tenshi||{};
+    const tt = t.monthly_target||20;
+    const tp = Math.min(100,Math.round((t.monthly_analysis||0)/tt*100));
+    document.getElementById('kpi-tenshi-bar').style.width = tp+'%';
+    document.getElementById('kpi-tenshi-nums').textContent = `${t.monthly_analysis||0}/${tt}件 (${tp}%)`;
+    document.getElementById('kpi-td-analysis').textContent = t.daily_analysis ? '✓' : '◯';
+    document.getElementById('kpi-td-analysis').className = t.daily_analysis ? 'kpi-chk-ok' : 'kpi-chk-ng';
+  }).catch(()=>{});
+}
+fetchKpi();
+setInterval(fetchKpi, 180000);
+
+// ── エージェントへの指示保存 ───────────────────────────────────────────────────
+function saveInstruct() {
+  const msg = document.getElementById('chat-input').value.trim();
+  if (!msg) return;
+  const agentId = _chatAgentId || 'global';
+  fetch('/api/instruct', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({agent_id: agentId, instruction: msg})})
+  .then(r=>r.json()).then(data=>{
+    if (data.ok) {
+      const el = document.getElementById('instruct-saved');
+      el.style.display = 'block';
+      setTimeout(()=>{ el.style.display='none'; }, 4000);
+    }
+  }).catch(()=>{});
+}
 </script>
 </body>
 </html>

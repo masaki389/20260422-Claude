@@ -13,6 +13,7 @@ import subprocess
 import json
 import uuid
 import random
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -114,6 +115,37 @@ CONTEXT_DIR   = BASE_DIR / "shared-context"
 
 NOTE_ROADMAP_SPREADSHEET_ID = "1xHIRrC4e4eJGuvnE84n7xERZYEzu4SApTroB4xYknM0"
 NOTE_ROADMAP_GID            = 1883610657
+DIRECTIVES_PATH             = _DATA_DIR / "agent_directives.json"
+
+
+def _load_directives() -> dict:
+    """agent_directives.json を読み込む。{agent_id: ["指示1", "指示2", ...]}"""
+    if DIRECTIVES_PATH.exists():
+        try:
+            return json.loads(DIRECTIVES_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def _save_directive(agent_id: str, instruction: str):
+    """エージェントへの指示を永続化する。"""
+    directives = _load_directives()
+    directives.setdefault(agent_id, [])
+    entry = {"text": instruction, "saved_at": datetime.now(JST).strftime("%Y-%m-%d %H:%M")}
+    directives[agent_id].insert(0, entry)
+    directives[agent_id] = directives[agent_id][:10]  # 最新10件まで保持
+    DIRECTIVES_PATH.write_text(json.dumps(directives, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _get_agent_directive_text(agent_id: str) -> str:
+    """agent_idに紐づく有効な指示をプロンプト用テキストに変換して返す。"""
+    directives = _load_directives()
+    items = directives.get(agent_id, []) + directives.get("global", [])
+    if not items:
+        return ""
+    lines = [f"・{d['text']}" for d in items[:5]]
+    return "\n【監督からの指示（優先順位：最高）】\n" + "\n".join(lines) + "\n\n"
 
 
 def _get_sheets_client():
@@ -274,13 +306,26 @@ state = {
         "tieup_researcher":    {"name": "タイアップ探索",      "dept": "newbiz",   "status": "idle", "task": ""},
         "ip_strategist":       {"name": "IP戦略家",            "dept": "newbiz",   "status": "idle", "task": ""},
         "bizdev_researcher":   {"name": "外部マネタイズ探索",   "dept": "newbiz",   "status": "idle", "task": ""},
+        # SNSマネタイズチーム
+        "sns_planner":         {"name": "SNS企画担当",          "dept": "sns",      "status": "idle", "task": ""},
+        "sns_educator":        {"name": "SNS教育担当",          "dept": "sns",      "status": "idle", "task": ""},
+        "sns_marketer":        {"name": "SNSマーケ担当",        "dept": "sns",      "status": "idle", "task": ""},
+        # 秘書
+        "secretary":           {"name": "秘書",                 "dept": "external", "status": "idle", "task": ""},
         # 外注
-        "kikuchi":             {"name": "菊地（外注）",        "dept": "external", "status": "idle", "task": ""},
+        "kikuchi":             {"name": "菊地（外注）",          "dept": "external", "status": "idle", "task": ""},
     },
     "logs": [],
     "kikuchi_progress":       {"episode": "-", "progress": 0, "status": "-", "due": "-"},
     "note_roadmap_progress":  {"done": 0, "total": 0, "progress": 0, "next_title": "-", "next_date": "-"},
     "marketing_insights":     [],
+    "kpi": {
+        "sachiko":  {"monthly_drafts": 0, "monthly_target": 4,  "daily_draft": False, "daily_x": False},
+        "content":  {"monthly_note": 0,   "monthly_note_target": 30, "monthly_x": 0, "monthly_x_target": 60, "daily_note": False, "daily_x": False},
+        "sales":    {"monthly_lists": 0,  "monthly_target": 20, "daily_list": False,  "daily_proposal": False},
+        "tenshi":   {"monthly_analysis": 0, "monthly_target": 20, "daily_analysis": False},
+        "last_updated": "",
+    },
 }
 
 
@@ -308,10 +353,21 @@ def make_agent(role, goal, backstory):
                  verbose=False, allow_delegation=False, llm=LLM)
 
 
-def run_single(description, expected_output, agent_obj) -> str:
-    task = Task(description=description, expected_output=expected_output, agent=agent_obj)
-    crew = Crew(agents=[agent_obj], tasks=[task], process=Process.sequential, verbose=False)
-    return str(crew.kickoff())
+def run_single(description, expected_output, agent_obj, max_retries=3) -> str:
+    for attempt in range(max_retries):
+        try:
+            task = Task(description=description, expected_output=expected_output, agent=agent_obj)
+            crew = Crew(agents=[agent_obj], tasks=[task], process=Process.sequential, verbose=False)
+            return str(crew.kickoff())
+        except Exception as e:
+            err = str(e)
+            is_overload = any(k in err for k in ("503", "UNAVAILABLE", "high demand", "overloaded", "quota"))
+            if is_overload and attempt < max_retries - 1:
+                wait_sec = 30 * (attempt + 1)
+                log(f"⏳ API高負荷 再試行({attempt+1}/{max_retries-1}) {wait_sec}秒後...")
+                time.sleep(wait_sec)
+                continue
+            raise
 
 
 def parse_x_posts(text: str) -> list[str]:
@@ -593,7 +649,9 @@ def job_generate_x_drafts():
         agent = make_agent_soul("x_writer")
         if strategy:
             agent.backstory = agent.backstory + f"\n\n最新戦略:\n{strategy[:1500]}"
+        directive_text = _get_agent_directive_text("x_writer")
         result = run_single(
+            directive_text +
             "X投稿を7件作成してください。SOUL.mdのゴール・ターゲット・テーマの柱に従うこと。\n"
             "テーマのローテーション必須（AI実績の数字・制作ノウハウ・一人会社リアル・逆張り・読者の悩みへの共感）\n"
             "各投稿140文字以内・絵文字あり・ハッシュタグ2〜3個。\n"
@@ -1222,6 +1280,129 @@ def job_bizdev_research():
         set_status("bizdev_researcher", "error", "エラー")
 
 
+# ─── Job: SNS企画担当 (月曜 10:00) ────────────────────────────────────────────
+def job_sns_planner():
+    today = datetime.now(JST)
+    month_label = today.strftime("%Y%m")
+    log("📅 SNS企画担当起動 — 月間コンテンツ企画生成", "sns_planner")
+    try:
+        set_status("sns_planner", "working", "月間企画カレンダー生成中...")
+        agent = make_agent_soul("sns_planner")
+        x_strategy = _read_strategy("x_strategy.md")[:800]
+        result = run_single(
+            f"今月（{today.strftime('%Y年%m月')}）のStudioOgawa SNSコンテンツ企画カレンダーを生成してください。\n\n"
+            "参考：X戦略直近レポート\n" + (x_strategy or "（なし）") + "\n\n"
+            "SOUL.mdのフォーマット通りに出力すること。"
+            "X（@obananapro）のテーマ柱5本・週別企画・月間スレッド1本・noteとの連動案を含めること。",
+            "月間コンテンツ企画カレンダー（Markdown）", agent)
+        set_status("sns_planner", "done", "月間企画完成 ✓")
+        _save_research(f"sns_plan_{month_label}.md", result, "content")
+        log(f"💾 月間企画: sns_plan_{month_label}.md", "sns_planner")
+        with lock:
+            state["result"] = result
+    except Exception as e:
+        log(f"❌ SNS企画エラー: {str(e)[:200]}")
+        set_status("sns_planner", "error", "エラー")
+
+
+# ─── Job: SNS教育コンテンツ (毎週水曜 11:00) ───────────────────────────────────
+def job_sns_educator():
+    today = datetime.now(JST).strftime("%Y%m%d")
+    log("📚 SNS教育担当起動 — 教育素材生成", "sns_educator")
+    try:
+        set_status("sns_educator", "working", "教育コンテンツ生成中...")
+        agent = make_agent_soul("sns_educator")
+        result = run_single(
+            "今週のStudioOgawa教育コンテンツ素材を生成してください。\n\n"
+            "SOUL.mdのフォーマット通りに：\n"
+            "①X用の共感投稿（ターゲットの言えない悩みを言語化した140文字）\n"
+            "②無料note素材（タイトル・冒頭フック・教育の流れ・有料noteへの誘導）\n"
+            "③LINE教育メッセージ素材（200文字）\n\n"
+            "売り込まず「この方法がないと損してますよ」と気づかせる視点で書くこと。",
+            "週次教育コンテンツ素材（Markdown）", agent)
+        set_status("sns_educator", "done", "教育素材完成 ✓")
+        _save_research(f"sns_education_{today}.md", result, "content")
+        log(f"💾 教育素材: sns_education_{today}.md", "sns_educator")
+        with lock:
+            state["result"] = result
+    except Exception as e:
+        log(f"❌ SNS教育エラー: {str(e)[:200]}")
+        set_status("sns_educator", "error", "エラー")
+
+
+# ─── Job: SNSマーケ担当 (毎週金曜 11:00) ────────────────────────────────────
+def job_sns_marketer():
+    today = datetime.now(JST).strftime("%Y%m%d")
+    log("📣 SNSマーケ担当起動 — 導線・販売設計レポート", "sns_marketer")
+    try:
+        set_status("sns_marketer", "working", "マーケ施策レポート生成中...")
+        agent = make_agent_soul("sns_marketer")
+        result = run_single(
+            "今週のStudioOgawaのSNS導線チェックと来週の販売施策を生成してください。\n\n"
+            "SOUL.mdのフォーマット通りに：\n"
+            "①今週の導線チェック（X→note誘導・無料→有料の流れ）\n"
+            "②今週の販売施策提案（優先度順）\n"
+            "③想定反論と切り返し（「高い」「自分にできるか不安」など）\n"
+            "④来週の重点KPI（X投稿のnote誘導数・note閲覧数目標）\n\n"
+            "StudioOgawa現状：幸子チャンネル95万再生・note教材販売準備中・月100万目標",
+            "SNSマーケ週次レポート（Markdown）", agent)
+        set_status("sns_marketer", "done", "マーケレポート完成 ✓")
+        _save_research(f"sns_marketing_{today}.md", result, "content")
+        log(f"💾 マーケレポート: sns_marketing_{today}.md", "sns_marketer")
+        with lock:
+            state["result"] = result
+    except Exception as e:
+        log(f"❌ SNSマーケエラー: {str(e)[:200]}")
+        set_status("sns_marketer", "error", "エラー")
+
+
+# ─── Job: KPI更新 (30分ごと) ─────────────────────────────────────────────────
+def job_kpi_update():
+    """各部門のKPIをファイルカウント・キュー状態から集計してstateに反映する。"""
+    now = datetime.now(JST)
+    today_str = now.strftime("%Y%m%d")
+    month_prefix = now.strftime("%Y%m")
+    try:
+        def count_this_month(pattern):
+            return sum(1 for f in RESEARCH_DIR.glob(pattern) if f.stem[-8:][:6] == month_prefix)
+
+        def exists_today(pattern):
+            return any(True for f in RESEARCH_DIR.glob(pattern) if today_str in f.name)
+
+        # 幸子
+        monthly_drafts = count_this_month("script_draft_*.txt")
+        daily_draft    = exists_today("script_draft_*.txt")
+        # 承認済みX投稿（今月）
+        approved = _load_queue(APPROVED_PATH)
+        monthly_x = len([p for p in approved["x_posts"] if p.get("approved_at", "").startswith(now.strftime("%Y-%m"))])
+        daily_x   = exists_today("sachiko_auto_*.txt")  # X生成ジョブ完了を代替指標として使用
+
+        # コンテンツ
+        nr = state.get("note_roadmap_progress", {})
+        monthly_note = nr.get("done", 0)
+        daily_note   = (nr.get("today_title", "-") != "-")
+
+        # 営業
+        monthly_lists    = count_this_month("sales_prospects_*.txt")
+        daily_list       = exists_today("sales_prospects_*.txt")
+        daily_proposal   = exists_today("proposals_*.txt")
+
+        # 転職
+        monthly_analysis = count_this_month("tenshi_analysis_*.txt")
+        daily_analysis   = exists_today("tenshi_analysis_*.txt")
+
+        with lock:
+            state["kpi"] = {
+                "sachiko":  {"monthly_drafts": monthly_drafts, "monthly_target": 4,  "daily_draft": daily_draft, "daily_x": daily_x},
+                "content":  {"monthly_note": monthly_note, "monthly_note_target": 30, "monthly_x": monthly_x, "monthly_x_target": 60, "daily_note": daily_note, "daily_x": daily_x},
+                "sales":    {"monthly_lists": monthly_lists, "monthly_target": 20, "daily_list": daily_list, "daily_proposal": daily_proposal},
+                "tenshi":   {"monthly_analysis": monthly_analysis, "monthly_target": 20, "daily_analysis": daily_analysis},
+                "last_updated": now.strftime("%H:%M"),
+            }
+    except Exception as e:
+        log(f"⚠ KPI更新失敗: {str(e)[:80]}")
+
+
 # ─── Job: 週次サマリーレポート (Mon 08:00) ────────────────────────────────
 def job_weekly_summary():
     today = datetime.now(JST)
@@ -1320,6 +1501,12 @@ scheduler.add_job(job_tenshi_script,        CronTrigger(hour=11, minute=30, time
 # Daily — 新規事業部（13:00〜）
 scheduler.add_job(job_ip_strategy,          CronTrigger(hour=13, minute=0,  timezone=JST), id="ip_strategy_daily",      name="IP戦略デイリーリサーチ（毎日）")
 scheduler.add_job(job_bizdev_research,      CronTrigger(hour=13, minute=30, timezone=JST), id="bizdev_daily",           name="外部マネタイズ探索（毎日）")
+# 30分ごと — KPI更新
+scheduler.add_job(job_kpi_update,           CronTrigger(minute="5,35", timezone=JST), id="kpi_update",                 name="KPI更新（30分ごと）")
+# SNSマネタイズチーム
+scheduler.add_job(job_sns_planner,          CronTrigger(day_of_week="mon", hour=10, minute=0, timezone=JST), id="sns_planner_monthly", name="SNS月間企画（月曜10時）")
+scheduler.add_job(job_sns_educator,         CronTrigger(day_of_week="wed", hour=11, minute=0, timezone=JST), id="sns_educator_weekly",  name="SNS教育コンテンツ（水曜11時）")
+scheduler.add_job(job_sns_marketer,         CronTrigger(day_of_week="fri", hour=11, minute=0, timezone=JST), id="sns_marketer_weekly",  name="SNSマーケ施策（金曜11時）")
 
 JOB_FUNCS = {
     "secretary_daily":      job_secretary_briefing,
@@ -1345,6 +1532,10 @@ JOB_FUNCS = {
     "ip_strategy_daily":      job_ip_strategy,
     "bizdev_daily":           job_bizdev_research,
     "weekly_summary":         job_weekly_summary,
+    "kpi_update":             job_kpi_update,
+    "sns_planner_monthly":    job_sns_planner,
+    "sns_educator_weekly":    job_sns_educator,
+    "sns_marketer_weekly":    job_sns_marketer,
 }
 
 
@@ -1472,6 +1663,13 @@ def api_note_roadmap_progress():
         return jsonify(state.get("note_roadmap_progress", {}))
 
 
+@app.route("/api/kpi")
+def api_kpi():
+    threading.Thread(target=job_kpi_update, daemon=True).start()
+    with lock:
+        return jsonify(state.get("kpi", {}))
+
+
 @app.route("/api/marketing_insights")
 def api_marketing_insights():
     with lock:
@@ -1539,6 +1737,26 @@ def api_edit_pending():
     _save_queue(PENDING_PATH, q)
     log(f"✏ 編集保存: {type_} [{item_id}]")
     return jsonify({"ok": True})
+
+
+@app.route("/api/instruct", methods=["POST"])
+def api_instruct():
+    """エージェントへの指示を保存する（次回ジョブ実行時に自動反映）。"""
+    data       = request.get_json() or {}
+    agent_id   = data.get("agent_id", "global").strip() or "global"
+    instruction = data.get("instruction", "").strip()
+    if not instruction:
+        return jsonify({"error": "instruction が必要です"}), 400
+    _save_directive(agent_id, instruction)
+    target_name = state["agents"].get(agent_id, {}).get("name", agent_id) if agent_id != "global" else "全エージェント共通"
+    log(f"📌 指示保存 [{target_name}]: {instruction[:40]}")
+    return jsonify({"ok": True, "agent": target_name})
+
+
+@app.route("/api/instruct", methods=["GET"])
+def api_instruct_list():
+    """保存済みの指示一覧を返す。"""
+    return jsonify(_load_directives())
 
 
 @app.route("/api/chat", methods=["POST"])
