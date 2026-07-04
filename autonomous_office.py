@@ -687,45 +687,67 @@ def job_scriptwriter_daily():
 
 # ─── Job: 菊地進捗チェック (hourly) ──────────────────────────────────────
 def job_kikuchi_progress_update():
-    import urllib.request
+    import urllib.request, csv as _csv
     try:
         url = ("https://docs.google.com/spreadsheets/d/"
                "1xHIRrC4e4eJGuvnE84n7xERZYEzu4SApTroB4xYknM0"
                "/export?format=csv&gid=595521756")
         with urllib.request.urlopen(url, timeout=15) as resp:
             content = resp.read().decode("utf-8")
-        import csv as _csv
-        reader = _csv.reader(content.splitlines())
-        rows = list(reader)
-        # 菊地が担当する全エピソードを収集
+        rows = list(_csv.reader(content.splitlines()))
+
+        # ── 1. サマリー表から対象エピソード（制作中→未着手→最後の完了）を特定 ──
         kikuchi_rows = []
         for row in rows[2:]:
             if len(row) >= 6 and "菊地" in row[1]:
                 kikuchi_rows.append(row)
         if not kikuchi_rows:
             return
-        # 優先度: 制作中 > 未着手 > 完了（直近）
-        current_ep = None
+        target_row = None
         for row in kikuchi_rows:
             if row[4].strip() == "制作中":
-                current_ep = row
-                break
-        if not current_ep:
+                target_row = row; break
+        if not target_row:
             for row in kikuchi_rows:
                 if row[4].strip() == "未着手":
-                    current_ep = row
+                    target_row = row; break
+        if not target_row:
+            target_row = kikuchi_rows[-1]
+
+        ep_name  = target_row[0].strip()   # e.g. "第13話"
+        status   = target_row[4].strip()
+        due_date = target_row[2].strip()
+
+        # ── 2. 詳細タスクセクション「【第N話】」を全行から検索 ──────────────
+        target_header = f"【{ep_name}】"
+        ep_section_start = None
+        for i, row in enumerate(rows):
+            if row and row[0] and target_header in row[0]:
+                ep_section_start = i + 1
+                break
+
+        done, total = 0, 0
+        if ep_section_start is not None:
+            for row in rows[ep_section_start:]:
+                if not row:
+                    continue
+                col0 = row[0].strip()
+                # 次エピソードのセクションヘッダーで終了
+                if col0.startswith("【") and "話】" in col0 and target_header not in col0:
                     break
-        if not current_ep:
-            # 全部完了なら最後の完了エピソードを表示
-            current_ep = kikuchi_rows[-1]
-        ep_name  = current_ep[0].strip()
-        status   = current_ep[4].strip()
-        due_date = current_ep[2].strip()
-        checks   = [current_ep[i].strip() for i in range(5, 10) if i < len(current_ep)]
-        done     = sum(1 for c in checks if c.upper() == "TRUE")
-        total    = len(checks) if checks else 5
-        pct      = int(done / total * 100) if total > 0 else 0
-        # 菊地は担当エピソードがある間は常に working（着座）
+                # 完了列（col3）が TRUE/FALSE のタスク行のみ集計
+                if len(row) >= 4 and row[3].strip().upper() in ("TRUE", "FALSE"):
+                    total += 1
+                    if row[3].strip().upper() == "TRUE":
+                        done += 1
+
+        # 詳細セクションが未作成の場合はサマリーの5チェックにフォールバック
+        if total == 0:
+            checks = [target_row[i].strip() for i in range(5, 10) if i < len(target_row)]
+            done   = sum(1 for c in checks if c.upper() == "TRUE")
+            total  = len(checks) if checks else 5
+
+        pct = int(done / total * 100) if total > 0 else 0
         agent_status = "done" if pct >= 100 else "working"
         with lock:
             prev_pct = state["kikuchi_progress"].get("progress", -1)
@@ -736,9 +758,8 @@ def job_kikuchi_progress_update():
                 "done": done, "total": total,
                 "status": status, "due": due_date
             }
-        # 進捗率が変化したときだけログ出力（30分ごとの無音更新は記録しない）
         if pct != prev_pct:
-            log(f"📊 菊地進捗: {ep_name} {pct}% ({done}/{total}章)", "kikuchi")
+            log(f"📊 菊地進捗: {ep_name} {pct}% ({done}/{total}タスク)", "kikuchi")
     except Exception as e:
         log(f"⚠ 菊地進捗取得失敗: {str(e)[:80]}")
 
@@ -1190,7 +1211,25 @@ def api_debug_kikuchi():
             reader = list(_csv.reader([line]))
             parts = reader[0] if reader else []
             parsed.append({"row": i, "raw": line[:200], "cols": parts})
-        return jsonify({"ok": True, "rows": parsed})
+        return jsonify({"ok": True, "rows": parsed, "total_rows": len(lines)})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+@app.route("/api/debug_kikuchi_full")
+def api_debug_kikuchi_full():
+    """スプシ全行をCSV解析して返す（詳細タスクシートの構造確認用）。"""
+    import urllib.request, csv as _csv
+    try:
+        url = ("https://docs.google.com/spreadsheets/d/"
+               "1xHIRrC4e4eJGuvnE84n7xERZYEzu4SApTroB4xYknM0"
+               "/export?format=csv&gid=595521756")
+        with urllib.request.urlopen(url, timeout=15) as resp:
+            content = resp.read().decode("utf-8")
+        rows = list(_csv.reader(content.splitlines()))
+        # 全行を返す（最大200行）、col0〜col4のみ
+        parsed = [{"row": i, "cols": row[:5]} for i, row in enumerate(rows[:200])]
+        return jsonify({"ok": True, "rows": parsed, "total": len(rows)})
     except Exception as e:
         return jsonify({"error": str(e)})
 
