@@ -1155,10 +1155,32 @@ def api_reject():
 
 @app.route("/api/kikuchi_progress")
 def api_kikuchi_progress():
-    # スプシから最新を取得してから返す（キャッシュより最新優先）
     threading.Thread(target=job_kikuchi_progress_update, daemon=True).start()
     with lock:
         return jsonify(state.get("kikuchi_progress", {}))
+
+
+@app.route("/api/debug_kikuchi")
+def api_debug_kikuchi():
+    """スプシのCSV生データを返す（デバッグ用）。"""
+    import urllib.request
+    try:
+        url = ("https://docs.google.com/spreadsheets/d/"
+               "1xHIRrC4e4eJGuvnE84n7xERZYEzu4SApTroB4xYknM0"
+               "/export?format=csv&gid=595521756")
+        with urllib.request.urlopen(url, timeout=15) as resp:
+            content = resp.read().decode("utf-8")
+        lines = content.split("\n")
+        parsed = []
+        for i, line in enumerate(lines[:20]):
+            import csv as _csv
+            reader = list(_csv.reader([line]))
+            parts = reader[0] if reader else []
+            parsed.append({"row": i, "raw": line[:200], "cols": parts})
+        return jsonify({"ok": True, "rows": parsed})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 
 
 @app.route("/api/edit_pending", methods=["POST"])
