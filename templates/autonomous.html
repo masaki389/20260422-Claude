@@ -131,6 +131,13 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 .kpi-chk-ng  { color:#4a6a4a; }
 .kpi-sched   { margin-top:6px; padding-top:5px; border-top:1px solid #1a3a1a; }
 .kpi-kikuchi { margin-top:6px; padding-top:5px; border-top:1px solid #1e3a5e; }
+.kpi-rev     { margin-top:6px; padding-top:5px; border-top:1px solid #2a3a2a; }
+.kpi-rev-row { display:flex; align-items:center; gap:4px; margin:3px 0; font-size:10px; color:#9090a8; }
+.kpi-rev-row label { min-width:28px; }
+.rev-input   { width:56px; background:#080c10; border:1px solid #2a3040; color:#c0d8c0; padding:2px 5px; font-size:10px; border-radius:2px; text-align:right; font-family:'Courier New',monospace; }
+.rev-input:focus { outline:none; border-color:#4a7a4a; }
+.rev-unit    { color:#6a8a6a; }
+.rev-summary { font-size:10px; margin-top:3px; text-align:right; color:#6b8a7a; }
 #game-container { overflow:hidden; max-width:100%; }
 #game-container canvas { max-width:100% !important; height:auto !important; display:block; }
 /* ── 成果物ビューア（下部全幅）── */
@@ -197,6 +204,13 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
           <div class="kpi-d-item"><span id="kpi-sd-tieup" class="kpi-chk-ng">◯</span> タイアップ探索（1件/日）</div>
           <div class="kpi-d-item"><span id="kpi-sd-sponsor" class="kpi-chk-ng">◯</span> スポンサー探索（1件/日）</div>
         </div>
+        <div class="kpi-rev">
+          <div class="kpi-d-label">💰 今月収益目標</div>
+          <div class="kpi-rev-row"><label>目標</label><input type="number" class="rev-input" id="rev-target-sachiko" placeholder="0" min="0"><span class="rev-unit">万円</span></div>
+          <div class="kpi-rev-row"><label>実績</label><input type="number" class="rev-input" id="rev-actual-sachiko" placeholder="0" min="0"><span class="rev-unit">万円</span></div>
+          <div class="kpi-m-bar" style="margin:4px 0"><div class="kpi-m-fill" id="rev-bar-sachiko" style="width:0%;background:linear-gradient(90deg,#1a4a2a,#4ade80)"></div></div>
+          <div class="rev-summary" id="rev-summary-sachiko">目標未設定</div>
+        </div>
         <div class="kpi-sched" id="kpi-sched-sachiko"></div>
       </div>
       <!-- コンテンツ・販売部 -->
@@ -229,6 +243,13 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
           <div class="kpi-d-item"><span id="kpi-cd-edu" class="kpi-chk-ng">◯</span> 教育コンテンツ（1件/日）</div>
           <div class="kpi-d-item"><span id="kpi-cd-mkt" class="kpi-chk-ng">◯</span> マーケ施策（1件/日）</div>
         </div>
+        <div class="kpi-rev">
+          <div class="kpi-d-label">💰 今月収益目標</div>
+          <div class="kpi-rev-row"><label>目標</label><input type="number" class="rev-input" id="rev-target-content" placeholder="0" min="0"><span class="rev-unit">万円</span></div>
+          <div class="kpi-rev-row"><label>実績</label><input type="number" class="rev-input" id="rev-actual-content" placeholder="0" min="0"><span class="rev-unit">万円</span></div>
+          <div class="kpi-m-bar" style="margin:4px 0"><div class="kpi-m-fill" id="rev-bar-content" style="width:0%;background:linear-gradient(90deg,#2a1a4a,#a78bfa)"></div></div>
+          <div class="rev-summary" id="rev-summary-content">目標未設定</div>
+        </div>
         <div class="kpi-sched" id="kpi-sched-content"></div>
       </div>
       <!-- toB受託営業部 -->
@@ -243,6 +264,13 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
           <div class="kpi-d-label">デイリー</div>
           <div class="kpi-d-item"><span id="kpi-sd-list" class="kpi-chk-ng">◯</span> 見込み客リスト（1件/日）</div>
           <div class="kpi-d-item"><span id="kpi-sd-prop" class="kpi-chk-ng">◯</span> 提案書生成（1件/日）</div>
+        </div>
+        <div class="kpi-rev">
+          <div class="kpi-d-label">💰 今月収益目標</div>
+          <div class="kpi-rev-row"><label>目標</label><input type="number" class="rev-input" id="rev-target-sales" placeholder="0" min="0"><span class="rev-unit">万円</span></div>
+          <div class="kpi-rev-row"><label>実績</label><input type="number" class="rev-input" id="rev-actual-sales" placeholder="0" min="0"><span class="rev-unit">万円</span></div>
+          <div class="kpi-m-bar" style="margin:4px 0"><div class="kpi-m-fill" id="rev-bar-sales" style="width:0%;background:linear-gradient(90deg,#4a1010,#f87171)"></div></div>
+          <div class="rev-summary" id="rev-summary-sales">目標未設定</div>
         </div>
         <div class="kpi-sched" id="kpi-sched-sales"></div>
       </div>
@@ -259,6 +287,13 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
           <div class="kpi-d-item"><span id="kpi-td-analysis" class="kpi-chk-ng">◯</span> 転職アニメ分析（1件/日）</div>
           <div class="kpi-d-item"><span id="kpi-td-script" class="kpi-chk-ng">◯</span> 脚本生成（GO判定時）</div>
         </div>
+        <div class="kpi-rev">
+          <div class="kpi-d-label">💰 今月収益目標</div>
+          <div class="kpi-rev-row"><label>目標</label><input type="number" class="rev-input" id="rev-target-tenshi" placeholder="0" min="0"><span class="rev-unit">万円</span></div>
+          <div class="kpi-rev-row"><label>実績</label><input type="number" class="rev-input" id="rev-actual-tenshi" placeholder="0" min="0"><span class="rev-unit">万円</span></div>
+          <div class="kpi-m-bar" style="margin:4px 0"><div class="kpi-m-fill" id="rev-bar-tenshi" style="width:0%;background:linear-gradient(90deg,#0a2a3a,#38bdf8)"></div></div>
+          <div class="rev-summary" id="rev-summary-tenshi">目標未設定</div>
+        </div>
         <div class="kpi-sched" id="kpi-sched-tenshi"></div>
       </div>
       <!-- 事業開発部 -->
@@ -274,6 +309,13 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
           <div class="kpi-d-item"><span id="kpi-nd-yt" class="kpi-chk-ng">◯</span> 新規YTリサーチ（1件/日）</div>
           <div class="kpi-d-item"><span id="kpi-nd-ip" class="kpi-chk-ng">◯</span> IP戦略リサーチ（1件/日）</div>
           <div class="kpi-d-item"><span id="kpi-nd-biz" class="kpi-chk-ng">◯</span> 外部マネタイズ探索（1件/日）</div>
+        </div>
+        <div class="kpi-rev">
+          <div class="kpi-d-label">💰 今月収益目標</div>
+          <div class="kpi-rev-row"><label>目標</label><input type="number" class="rev-input" id="rev-target-newbiz" placeholder="0" min="0"><span class="rev-unit">万円</span></div>
+          <div class="kpi-rev-row"><label>実績</label><input type="number" class="rev-input" id="rev-actual-newbiz" placeholder="0" min="0"><span class="rev-unit">万円</span></div>
+          <div class="kpi-m-bar" style="margin:4px 0"><div class="kpi-m-fill" id="rev-bar-newbiz" style="width:0%;background:linear-gradient(90deg,#2a1a00,#fbbf24)"></div></div>
+          <div class="rev-summary" id="rev-summary-newbiz">目標未設定</div>
         </div>
         <div class="kpi-sched" id="kpi-sched-newbiz"></div>
       </div>
@@ -417,7 +459,7 @@ const AGENTS_CFG = {
   tenshi_scriptwriter: {x:1205, y:365, name:'転職脚本家',        dept:'tenshi',  skin:0xf5c5a0, hair:0x1a1a28},
   // 事業開発部 (2 agents)
   secretary:           {x:1358, y:195, name:'秘書',              dept:'newbiz',  skin:0xf5c5a0, hair:0x200818},
-  kikuchi:             {x:1475, y:370, name:'菊地（外注）',       dept:'newbiz',  skin:0xd4a87c, hair:0x2a1a0a},
+  kikuchi:             {x:235,  y:415, name:'菊地（外注）',       dept:'sachiko', skin:0xd4a87c, hair:0x2a1a0a},
 };
 const SC = {idle:0x6b7280, working:0xfbbf24, done:0x34d399, error:0xef4444};
 
@@ -819,6 +861,54 @@ function updateMarketingInsights(insights){
 }
 function pollMarketingInsights(){fetch('/api/marketing_insights').then(r=>r.json()).then(updateMarketingInsights).catch(()=>{});}
 pollMarketingInsights(); setInterval(pollMarketingInsights,600000);
+
+// ── 収益目標（localStorage永続） ──────────────────────────────────────────────
+const REV_DEPTS = ['sachiko','content','sales','tenshi','newbiz'];
+function _revKey(){ return 'revTargets_'+new Date().getFullYear()+'_'+(new Date().getMonth()+1); }
+function saveRevTargets(){
+  const data={};
+  REV_DEPTS.forEach(d=>{
+    data[d]={
+      target: parseFloat(document.getElementById('rev-target-'+d)?.value)||0,
+      actual: parseFloat(document.getElementById('rev-actual-'+d)?.value)||0,
+    };
+  });
+  localStorage.setItem(_revKey(), JSON.stringify(data));
+  REV_DEPTS.forEach(d=>updateRevDisplay(d));
+}
+function updateRevDisplay(dept){
+  const t=parseFloat(document.getElementById('rev-target-'+dept)?.value)||0;
+  const a=parseFloat(document.getElementById('rev-actual-'+dept)?.value)||0;
+  const bar=document.getElementById('rev-bar-'+dept);
+  const sum=document.getElementById('rev-summary-'+dept);
+  if(!bar||!sum) return;
+  if(t===0){bar.style.width='0%';sum.textContent='目標未設定';sum.style.color='#5a6a5a';return;}
+  const pct=Math.min(100,Math.round(a/t*100));
+  bar.style.width=pct+'%';
+  const remaining=Math.max(0,t-a);
+  if(a>=t){
+    sum.textContent='✅ 達成！ ¥'+Number(a*10000).toLocaleString()+' / ¥'+Number(t*10000).toLocaleString();
+    sum.style.color='#4ade80';
+  } else {
+    sum.textContent=pct+'% 達成 ／ 残り ¥'+Number(remaining*10000).toLocaleString();
+    sum.style.color=pct>=70?'#a0d0a0':pct>=40?'#d0c070':'#c08080';
+  }
+}
+function initRevTargets(){
+  const saved=JSON.parse(localStorage.getItem(_revKey())||'{}');
+  REV_DEPTS.forEach(dept=>{
+    const v=saved[dept]||{target:0,actual:0};
+    const tEl=document.getElementById('rev-target-'+dept);
+    const aEl=document.getElementById('rev-actual-'+dept);
+    if(tEl&&v.target) tEl.value=v.target;
+    if(aEl&&v.actual) aEl.value=v.actual;
+    updateRevDisplay(dept);
+    if(tEl) tEl.addEventListener('input',saveRevTargets);
+    if(aEl) aEl.addEventListener('input',saveRevTargets);
+  });
+}
+document.addEventListener('DOMContentLoaded', initRevTargets);
+
 window._updateUI=function(data){
   const sb=document.getElementById('status-bar');
   if(sb){if(data.running){sb.textContent='⚡ RUNNING';sb.style.color='#fbbf24';}else{sb.textContent='●  IDLE';sb.style.color='#4a8a4a';}}
