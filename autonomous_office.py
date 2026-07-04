@@ -1283,21 +1283,25 @@ def job_bizdev_research():
 # ─── Job: SNS企画担当 (月曜 10:00) ────────────────────────────────────────────
 def job_sns_planner():
     today = datetime.now(JST)
-    month_label = today.strftime("%Y%m")
-    log("📅 SNS企画担当起動 — 月間コンテンツ企画生成", "sns_planner")
+    week_label = today.strftime("%Y%m%d")
+    log("📅 SNS企画担当起動 — 今週のコンテンツ企画生成", "sns_planner")
     try:
-        set_status("sns_planner", "working", "月間企画カレンダー生成中...")
+        set_status("sns_planner", "working", "週間企画生成中...")
         agent = make_agent_soul("sns_planner")
         x_strategy = _read_strategy("x_strategy.md")[:800]
         result = run_single(
-            f"今月（{today.strftime('%Y年%m月')}）のStudioOgawa SNSコンテンツ企画カレンダーを生成してください。\n\n"
+            f"今週（{today.strftime('%Y年%m月%d日')}週）のStudioOgawa SNSコンテンツ週間企画を生成してください。\n\n"
             "参考：X戦略直近レポート\n" + (x_strategy or "（なし）") + "\n\n"
-            "SOUL.mdのフォーマット通りに出力すること。"
-            "X（@obananapro）のテーマ柱5本・週別企画・月間スレッド1本・noteとの連動案を含めること。",
-            "月間コンテンツ企画カレンダー（Markdown）", agent)
-        set_status("sns_planner", "done", "月間企画完成 ✓")
-        _save_research(f"sns_plan_{month_label}.md", result, "content")
-        log(f"💾 月間企画: sns_plan_{month_label}.md", "sns_planner")
+            "SOUL.mdのフォーマットに従い以下を含めること：\n"
+            "・今週のテーマの柱（3本）\n"
+            "・月〜日の投稿ネタ7件（フック型・断言型・逆張り型を混ぜる）\n"
+            "・今週のスレッド企画1本\n"
+            "・noteとの連動案1件\n"
+            "月100万円目標を念頭に、最もフォロワー増・note誘導に効く企画を選ぶこと。",
+            "週間SNS企画（Markdown）", agent)
+        set_status("sns_planner", "done", "週間企画完成 ✓")
+        _save_research(f"sns_plan_{week_label}.md", result, "content")
+        log(f"💾 週間SNS企画: sns_plan_{week_label}.md", "sns_planner")
         with lock:
             state["result"] = result
     except Exception as e:
@@ -1466,76 +1470,89 @@ def job_weekly_summary():
         log(f"❌ 週次サマリーエラー: {str(e)[:200]}")
 
 
-# ─── Scheduler ───────────────────────────────────────────────────────────────
+# ─── Scheduler ── 月100万円逆算スケジュール ──────────────────────────────────
+# 目標：6ヶ月以内に月100万円
+# 収益柱：① 幸子AdSense ② 転職アフィリ ③ note/Brain教材 ④ BtoB受託
+# 原則：「週1」「月1」は収益につながらない。毎日動かすか、最低でも週3。
 scheduler = BackgroundScheduler(timezone=JST, job_defaults={"misfire_grace_time": 300})
-# Daily 07:30 — 秘書
-scheduler.add_job(job_secretary_briefing,   CronTrigger(hour=7,  minute=30, timezone=JST), id="secretary_daily",   name="秘書ブリーフィング")
-# Daily 09:00 — 並列4ジョブ（幸子リサーチ・台本骨子・X投稿・note下書き）
-scheduler.add_job(job_sachiko_research,     CronTrigger(hour=9,  minute=0,  timezone=JST), id="sachiko_daily",     name="幸子リサーチ")
-scheduler.add_job(job_scriptwriter_daily,   CronTrigger(hour=9,  minute=0,  timezone=JST), id="scriptwriter_daily",name="台本骨子ドラフト生成")
-scheduler.add_job(job_generate_x_drafts,    CronTrigger(hour=9,  minute=0,  timezone=JST), id="x_draft_daily",     name="X投稿ドラフト生成")
-# Daily X投稿
-scheduler.add_job(job_x_random_post,        CronTrigger(hour=8,  minute=0,  timezone=JST), id="x_post_morning",    name="X投稿（朝8時）")
-scheduler.add_job(job_x_random_post,        CronTrigger(hour=12, minute=0,  timezone=JST), id="x_post_noon",       name="X投稿（昼12時）")
-scheduler.add_job(job_x_random_post,        CronTrigger(hour=18, minute=0,  timezone=JST), id="x_post_afternoon",  name="X投稿（夕方18時）")
-scheduler.add_job(job_x_random_post,        CronTrigger(hour=20, minute=0,  timezone=JST), id="x_post_evening",    name="X投稿（夜20時）")
-# 30分ごと — 菊地進捗 / note進捗（毎時0分・30分）
-scheduler.add_job(job_kikuchi_progress_update,       CronTrigger(minute="0,30", timezone=JST), id="kikuchi_check",        name="菊地進捗チェック（30分ごと）")
-scheduler.add_job(job_note_roadmap_progress_update,  CronTrigger(minute="15,45", timezone=JST), id="note_roadmap_check", name="noteロードマップ進捗（30分ごと）")
-# Daily 08:30 — X戦略デイリーリサーチ
-scheduler.add_job(job_x_strategy_learn,    CronTrigger(hour=8,  minute=30, timezone=JST), id="x_strategy_daily",    name="X戦略デイリーリサーチ（毎日）")
-# Weekly Mon 08:00 — 週次サマリーレポート
-scheduler.add_job(job_weekly_summary,      CronTrigger(day_of_week="mon", hour=8, minute=0, timezone=JST), id="weekly_summary",         name="週次サマリーレポート（月曜8時）")
-# Weekly — noteリサーチ
-scheduler.add_job(job_note_research,        CronTrigger(day_of_week="sun", hour=23, minute=30, timezone=JST), id="note_research_weekly",  name="noteリサーチ（週1）")
-scheduler.add_job(job_generate_note_draft,  CronTrigger(hour=10, minute=30, timezone=JST), id="note_draft_daily",      name="note記事ドラフト生成（毎日・ロードマップ対応）")
-scheduler.add_job(job_marketing_research,   CronTrigger(day_of_week="mon,wed,fri", hour=14, minute=0, timezone=JST), id="marketing_research_mwf", name="X/noteマーケリサーチ（月・水・金）")
-scheduler.add_job(job_tieup_research,       CronTrigger(hour=11, minute=0,  timezone=JST), id="tieup_daily",           name="タイアップリサーチ（毎日）")
-# Weekly — 幸子分析 (火曜9時)
-scheduler.add_job(job_sachiko_analytics,    CronTrigger(day_of_week="tue", hour=9,  minute=0,  timezone=JST), id="sachiko_analytics",     name="幸子チャンネル週次分析")
-# Daily — 営業（毎日9:30）
-scheduler.add_job(job_sales_research,       CronTrigger(hour=9,  minute=30, timezone=JST), id="sales_research_daily",  name="BtoB営業リサーチ（毎日）")
-# Daily — 転職分析（毎日10:00）+ 脚本（毎日11:30）
-scheduler.add_job(job_tenshi_analyze,       CronTrigger(hour=10, minute=0,  timezone=JST), id="tenshi_analysis_daily",  name="転職アニメ分析（毎日）")
-scheduler.add_job(job_tenshi_script,        CronTrigger(hour=11, minute=30, timezone=JST), id="tenshi_script_daily",    name="転職アニメ脚本（毎日・GO判定時のみ生成）")
-# Daily — 新規事業部（13:00〜）
-scheduler.add_job(job_ip_strategy,          CronTrigger(hour=13, minute=0,  timezone=JST), id="ip_strategy_daily",      name="IP戦略デイリーリサーチ（毎日）")
-scheduler.add_job(job_bizdev_research,      CronTrigger(hour=13, minute=30, timezone=JST), id="bizdev_daily",           name="外部マネタイズ探索（毎日）")
-# 30分ごと — KPI更新
-scheduler.add_job(job_kpi_update,           CronTrigger(minute="5,35", timezone=JST), id="kpi_update",                 name="KPI更新（30分ごと）")
-# SNSマネタイズチーム
-scheduler.add_job(job_sns_planner,          CronTrigger(day_of_week="mon", hour=10, minute=0, timezone=JST), id="sns_planner_monthly", name="SNS月間企画（月曜10時）")
-scheduler.add_job(job_sns_educator,         CronTrigger(day_of_week="wed", hour=11, minute=0, timezone=JST), id="sns_educator_weekly",  name="SNS教育コンテンツ（水曜11時）")
-scheduler.add_job(job_sns_marketer,         CronTrigger(day_of_week="fri", hour=11, minute=0, timezone=JST), id="sns_marketer_weekly",  name="SNSマーケ施策（金曜11時）")
+
+# ── ① X投稿（1日4回・承認済みから自動投稿）──────────────────────────────────
+scheduler.add_job(job_x_random_post, CronTrigger(hour=8,  minute=0,  timezone=JST), id="x_post_morning",   name="X投稿（朝8時）")
+scheduler.add_job(job_x_random_post, CronTrigger(hour=12, minute=0,  timezone=JST), id="x_post_noon",      name="X投稿（昼12時）")
+scheduler.add_job(job_x_random_post, CronTrigger(hour=18, minute=0,  timezone=JST), id="x_post_afternoon", name="X投稿（夕方18時）")
+scheduler.add_job(job_x_random_post, CronTrigger(hour=20, minute=0,  timezone=JST), id="x_post_evening",   name="X投稿（夜20時）")
+
+# ── ② 朝ブロック：コンテンツ量産（幸子AdSense + note教材）──────────────────
+scheduler.add_job(job_secretary_briefing,  CronTrigger(hour=7,  minute=0,  timezone=JST), id="secretary_daily",    name="秘書ブリーフィング（毎日7時）")
+scheduler.add_job(job_x_strategy_learn,    CronTrigger(hour=7,  minute=30, timezone=JST), id="x_strategy_daily",   name="X戦略デイリーリサーチ（毎日）")
+scheduler.add_job(job_sachiko_research,    CronTrigger(hour=8,  minute=30, timezone=JST), id="sachiko_daily",      name="幸子リサーチ（毎日）")
+scheduler.add_job(job_scriptwriter_daily,  CronTrigger(hour=9,  minute=0,  timezone=JST), id="scriptwriter_daily", name="台本骨子ドラフト生成（毎日）")
+scheduler.add_job(job_generate_x_drafts,   CronTrigger(hour=9,  minute=30, timezone=JST), id="x_draft_daily",      name="X投稿ドラフト生成（毎日）")
+scheduler.add_job(job_generate_note_draft, CronTrigger(hour=10, minute=0,  timezone=JST), id="note_draft_daily",   name="note記事ドラフト生成（毎日・ロードマップ対応）")
+
+# ── ③ 午前ブロック：営業 + 転職アフィリ（毎日）─────────────────────────────
+scheduler.add_job(job_sales_research,   CronTrigger(hour=10, minute=30, timezone=JST), id="sales_research_daily",  name="BtoB営業リサーチ（毎日）")
+scheduler.add_job(job_tenshi_analyze,   CronTrigger(hour=11, minute=0,  timezone=JST), id="tenshi_analysis_daily", name="転職アニメ分析（毎日）")
+scheduler.add_job(job_tieup_research,   CronTrigger(hour=11, minute=30, timezone=JST), id="tieup_daily",           name="タイアップリサーチ（毎日）")
+scheduler.add_job(job_tenshi_script,    CronTrigger(hour=12, minute=0,  timezone=JST), id="tenshi_script_daily",   name="転職アニメ脚本（毎日・GO判定時のみ生成）")
+
+# ── ④ 午後ブロック：SNSマネタイズ + 新規事業（毎日）──────────────────────────
+scheduler.add_job(job_sns_educator,     CronTrigger(hour=13, minute=0,  timezone=JST), id="sns_educator_daily",    name="SNS教育コンテンツ（毎日）")
+scheduler.add_job(job_ip_strategy,      CronTrigger(hour=13, minute=30, timezone=JST), id="ip_strategy_daily",     name="IP戦略デイリーリサーチ（毎日）")
+scheduler.add_job(job_bizdev_research,  CronTrigger(hour=14, minute=0,  timezone=JST), id="bizdev_daily",          name="外部マネタイズ探索（毎日）")
+scheduler.add_job(job_marketing_research, CronTrigger(hour=14, minute=30, timezone=JST), id="marketing_research_daily", name="X/noteマーケリサーチ（毎日）")
+scheduler.add_job(job_sns_marketer,     CronTrigger(hour=15, minute=0,  timezone=JST), id="sns_marketer_daily",    name="SNSマーケ施策（毎日）")
+
+# ── ⑤ 夜ブロック：翌日の下地作り ───────────────────────────────────────────
+scheduler.add_job(job_note_research,    CronTrigger(hour=22, minute=0,  timezone=JST), id="note_research_daily",   name="noteリサーチ（毎日22時）")
+
+# ── ⑥ 週3以上：分析・改善（月水金）──────────────────────────────────────────
+scheduler.add_job(job_sachiko_analytics, CronTrigger(day_of_week="mon,wed,fri", hour=15, minute=30, timezone=JST), id="sachiko_analytics",   name="幸子チャンネル分析（週3）")
+
+# ── ⑦ 週次：戦略見直し（月曜）────────────────────────────────────────────────
+scheduler.add_job(job_weekly_summary,  CronTrigger(day_of_week="mon", hour=6, minute=0, timezone=JST), id="weekly_summary",       name="週次サマリーレポート（月曜6時）")
+scheduler.add_job(job_sns_planner,     CronTrigger(day_of_week="mon", hour=9, minute=0, timezone=JST), id="sns_planner_weekly",    name="SNS週間企画（月曜9時）")
+
+# ── ⑧ 常時監視（30分ごと）──────────────────────────────────────────────────
+scheduler.add_job(job_kikuchi_progress_update,      CronTrigger(minute="0,30",  timezone=JST), id="kikuchi_check",      name="菊地進捗チェック（30分ごと）")
+scheduler.add_job(job_note_roadmap_progress_update, CronTrigger(minute="15,45", timezone=JST), id="note_roadmap_check", name="noteロードマップ進捗（30分ごと）")
+scheduler.add_job(job_kpi_update,                   CronTrigger(minute="5,35",  timezone=JST), id="kpi_update",         name="KPI更新（30分ごと）")
 
 JOB_FUNCS = {
-    "secretary_daily":      job_secretary_briefing,
-    "sachiko_daily":        job_sachiko_research,
-    "scriptwriter_daily":   job_scriptwriter_daily,
-    "x_draft_daily":        job_generate_x_drafts,
-    "x_post_morning":       job_x_random_post,
-    "x_post_noon":          job_x_random_post,
-    "x_post_afternoon":     job_x_random_post,
-    "x_post_evening":       job_x_random_post,
-    "kikuchi_check":          job_kikuchi_progress_update,
-    "x_strategy_daily":       job_x_strategy_learn,
-    "weekly_summary":         job_weekly_summary,
-    "note_research_weekly":     job_note_research,
-    "note_draft_daily":         job_generate_note_draft,
-    "note_roadmap_check":       job_note_roadmap_progress_update,
-    "marketing_research_mwf":   job_marketing_research,
-    "tieup_daily":            job_tieup_research,
-    "sachiko_analytics":      job_sachiko_analytics,
-    "sales_research_daily":   job_sales_research,
-    "tenshi_analysis_daily":  job_tenshi_analyze,
-    "tenshi_script_daily":    job_tenshi_script,
-    "ip_strategy_daily":      job_ip_strategy,
-    "bizdev_daily":           job_bizdev_research,
-    "weekly_summary":         job_weekly_summary,
-    "kpi_update":             job_kpi_update,
-    "sns_planner_monthly":    job_sns_planner,
-    "sns_educator_weekly":    job_sns_educator,
-    "sns_marketer_weekly":    job_sns_marketer,
+    # X投稿
+    "x_post_morning":          job_x_random_post,
+    "x_post_noon":             job_x_random_post,
+    "x_post_afternoon":        job_x_random_post,
+    "x_post_evening":          job_x_random_post,
+    # 朝ブロック
+    "secretary_daily":         job_secretary_briefing,
+    "x_strategy_daily":        job_x_strategy_learn,
+    "sachiko_daily":           job_sachiko_research,
+    "scriptwriter_daily":      job_scriptwriter_daily,
+    "x_draft_daily":           job_generate_x_drafts,
+    "note_draft_daily":        job_generate_note_draft,
+    # 午前ブロック
+    "sales_research_daily":    job_sales_research,
+    "tenshi_analysis_daily":   job_tenshi_analyze,
+    "tieup_daily":             job_tieup_research,
+    "tenshi_script_daily":     job_tenshi_script,
+    # 午後ブロック
+    "sns_educator_daily":      job_sns_educator,
+    "ip_strategy_daily":       job_ip_strategy,
+    "bizdev_daily":            job_bizdev_research,
+    "marketing_research_daily":job_marketing_research,
+    "sns_marketer_daily":      job_sns_marketer,
+    # 夜ブロック
+    "note_research_daily":     job_note_research,
+    # 週3
+    "sachiko_analytics":       job_sachiko_analytics,
+    # 週次
+    "weekly_summary":          job_weekly_summary,
+    "sns_planner_weekly":      job_sns_planner,
+    # 常時監視
+    "kikuchi_check":           job_kikuchi_progress_update,
+    "note_roadmap_check":      job_note_roadmap_progress_update,
+    "kpi_update":              job_kpi_update,
 }
 
 
