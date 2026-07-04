@@ -109,6 +109,57 @@ APPROVED_PATH = _DATA_DIR / "approved_queue.json"
 AGENTS_DIR    = BASE_DIR / "agents"
 CONTEXT_DIR   = BASE_DIR / "shared-context"
 
+NOTE_ROADMAP_SPREADSHEET_ID = "1xHIRrC4e4eJGuvnE84n7xERZYEzu4SApTroB4xYknM0"
+NOTE_ROADMAP_GID            = 1883610657
+
+
+def _get_sheets_client():
+    """Google Sheets書き込み用クライアントを返す。環境変数 GOOGLE_SERVICE_ACCOUNT_JSON が必要。"""
+    sa_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()
+    if not sa_json:
+        return None
+    try:
+        import json as _json, base64, gspread
+        from google.oauth2.service_account import Credentials
+        try:
+            sa_dict = _json.loads(base64.b64decode(sa_json).decode())
+        except Exception:
+            sa_dict = _json.loads(sa_json)
+        scopes = [
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/spreadsheets",
+        ]
+        creds = Credentials.from_service_account_info(sa_dict, scopes=scopes)
+        return gspread.authorize(creds)
+    except Exception as e:
+        print(f"[Sheets] 認証失敗: {e}", flush=True)
+        return None
+
+
+def note_roadmap_mark_done(roadmap_date: str) -> bool:
+    """ロードマップの指定日付行（col0）の「完了」列（col7）をTRUEにする。"""
+    gc = _get_sheets_client()
+    if not gc:
+        return False
+    try:
+        sh = gc.open_by_key(NOTE_ROADMAP_SPREADSHEET_ID)
+        # gidでワークシートを特定
+        ws = None
+        for w in sh.worksheets():
+            if w.id == NOTE_ROADMAP_GID:
+                ws = w; break
+        if ws is None:
+            return False
+        records = ws.get_all_values()
+        for i, row in enumerate(records, start=1):
+            if row and row[0].strip() == roadmap_date.strip():
+                ws.update_cell(i, 7, True)  # col7 = 完了
+                return True
+        return False
+    except Exception as e:
+        print(f"[Sheets] 更新失敗: {e}", flush=True)
+        return False
+
 _restore_session("SESSION_X_B64",    BASE_DIR / "automation" / "sessions" / "session_x.json")
 _restore_session("SESSION_NOTE_B64", BASE_DIR / "automation" / "sessions" / "session_note.json")
 
@@ -703,10 +754,11 @@ def job_generate_note_draft():
         body   = "\n".join(lines[1:]).strip() if len(lines) > 1 else result
 
         add_to_pending("note_drafts", {
-            "id":         str(uuid.uuid4())[:8],
-            "title":      title,
-            "body":       body,
-            "created_at": datetime.now(JST).strftime("%Y-%m-%d %H:%M"),
+            "id":           str(uuid.uuid4())[:8],
+            "title":        title,
+            "body":         body,
+            "roadmap_date": art_date,   # 承認時にスプシを自動チェックするために保存
+            "created_at":   datetime.now(JST).strftime("%Y-%m-%d %H:%M"),
         })
         set_status("note_writer", "done", f"{title[:20]}... → 承認待ち ✓")
         log(f"📥 note記事ドラフト追加: {title[:30]}...")
@@ -1313,8 +1365,26 @@ def api_trigger(job_id):
 def api_approve():
     data = request.get_json() or {}
     type_, item_id = data.get("type"), data.get("id")
+
+    # noteドラフト承認時: ロードマップスプシを自動チェック
+    roadmap_date = None
+    if type_ == "note_drafts":
+        pending = _load_queue(PENDING_PATH)
+        item = next((i for i in pending.get("note_drafts", []) if i["id"] == item_id), None)
+        if item:
+            roadmap_date = item.get("roadmap_date")
+
     if approve_item(type_, item_id):
         log(f"✅ 承認: {type_} [{item_id}]")
+        if roadmap_date:
+            def _mark():
+                ok = note_roadmap_mark_done(roadmap_date)
+                if ok:
+                    log(f"📝 スプシ自動チェック: {roadmap_date} ✓")
+                    job_note_roadmap_progress_update()
+                else:
+                    log(f"⚠ スプシ自動チェック失敗（GOOGLE_SERVICE_ACCOUNT_JSON未設定の可能性）: {roadmap_date}")
+            threading.Thread(target=_mark, daemon=True).start()
         return jsonify({"ok": True})
     return jsonify({"error": "item not found"}), 404
 
