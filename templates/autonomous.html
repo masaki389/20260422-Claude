@@ -51,7 +51,8 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
 .progress-bar-bg { background:#0a1520; border:1px solid #1e3a5e; border-radius:3px; height:14px; overflow:hidden; margin-bottom:4px; }
 .progress-bar-fill { height:100%; background:linear-gradient(90deg,#1a5a9a,#3a9adf); transition:width 0.5s; border-radius:2px; }
 .progress-text { font-size:11px; color:#7ab0e0; text-align:right; }
-.kikuchi-checks { display:flex; gap:3px; margin-top:5px; }
+.btn-kk-refresh { background:none; border:none; cursor:pointer; font-size:11px; padding:0 2px; opacity:.7; }
+.btn-kk-refresh:hover { opacity:1; }
 .check-item { flex:1; background:#0a1520; border:1px solid #1e3a5e; border-radius:2px; padding:3px; text-align:center; font-size:10px; color:#3a6a9a; }
 .check-item.done { background:#0a2a40; border-color:#3a7aaa; color:#7ab0e0; }
 .schedule-list { display:flex; flex-direction:column; gap:3px; max-height:180px; overflow-y:auto; }
@@ -132,15 +133,11 @@ body { background:#070c07; color:#c9d1d9; font-family:-apple-system,BlinkMacSyst
       <div class="script-desc">① リサーチャーがテーマを分析 → ② 脚本家が6フェーズ台本骨子を出力。成果物は下の「幸子チャンネル」タブに表示されます。（毎日9:00に自動生成もあり）</div>
     </div>
     <div class="kikuchi-panel">
-      <div class="kikuchi-title">👤 菊地（外注）進捗</div>
+      <div class="kikuchi-title">👤 菊地（外注）進捗 <button class="btn-kk-refresh" onclick="pollKikuchi()" title="進捗を再取得">🔄</button></div>
       <div class="kikuchi-ep" id="kk-episode">読み込み中...</div>
       <div class="kikuchi-due" id="kk-due"></div>
       <div class="progress-bar-bg"><div class="progress-bar-fill" id="kk-bar" style="width:0%"></div></div>
       <div class="progress-text" id="kk-pct">0%</div>
-      <div class="kikuchi-checks" id="kk-checks">
-        <div class="check-item">①</div><div class="check-item">②</div>
-        <div class="check-item">③</div><div class="check-item">④</div><div class="check-item">⑤</div>
-      </div>
     </div>
     <div class="panel">
       <div class="panel-title">📥 承認待ちキュー</div>
@@ -610,7 +607,7 @@ let _noteModalId='';
 function previewNote(id){_noteModalId=id;fetch('/api/note_body/'+id).then(r=>r.json()).then(data=>{document.getElementById('modal-title').value=data.title||'';document.getElementById('modal-body').value=data.body||'';document.getElementById('modal-approve-btn').onclick=()=>{approveItem('note_drafts',id);closeModal();};document.getElementById('modal-reject-btn').onclick=()=>{rejectItem('note_drafts',id);closeModal();};document.getElementById('modal-save-btn').onclick=()=>saveNoteEdit(id);document.getElementById('note-modal').classList.add('open');}).catch(()=>{});}
 function saveNoteEdit(id){const title=document.getElementById('modal-title').value.trim();const body=document.getElementById('modal-body').value.trim();fetch('/api/edit_pending',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'note_drafts',id,title,body})}).then(()=>{const nt=document.getElementById('nt-'+id);if(nt)nt.textContent=title;}).catch(()=>{});}
 function closeModal(){document.getElementById('note-modal').classList.remove('open');}
-function updateKikuchi(data){if(!data||data.error)return;document.getElementById('kk-episode').textContent=data.episode||'-';document.getElementById('kk-due').textContent=data.due?`納期: ${data.due}  ${data.status||''}`:'';const pct=data.progress||0;document.getElementById('kk-bar').style.width=pct+'%';document.getElementById('kk-pct').textContent=`${pct}% (${data.done||0}/${data.total||5}章)`;const checks=document.querySelectorAll('#kk-checks .check-item');['①','②','③','④','⑤'].forEach((lb,i)=>{const done=i<(data.done||0);checks[i].textContent=done?'✓'+lb:lb;checks[i].classList.toggle('done',done);});}
+function updateKikuchi(data){if(!data||data.error)return;document.getElementById('kk-episode').textContent=data.episode||'-';document.getElementById('kk-due').textContent=data.due?`納期: ${data.due}  ${data.status||''}`:'';const pct=data.progress||0;document.getElementById('kk-bar').style.width=pct+'%';document.getElementById('kk-pct').textContent=`${pct}% (${data.done||0}/${data.total||0}タスク)`;}
 function pollKikuchi(){fetch('/api/kikuchi_progress').then(r=>r.json()).then(updateKikuchi).catch(()=>{});}
 pollKikuchi(); setInterval(pollKikuchi,300000);
 window._updateUI=function(data){

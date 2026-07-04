@@ -696,57 +696,61 @@ def job_kikuchi_progress_update():
             content = resp.read().decode("utf-8")
         rows = list(_csv.reader(content.splitlines()))
 
-        # ── 1. サマリー表から対象エピソード（制作中→未着手→最後の完了）を特定 ──
         kikuchi_rows = []
         for row in rows[2:]:
             if len(row) >= 6 and "菊地" in row[1]:
                 kikuchi_rows.append(row)
         if not kikuchi_rows:
             return
-        target_row = None
-        for row in kikuchi_rows:
-            if row[4].strip() == "制作中":
-                target_row = row; break
-        if not target_row:
+
+        def detail_progress(ep_str):
+            """詳細タスクセクション「【第N話】」のTRUE/FALSEを集計して (done, total) を返す。"""
+            hdr = f"【{ep_str}】"
+            start = None
+            for i, r in enumerate(rows):
+                if r and r[0] and hdr in r[0]:
+                    start = i + 1; break
+            d, t = 0, 0
+            if start is not None:
+                for r in rows[start:]:
+                    if not r: continue
+                    c0 = r[0].strip()
+                    if c0.startswith("【") and "話】" in c0 and hdr not in c0:
+                        break
+                    if len(r) >= 4 and r[3].strip().upper() in ("TRUE", "FALSE"):
+                        t += 1
+                        if r[3].strip().upper() == "TRUE":
+                            d += 1
+            return d, t
+
+        # 制作中→未着手の順で「詳細タスクが未完了のもの」を探す
+        # 詳細100%なら完了扱いにして次候補へ進む
+        target_row, done, total = None, 0, 0
+        for priority in ("制作中", "未着手"):
             for row in kikuchi_rows:
-                if row[4].strip() == "未着手":
-                    target_row = row; break
-        if not target_row:
-            target_row = kikuchi_rows[-1]
-
-        ep_name  = target_row[0].strip()   # e.g. "第13話"
-        status   = target_row[4].strip()
-        due_date = target_row[2].strip()
-
-        # ── 2. 詳細タスクセクション「【第N話】」を全行から検索 ──────────────
-        target_header = f"【{ep_name}】"
-        ep_section_start = None
-        for i, row in enumerate(rows):
-            if row and row[0] and target_header in row[0]:
-                ep_section_start = i + 1
+                if row[4].strip() == priority:
+                    ep = row[0].strip()
+                    d, t = detail_progress(ep)
+                    if t == 0 or d < t:   # 詳細未完了 or 詳細シートなし
+                        target_row = row; done = d; total = t; break
+            if target_row:
                 break
 
-        done, total = 0, 0
-        if ep_section_start is not None:
-            for row in rows[ep_section_start:]:
-                if not row:
-                    continue
-                col0 = row[0].strip()
-                # 次エピソードのセクションヘッダーで終了
-                if col0.startswith("【") and "話】" in col0 and target_header not in col0:
-                    break
-                # 完了列（col3）が TRUE/FALSE のタスク行のみ集計
-                if len(row) >= 4 and row[3].strip().upper() in ("TRUE", "FALSE"):
-                    total += 1
-                    if row[3].strip().upper() == "TRUE":
-                        done += 1
+        # 全エピソード完了 → 最後のエピソードを表示
+        if not target_row:
+            target_row = kikuchi_rows[-1]
+            ep = target_row[0].strip()
+            done, total = detail_progress(ep)
 
-        # 詳細セクションが未作成の場合はサマリーの5チェックにフォールバック
+        # 詳細シートがない場合はサマリーの5チェックにフォールバック
         if total == 0:
             checks = [target_row[i].strip() for i in range(5, 10) if i < len(target_row)]
             done   = sum(1 for c in checks if c.upper() == "TRUE")
             total  = len(checks) if checks else 5
 
+        ep_name  = target_row[0].strip()
+        status   = target_row[4].strip()
+        due_date = target_row[2].strip()
         pct = int(done / total * 100) if total > 0 else 0
         agent_status = "done" if pct >= 100 else "working"
         with lock:
