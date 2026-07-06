@@ -60,12 +60,20 @@ nav{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px sol
 .hero-video-bg iframe{
   position:absolute;
   top:50%;left:50%;
-  transform:translate(-50%,-53%) scale(1.18);
+  transform:translate(-50%,-50%);
   width:177.78vh;
   height:100vh;
   min-width:100vw;
   min-height:56.25vw;
   border:none;
+  pointer-events:none;
+}
+.hero-video-bg::after{
+  content:'';
+  position:absolute;
+  bottom:0;left:0;right:0;
+  height:14%;
+  background:rgba(0,0,0,.85);
   pointer-events:none;
 }
 .hero-overlay{
@@ -205,7 +213,7 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
 <section class="hero">
   <div class="hero-video-bg">
     <iframe
-      src="https://www.youtube.com/embed/AbMv2877CK4?autoplay=1&mute=1&loop=1&playlist=AbMv2877CK4&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&start=5"
+      src="https://www.youtube.com/embed/AbMv2877CK4?autoplay=1&mute=1&loop=1&playlist=AbMv2877CK4&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&start=12"
       allow="autoplay; encrypted-media"
       allowfullscreen>
     </iframe>
