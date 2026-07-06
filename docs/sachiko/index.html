@@ -60,7 +60,7 @@ nav{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px sol
 .hero-video-bg iframe{
   position:absolute;
   top:50%;left:50%;
-  transform:translate(-50%,-50%);
+  transform:translate(-50%,-53%) scale(1.18);
   width:177.78vh;
   height:100vh;
   min-width:100vw;
@@ -205,7 +205,7 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
 <section class="hero">
   <div class="hero-video-bg">
     <iframe
-      src="https://www.youtube.com/embed/AbMv2877CK4?autoplay=1&mute=1&loop=1&playlist=AbMv2877CK4&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1"
+      src="https://www.youtube.com/embed/AbMv2877CK4?autoplay=1&mute=1&loop=1&playlist=AbMv2877CK4&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&start=5"
       allow="autoplay; encrypted-media"
       allowfullscreen>
     </iframe>
@@ -230,8 +230,10 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
 <div class="stats-section">
 <div class="stats-grid">
   <div class="stat-col milestone">
-    <div class="stat-badge">🎉 突破</div>
-    <div class="stat-num serif">100<span class="stat-unit">万</span></div>
+    <div style="display:flex;align-items:baseline;gap:.45rem;justify-content:center">
+      <div class="stat-num serif">100<span class="stat-unit">万</span></div>
+      <div class="stat-badge">🎉 突破</div>
+    </div>
     <div class="stat-lbl">YouTube 総再生回数</div>
   </div>
   <div class="stat-col regular">
