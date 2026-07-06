@@ -57,15 +57,15 @@ nav{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px sol
   overflow:hidden;
   pointer-events:none;
 }
-.hero-video-bg iframe{
+.hero-video-bg video{
   position:absolute;
   top:50%;left:50%;
   transform:translate(-50%,-50%);
-  width:177.78vh;
-  height:100vh;
-  min-width:100vw;
-  min-height:56.25vw;
-  border:none;
+  min-width:100%;
+  min-height:100%;
+  width:auto;
+  height:auto;
+  object-fit:cover;
   pointer-events:none;
 }
 .hero-video-bg::after{
@@ -212,11 +212,9 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
 <!-- HERO：背景動画 -->
 <section class="hero">
   <div class="hero-video-bg">
-    <iframe
-      src="https://www.youtube.com/embed/AbMv2877CK4?autoplay=1&mute=1&loop=1&playlist=AbMv2877CK4&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&start=25&enablejsapi=1"
-      allow="autoplay; encrypted-media"
-      allowfullscreen>
-    </iframe>
+    <video autoplay muted loop playsinline>
+      <source src="hero.mp4" type="video/mp4">
+    </video>
   </div>
   <div class="hero-overlay"></div>
   <div class="hero-content">
@@ -344,24 +342,6 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
   <span>制作：Studio Ogawa</span>
 </div></div></footer>
 
-<script>
-// YouTube IFrame API：ループ時も25秒から再生
-var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-document.head.appendChild(tag);
-var player;
-function onYouTubeIframeAPIReady() {
-  player = new YT.Player(document.querySelector('.hero-video-bg iframe'), {
-    events: {
-      onStateChange: function(e) {
-        if (e.data === YT.PlayerState.ENDED) {
-          player.seekTo(25, true);
-          player.playVideo();
-        }
-      }
-    }
-  });
-}
-</script>
+
 </body>
 </html>
