@@ -1,12 +1,10 @@
 [build]
-  publish = "docs/sachiko"
+  base = "docs/sachiko"
+  publish = "."
   command = ""
 
-[build.environment]
-  NETLIFY_SKIP_DEPENDENCY_INSTALLATION = "true"
-
 [[headers]]
-  for = "*.mp4"
+  for = "/*.mp4"
   [headers.values]
     Content-Type = "video/mp4"
     Accept-Ranges = "bytes"
