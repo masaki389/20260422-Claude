@@ -1,7 +1,9 @@
 [build]
   publish = "docs/sachiko"
   command = ""
-  ignore = "exit 0"
+
+[build.environment]
+  NETLIFY_SKIP_DEPENDENCY_INSTALLATION = "true"
 
 [[headers]]
   for = "*.mp4"
