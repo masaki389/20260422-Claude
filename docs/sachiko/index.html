@@ -183,6 +183,40 @@ nav{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px sol
 footer{padding:2rem 0;border-top:1px solid var(--border)}
 .foot-in{display:flex;justify-content:space-between;align-items:center;gap:1rem;font-size:.75rem;color:var(--muted);flex-wrap:wrap}
 .foot-links{display:flex;gap:1.5rem;list-style:none}
+
+/* SECTION共通 */
+.section-kicker{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.section-h2{font-size:clamp(1.4rem,3vw,2rem);margin:.5rem 0 clamp(1.5rem,3vw,2.5rem)}
+.section-sub{font-size:.88rem;color:var(--muted);max-width:52ch;margin-bottom:2.5rem;line-height:1.8}
+
+/* TIEUP MENU */
+.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:1.25rem}
+.menu-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.75rem;display:flex;flex-direction:column;gap:.75rem}
+.menu-num{font-size:.65rem;font-weight:800;letter-spacing:.14em;color:var(--accent);font-variant-numeric:tabular-nums}
+.menu-card h3{font-size:.95rem;font-weight:700;line-height:1.4}
+.menu-card p{font-size:.82rem;color:var(--muted);line-height:1.7;flex:1}
+.menu-tag{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.06em;background:var(--gold-light);color:var(--gold);border-radius:3px;padding:.2rem .7rem;margin-top:auto}
+.menu-note{font-size:.75rem;color:var(--muted);text-align:center;padding-top:.5rem}
+@media(max-width:720px){.menu-grid{grid-template-columns:1fr}}
+
+/* VOICE */
+.voice-section{background:var(--bg2)}
+.voice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:2rem}
+.voice-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.5rem;display:flex;flex-direction:column;gap:.75rem}
+.voice-card::before{content:'\201C';font-size:2.5rem;line-height:1;color:var(--accent);opacity:.35;font-family:Georgia,serif;margin-bottom:-.5rem}
+.voice-text{font-size:.85rem;line-height:1.75;color:var(--text);font-style:italic}
+.voice-meta{font-size:.72rem;color:var(--muted);margin-top:auto}
+.reach-note{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:1.1rem 1.5rem;font-size:.82rem;color:var(--muted);line-height:1.7}
+@media(max-width:720px){.voice-grid{grid-template-columns:1fr}}
+
+/* SPONSOR ENHANCED */
+.sponsor-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+.btn-white-lg{display:inline-block;background:#fff;color:var(--accent);padding:1rem 2.5rem;border-radius:3px;font-weight:700;font-size:1rem;letter-spacing:.02em}
+.sponsor-email{font-size:.75rem;color:rgba(255,255,255,.5);margin-top:.5rem}
+.fit-section{margin-top:2.5rem;text-align:center}
+.fit-section h3{font-size:.92rem;font-weight:700;color:var(--muted);margin-bottom:1rem;letter-spacing:.04em}
+.fit-grid{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center}
+.fit-tag{background:var(--white);border:1px solid var(--border);border-radius:99px;font-size:.8rem;padding:.4rem 1.1rem;color:var(--text);font-weight:600}
 </style>
 </head>
 <body>
@@ -195,7 +229,7 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
     <li><a href="#story">作品紹介</a></li>
     <li><a href="#videos">動画一覧</a></li>
     <li><a href="#audience">視聴者データ</a></li>
-    <li><a href="#sponsor">タイアップ</a></li>
+    <li><a href="#tieup-menu">タイアップ</a></li>
   </ul>
   <a href="https://www.youtube.com/channel/UCL2SaCrx2RZbDe9ILxDVEpw" target="_blank" class="nav-yt">▶ チャンネル登録</a>
 </div></div></nav>
@@ -310,15 +344,87 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
 </div>
 </section>
 
+<!-- TIEUP MENU -->
+<section id="tieup-menu">
+<div class="wrap">
+  <p class="section-kicker">Tie-up Menu</p>
+  <h2 class="serif section-h2">タイアップメニュー</h2>
+  <p class="section-sub">幸子の物語世界に自然に溶け込む形で、商品・サービスのご紹介が可能です。<br>以下のメニューを組み合わせ、貴社のニーズに合わせてご提案します。</p>
+  <div class="menu-grid">
+    <div class="menu-card">
+      <div class="menu-num">PLAN 01</div>
+      <h3>提供クレジット表示</h3>
+      <p>動画の冒頭・末尾に「提供：◯◯」のテロップを表示。毎話5〜10万再生の視聴者へ継続的に露出します。継続スポンサードに向いたプランです。</p>
+      <div class="menu-tag">認知向け／継続型</div>
+    </div>
+    <div class="menu-card">
+      <div class="menu-num">PLAN 02</div>
+      <h3>ストーリー内ご紹介</h3>
+      <p>幸子の日常に自然に溶け込む形で商品・サービスを登場させます。「使ってみたら良かった」という体験談として描くことで、広告感を抑えた紹介が可能です。概要欄への誘導リンクも設置できます。</p>
+      <div class="menu-tag">共感訴求／高エンゲージメント</div>
+    </div>
+    <div class="menu-card">
+      <div class="menu-num">PLAN 03</div>
+      <h3>テーマ共同企画</h3>
+      <p>「シニアの保険見直し」「老後の健康管理」など、貴社サービスに関連するテーマで専用エピソードを共同制作します。視聴者が求めている情報と貴社の訴求が一致する企画を設計します。</p>
+      <div class="menu-tag">深い訴求／専用制作</div>
+    </div>
+  </div>
+  <p class="menu-note">※ 概要欄への掲載・バナー表示のみのライトプランもご相談可能です</p>
+</div>
+</section>
+
+<!-- VOICE OF VIEWERS -->
+<section id="voice" class="voice-section">
+<div class="wrap">
+  <p class="section-kicker">Viewer Voice</p>
+  <h2 class="serif section-h2">視聴者からの声</h2>
+  <div class="voice-grid">
+    <div class="voice-card">
+      <p class="voice-text">自分のことのようで、思わず泣いてしまいました。毎話楽しみに見ています</p>
+      <p class="voice-meta">60代女性 / コメントより</p>
+    </div>
+    <div class="voice-card">
+      <p class="voice-text">母に見せたら「幸子さんみたいに頑張らないと」と言っていました。二人で見ています</p>
+      <p class="voice-meta">40代女性 / コメントより</p>
+    </div>
+    <div class="voice-card">
+      <p class="voice-text">年金のことが不安だったけど、幸子を見てから「自分でも動けるかも」と思えてきた</p>
+      <p class="voice-meta">58歳女性 / コメントより</p>
+    </div>
+  </div>
+  <div class="reach-note">
+    <strong>視聴者リーチの特徴：</strong>本人層（55歳以上女性）＋ その子世代（40代）の2層へ同時リーチ。過激な表現を含まない共感型コンテンツのため、ブランドセーフな環境での訴求が可能です。最多再生エピソードでは単話49万再生を記録しており、「老後のお金」「家族関係」「働くシニア」テーマへの強い関心が確認されています。
+  </div>
+</div>
+</section>
+
 <!-- SPONSOR -->
 <section id="sponsor" style="border-top:none;padding-top:0">
-<div class="wrap"><div class="sponsor-box">
-  <p class="eye">Tie-up & Sponsorship</p>
-  <h2 class="serif">タイアップ・スポンサーのご相談</h2>
-  <p>動画内でのご紹介・概要欄への掲載・専用動画制作など、貴社のニーズに合わせてご提案します。</p>
-  <a href="mailto:sachiko.ch.info@gmail.com" class="btn-white">タイアップを相談する</a>
-  <p class="sponsor-note">通常2営業日以内にご返信します</p>
-</div></div>
+<div class="wrap">
+  <div class="sponsor-box">
+    <p class="eye">Contact</p>
+    <h2 class="serif">タイアップ・スポンサーのご相談</h2>
+    <p>まずはメールでお気軽にご相談ください。ご予算・ご希望に合わせてプランをご提案します。</p>
+    <div class="sponsor-btns">
+      <a href="mailto:sachiko.ch.info@gmail.com" class="btn-white-lg">タイアップを相談する →</a>
+    </div>
+    <p class="sponsor-email">sachiko.ch.info@gmail.com｜通常2営業日以内にご返信します</p>
+  </div>
+  <div class="fit-section">
+    <h3>特に相性の良い業種</h3>
+    <div class="fit-grid">
+      <div class="fit-tag">保険・共済</div>
+      <div class="fit-tag">金融・資産運用</div>
+      <div class="fit-tag">健康食品・サプリメント</div>
+      <div class="fit-tag">宅配食・惣菜サービス</div>
+      <div class="fit-tag">旅行・シニアツアー</div>
+      <div class="fit-tag">終活・葬儀・相続</div>
+      <div class="fit-tag">医療・介護サービス</div>
+      <div class="fit-tag">地方自治体・啓発事業</div>
+    </div>
+  </div>
+</div>
 </section>
 
 <footer><div class="wrap"><div class="foot-in">
@@ -326,7 +432,7 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
   <ul class="foot-links">
     <li><a href="#story">作品紹介</a></li>
     <li><a href="#videos">動画一覧</a></li>
-    <li><a href="#sponsor">タイアップ</a></li>
+    <li><a href="#tieup-menu">タイアップ</a></li>
     <li><a href="https://www.youtube.com/channel/UCL2SaCrx2RZbDe9ILxDVEpw" target="_blank">YouTube</a></li>
   </ul>
   <span>制作：Studio Ogawa</span>
