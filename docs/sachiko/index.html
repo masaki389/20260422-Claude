@@ -217,6 +217,16 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
 .fit-section h3{font-size:.92rem;font-weight:700;color:var(--muted);margin-bottom:1rem;letter-spacing:.04em}
 .fit-grid{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center}
 .fit-tag{background:var(--white);border:1px solid var(--border);border-radius:99px;font-size:.8rem;padding:.4rem 1.1rem;color:var(--text);font-weight:600}
+
+/* TEAM */
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:2rem}
+.team-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.75rem;text-align:center}
+.team-role-badge{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:var(--bg2);color:var(--muted);border-radius:3px;padding:.25rem .7rem;margin-bottom:.85rem}
+.team-name{font-size:1.05rem;font-weight:700;margin-bottom:.35rem}
+.team-name-en{font-size:.72rem;color:var(--muted);letter-spacing:.08em;margin-bottom:.75rem}
+.team-desc{font-size:.78rem;color:var(--muted);line-height:1.7}
+.team-contact-badge{display:inline-flex;align-items:center;gap:.4rem;margin-top:.75rem;font-size:.7rem;font-weight:700;color:var(--accent);background:rgba(155,58,92,.08);border-radius:99px;padding:.3rem .85rem}
+@media(max-width:720px){.team-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -344,6 +354,35 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
 </div>
 </section>
 
+<!-- TEAM -->
+<section id="team">
+<div class="wrap">
+  <p class="section-kicker">Our Team</p>
+  <h2 class="serif section-h2">制作チーム</h2>
+  <div class="team-grid">
+    <div class="team-card">
+      <div class="team-role-badge">Director / Creator</div>
+      <div class="team-name serif">小川 真輝</div>
+      <div class="team-name-en">Masaki Ogawa</div>
+      <div class="team-desc">監督・クリエイティブディレクター。企画・脚本・AI制作を担当。幸子チャンネルを0から立ち上げ、108万再生を達成。</div>
+    </div>
+    <div class="team-card">
+      <div class="team-role-badge">Production</div>
+      <div class="team-name serif">菊地 将晃</div>
+      <div class="team-name-en">Masaaki Kikuchi</div>
+      <div class="team-desc">制作担当。映像クオリティの管理・制作フロー全体を支える。</div>
+    </div>
+    <div class="team-card">
+      <div class="team-role-badge">Business / Sales</div>
+      <div class="team-name serif">小国 こうた</div>
+      <div class="team-name-en">Kota Oguni</div>
+      <div class="team-desc">営業・タイアップ担当。企業様とのご相談・条件交渉・契約まで一括して対応します。</div>
+      <div class="team-contact-badge">▶ タイアップ窓口</div>
+    </div>
+  </div>
+</div>
+</section>
+
 <!-- TIEUP MENU -->
 <section id="tieup-menu">
 <div class="wrap">
@@ -405,11 +444,11 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
   <div class="sponsor-box">
     <p class="eye">Contact</p>
     <h2 class="serif">タイアップ・スポンサーのご相談</h2>
-    <p>まずはメールでお気軽にご相談ください。ご予算・ご希望に合わせてプランをご提案します。</p>
+    <p>営業担当・小国こうたが対応します。まずはお気軽にご連絡ください。ご予算・ご希望に合わせてプランをご提案します。</p>
     <div class="sponsor-btns">
       <a href="mailto:sachiko.ch.info@gmail.com" class="btn-white-lg">タイアップを相談する →</a>
     </div>
-    <p class="sponsor-email">sachiko.ch.info@gmail.com｜通常2営業日以内にご返信します</p>
+    <p class="sponsor-email">sachiko.ch.info@gmail.com｜担当：小国こうた｜通常2営業日以内にご返信します</p>
   </div>
   <div class="fit-section">
     <h3>特に相性の良い業種</h3>
@@ -435,7 +474,7 @@ footer{padding:2rem 0;border-top:1px solid var(--border)}
     <li><a href="#tieup-menu">タイアップ</a></li>
     <li><a href="https://www.youtube.com/channel/UCL2SaCrx2RZbDe9ILxDVEpw" target="_blank">YouTube</a></li>
   </ul>
-  <span>制作：Studio Ogawa</span>
+  <span>制作：小川真輝・菊地将晃　営業：小国こうた</span>
 </div></div></footer>
 
 
